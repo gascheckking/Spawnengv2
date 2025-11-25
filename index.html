@@ -6,79 +6,123 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
-      --bg-primary: #050505;
-      --bg-secondary: #101010;
-      --bg-tertiary: #181818;
-      --text-primary: #f5f5f5;
+      --bg-primary: #020617;
+      --bg-secondary: #050816;
+      --bg-tertiary: #0b1220;
+      --text-primary: #f9fafb;
       --text-secondary: #9ca3af;
       --accent: #00d4ff;
       --accent-soft: rgba(0, 212, 255, 0.18);
-      --border: #2f2f2f;
+      --border: #1f2937;
       --success: #22c55e;
+      --danger: #f97373;
       --font-mono: "SF Mono", "Fira Code", monospace;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      background: radial-gradient(circle at top, #0b1220 0, #020617 45%, #000 100%);
+      background: radial-gradient(circle at top, #0f172a 0, #020617 40%, #000 100%);
       color: var(--text-primary);
       font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      min-height: 100vh;
+      padding: 0.8rem;
     }
+
+    .app-frame {
+      width: 100%;
+      max-width: 480px;
+      border-radius: 1.2rem;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow:
+        0 0 0 1px rgba(15, 23, 42, 0.9),
+        0 16px 40px rgba(0, 0, 0, 0.9);
+      background: radial-gradient(circle at top, #020617 0, #020617 45%, #020617 100%);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+
     .app-header {
-      padding: 0.85rem 1rem;
+      padding: 0.75rem 0.9rem;
       border-bottom: 1px solid var(--border);
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(12px);
+      background: linear-gradient(to right, #020617, #020617 40%, #020617);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .brand { display: flex; flex-direction: column; gap: 0.1rem; }
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
     .brand-title {
-      font-size: 1.35rem;
+      font-size: 1.1rem;
       font-weight: 700;
+      letter-spacing: 0.04em;
       color: var(--accent);
     }
     .brand-sub {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-    }
-    .header-right { display: flex; align-items: center; gap: 0.5rem; }
-    .network-pill {
-      padding: 0.3rem 0.7rem;
-      border-radius: 999px;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      font-family: var(--font-mono);
       font-size: 0.7rem;
       color: var(--text-secondary);
     }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .network-pill {
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      background: #020617;
+      border: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+    }
     .btn {
-      border-radius: 0.35rem;
+      border-radius: 0.5rem;
       border: 1px solid var(--accent);
       background: var(--accent-soft);
-      padding: 0.4rem 0.9rem;
-      font-size: 0.8rem;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.75rem;
       color: var(--accent);
       cursor: pointer;
       font-weight: 600;
-      transition: background 0.18s, color 0.18s, border-color 0.18s;
+      transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.08s;
     }
-    .btn:hover { background: var(--accent); color: #020617; }
+    .btn:hover {
+      background: var(--accent);
+      color: #020617;
+      transform: translateY(-1px);
+    }
+    .btn-small {
+      padding: 0.25rem 0.6rem;
+      font-size: 0.7rem;
+    }
+
+    /* TAB BAR */
 
     .tab-bar {
       display: flex;
       overflow-x: auto;
       border-bottom: 1px solid var(--border);
-      background: rgba(3, 7, 18, 0.96);
+      background: #020617;
     }
     .tab-bar::-webkit-scrollbar { display: none; }
+
     .tab-btn {
       border: none;
       background: transparent;
       color: var(--text-secondary);
-      padding: 0.7rem 0.9rem;
-      font-size: 0.8rem;
+      padding: 0.6rem 0.7rem;
+      font-size: 0.75rem;
       cursor: pointer;
       border-bottom: 2px solid transparent;
       white-space: nowrap;
@@ -88,18 +132,20 @@
       border-bottom-color: var(--accent);
     }
 
+    /* STATUS / TICKER */
+
     .status-strip {
-      padding: 0.4rem 0.8rem;
-      background: var(--bg-tertiary);
+      padding: 0.35rem 0.7rem;
+      background: #020617;
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
     }
     .status-left,
     .status-right {
       display: flex;
-      gap: 0.75rem;
+      gap: 0.55rem;
       align-items: center;
       color: var(--text-secondary);
     }
@@ -109,21 +155,21 @@
       border-radius: 999px;
       background: #4b5563;
       display: inline-block;
-      margin-right: 0.25rem;
+      margin-right: 0.2rem;
     }
     .status-dot.on { background: var(--success); }
 
     .ticker {
       overflow: hidden;
-      background: var(--bg-secondary);
+      background: #020617;
       border-bottom: 1px solid var(--border);
       font-family: var(--font-mono);
-      font-size: 0.75rem;
-      padding: 0.4rem 0;
+      font-size: 0.7rem;
+      padding: 0.3rem 0;
     }
     .ticker-inner {
       white-space: nowrap;
-      animation: ticker-scroll 24s linear infinite;
+      animation: ticker-scroll 22s linear infinite;
       padding-left: 100%;
     }
     @keyframes ticker-scroll {
@@ -131,115 +177,158 @@
       to { transform: translateX(-100%); }
     }
 
+    /* MAIN / VIEW */
+
     .app-main {
-      min-height: calc(100vh - 140px);
-      padding: 0.8rem;
+      flex: 1;
+      min-height: 0;
+      padding: 0.7rem;
+      overflow-y: auto;
     }
     .view-title {
-      font-size: 1.05rem;
+      font-size: 0.95rem;
       font-weight: 600;
-      margin: 0 0 0.8rem;
+      margin: 0 0 0.6rem;
     }
 
     .card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 0.8rem;
+      grid-template-columns: 1fr;
+      gap: 0.6rem;
     }
+    @media (min-width: 480px) {
+      .card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
     .card {
-      background: rgba(15, 23, 42, 0.9);
-      border-radius: 0.7rem;
+      background: radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 100%);
+      border-radius: 0.8rem;
       border: 1px solid var(--border);
-      padding: 0.9rem;
+      padding: 0.8rem;
     }
     .card h3 {
-      margin: 0 0 0.4rem;
+      margin: 0 0 0.3rem;
       color: var(--accent);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
     .card p {
       margin: 0.15rem 0;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       color: var(--text-secondary);
     }
 
     .metric-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 0.8rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.6rem;
     }
     .metric {
-      background: rgba(15, 23, 42, 0.9);
-      border-radius: 0.7rem;
+      background: #020617;
+      border-radius: 0.8rem;
       border: 1px solid var(--border);
-      padding: 0.9rem;
+      padding: 0.7rem;
       text-align: center;
     }
     .metric .value {
-      font-size: 1.4rem;
+      font-size: 1.1rem;
       font-weight: 700;
       color: var(--accent);
     }
     .metric .label {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--text-secondary);
     }
 
-    .packmap-wrap { margin-top: 0.8rem; }
+    /* PACK MAP */
+
+    .packmap-wrap { margin-top: 0.5rem; }
     .packmap-canvas {
       width: 100%;
-      height: 260px;
+      height: 220px;
       background: radial-gradient(circle at center, #020617 0, #000 100%);
-      border-radius: 0.7rem;
+      border-radius: 0.9rem;
       border: 1px solid var(--border);
       display: block;
     }
 
+    /* PROFILE & TASKS */
+
     .profile-header {
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
-      margin-bottom: 0.8rem;
+      gap: 0.3rem;
+      margin-bottom: 0.6rem;
     }
     .profile-wallet {
       font-family: var(--font-mono);
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       color: var(--text-secondary);
     }
     .badge-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.35rem;
+      gap: 0.25rem;
     }
     .badge {
       border-radius: 999px;
-      padding: 0.2rem 0.6rem;
-      font-size: 0.68rem;
+      padding: 0.18rem 0.5rem;
+      font-size: 0.65rem;
       border: 1px solid var(--border);
-      background: var(--bg-tertiary);
+      background: #020617;
     }
 
-    .app-footer {
-      padding: 0.8rem;
-      border-top: 1px solid var(--border);
-      background: rgba(0, 0, 0, 0.9);
-      font-size: 0.72rem;
-      text-align: center;
+    .task-list {
+      list-style: none;
+      padding: 0;
+      margin: 0.4rem 0 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .task-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #020617;
+      border-radius: 0.6rem;
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.55rem;
+      font-size: 0.7rem;
       color: var(--text-secondary);
     }
+    .task-item.done {
+      opacity: 0.6;
+    }
+    .task-label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+    .task-xp {
+      color: var(--accent);
+      font-size: 0.65rem;
+    }
 
-    @media (min-width: 768px) {
-      .app-header { padding: 0.9rem 1.4rem; }
-      .app-main { padding: 1rem 1.4rem 1.2rem; }
+    /* FOOTER */
+
+    .app-footer {
+      padding: 0.55rem 0.7rem;
+      border-top: 1px solid var(--border);
+      background: #020617;
+      font-size: 0.68rem;
+      text-align: center;
+      color: var(--text-secondary);
     }
   </style>
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app" class="app-frame"></div>
 
   <script type="module">
     // --------------------------------------
-    // MOCK DATA / MESH
+    // MOCK MESH DATA
     // --------------------------------------
     const MOCK_EVENTS = [
       {
@@ -252,7 +341,7 @@
         owner: "0x1234...beef",
         tags: ["pull", "core"],
         score: 420,
-        timestamp: Date.now() - 5000,
+        timestamp: Date.now() - 5_000,
       },
       {
         id: "2",
@@ -264,7 +353,7 @@
         owner: "0x9999...aaaa",
         tags: ["swap"],
         score: 210,
-        timestamp: Date.now() - 25000,
+        timestamp: Date.now() - 25_000,
       },
       {
         id: "3",
@@ -276,7 +365,7 @@
         owner: "0xabcd...0001",
         tags: ["burn", "gamble"],
         score: 90,
-        timestamp: Date.now() - 60000,
+        timestamp: Date.now() - 60_000,
       },
       {
         id: "4",
@@ -287,8 +376,8 @@
         rarity: "Relic",
         owner: "0xdeaf...9999",
         tags: ["zora", "mythic_hit"],
-        score: 9900,
-        timestamp: Date.now() - 120000,
+        score: 9_900,
+        timestamp: Date.now() - 120_000,
       },
       {
         id: "5",
@@ -300,7 +389,7 @@
         owner: "0xface...7777",
         tags: ["farcaster", "social"],
         score: 300,
-        timestamp: Date.now() - 240000,
+        timestamp: Date.now() - 240_000,
       },
     ];
 
@@ -353,6 +442,7 @@
       wallet: null,
       connected: false,
       theme: "dark",
+      currentTab: "trading",
       events: [],
       stats: null,
       profile: {
@@ -360,6 +450,13 @@
         xp: 1250,
         level: 4,
         bestHit: "Relic (ZoraPack)",
+      },
+      daily: {
+        tasks: [
+          { id: "open-pack", label: "Open 1 pack", xp: 25, done: false },
+          { id: "do-trade", label: "Do 1 trade / swap", xp: 20, done: false },
+          { id: "cast-social", label: "Share 1 pull on-chain", xp: 30, done: false },
+        ],
       },
     };
 
@@ -396,7 +493,7 @@
           </div>
           <div class="header-right">
             <div class="network-pill" id="network-pill">${NETWORK_INFO.label}</div>
-            <button id="wallet-btn" class="btn">Connect Wallet</button>
+            <button id="wallet-btn" class="btn">Connect</button>
           </div>
         </header>
 
@@ -469,7 +566,7 @@
           ? "0x" + Math.random().toString(16).slice(2, 8) + "...mesh"
           : null;
 
-        btn.textContent = state.connected ? "Disconnect" : "Connect Wallet";
+        btn.textContent = state.connected ? "Disconnect" : "Connect";
         status.textContent = state.connected
           ? `Wallet: ${state.wallet}`
           : "Wallet: Disconnected";
@@ -486,6 +583,7 @@
     }
 
     function switchView(id) {
+      state.currentTab = id;
       setActiveTab(id);
       const title = document.getElementById("view-title");
       const body = document.getElementById("view-body");
@@ -519,11 +617,12 @@
       const events = state.events;
       const rows = events.map(e => `
         <div class="card">
-          <h3>${e.label}</h3>
+          <h3>📦 ${e.label}</h3>
           <p>Kind: ${e.kind}</p>
           <p>Series: ${e.series}</p>
           <p>Rarity: ${e.rarity}</p>
           <p>Owner: ${e.owner}</p>
+          <button class="btn btn-small" data-share-id="${e.id}">Share pull</button>
         </div>
       `).join("");
       return `<div class="card-grid">${rows}</div>`;
@@ -534,7 +633,7 @@
       if (!packs.length) return `<p>Inga packs öppnade ännu.</p>`;
       const rows = packs.map(e => `
         <div class="card">
-          <h3>${e.label}</h3>
+          <h3>🎴 ${e.label}</h3>
           <p>Series: ${e.series}</p>
           <p>Rarity: ${e.rarity}</p>
           <p>Score: ${e.score}</p>
@@ -547,12 +646,12 @@
       return `
         <div class="card-grid">
           <div class="card">
-            <h3>Forge New Pack Series</h3>
+            <h3>🛠 Forge New Pack Series</h3>
             <p>Gå från bild → rarity → foil → deploy.</p>
             <button class="btn">Start Forge Flow</button>
           </div>
           <div class="card">
-            <h3>Manage Existing Series</h3>
+            <h3>📚 Manage Existing Series</h3>
             <p>Visa och konfigurera redan deployade serier.</p>
             <button class="btn">Open Series Panel</button>
           </div>
@@ -564,17 +663,17 @@
       return `
         <div class="card-grid">
           <div class="card">
-            <h3>Fragment Gamble</h3>
+            <h3>🔥 Fragment Gamble</h3>
             <p>Burn 10x Fragments → chans på Shard/Core.</p>
             <button class="btn">Simulate Burn</button>
           </div>
           <div class="card">
-            <h3>Shard Gamble</h3>
+            <h3>⚡ Shard Gamble</h3>
             <p>Burn 3x Shards → chans på Artifact/Relic.</p>
             <button class="btn">Simulate Burn</button>
           </div>
           <div class="card">
-            <h3>Zora Packs</h3>
+            <h3>🪙 Zora Packs</h3>
             <p>Köp ZoraPack → rarity multipliers på Zora value.</p>
             <button class="btn">Open Zora Pack</button>
           </div>
@@ -614,7 +713,7 @@
       if (!verified.length) return `<p>Inga Warp Verified mythic hits ännu.</p>`;
       const rows = verified.map(e => `
         <div class="card">
-          <h3>${e.label}</h3>
+          <h3>🔒 ${e.label}</h3>
           <p>Owner: ${e.owner}</p>
           <p>Score: ${e.score}</p>
         </div>
@@ -626,11 +725,11 @@
       return `
         <div class="card-grid">
           <div class="card">
-            <h3>Trending Tags</h3>
+            <h3>📈 Trending Tags</h3>
             <p>#GenesisPacks · #ZoraPack · #RelicHit</p>
           </div>
           <div class="card">
-            <h3>Social Cast</h3>
+            <h3>📡 Social Cast</h3>
             <p>Posta ett mock-cast till Farcaster (framtida Neynar-integration).</p>
             <button class="btn" id="cast-btn">Post Mock Cast</button>
           </div>
@@ -645,7 +744,7 @@
         <div class="metric-grid">
           <div class="metric">
             <div class="value">${s.totalPacks}</div>
-            <div class="label">Total Packs Opened</div>
+            <div class="label">Packs Opened</div>
           </div>
           <div class="metric">
             <div class="value">${s.cores}</div>
@@ -671,17 +770,17 @@
       return `
         <div class="card-grid">
           <div class="card">
-            <h3>Deploy Guard + Factory</h3>
-            <p>Deployar ReserveGuard + PackFactory på Base.</p>
+            <h3>🏗 Deploy Guard + Factory</h3>
+            <p>ReserveGuard + PackFactory på Base (via Hardhat senare).</p>
             <button class="btn">Deploy Base Skeleton</button>
           </div>
           <div class="card">
-            <h3>Deploy TokenPackSeries</h3>
+            <h3>🚀 Deploy TokenPackSeries</h3>
             <p>Starta en ny serie med din rarity-tabell.</p>
             <button class="btn">Launch Series</button>
           </div>
           <div class="card">
-            <h3>Creator Registry</h3>
+            <h3>✅ Creator Registry</h3>
             <p>Framtida modul för Warp Verified kreatörer.</p>
             <button class="btn">Open Registry</button>
           </div>
@@ -692,26 +791,57 @@
     function viewProfile() {
       const p = state.profile;
       const walletText = state.wallet || "0x….not-connected";
+
+      const tasksHtml = state.daily.tasks.map(t => `
+        <li class="task-item ${t.done ? "done" : ""}">
+          <div class="task-label">
+            <span>${t.label}</span>
+            <span class="task-xp">+${t.xp} XP</span>
+          </div>
+          <button class="btn btn-small" data-task-id="${t.id}">
+            ${t.done ? "Done" : "Complete"}
+          </button>
+        </li>
+      `).join("");
+
       return `
         <div class="profile-header">
           <div><strong>Spawn Profile</strong></div>
           <div class="profile-wallet">${walletText}</div>
           <div class="badge-row">
-            <span class="badge">Streak: ${p.streakDays} days</span>
-            <span class="badge">XP: ${p.xp}</span>
-            <span class="badge">Level ${p.level}</span>
-            <span class="badge">Best hit: ${p.bestHit}</span>
+            <span class="badge">🔥 Streak: ${p.streakDays} days</span>
+            <span class="badge">⭐ XP: ${p.xp}</span>
+            <span class="badge">🏅 Level ${p.level}</span>
+            <span class="badge">🎯 Best hit: ${p.bestHit}</span>
           </div>
         </div>
+
         <div class="metric-grid">
           <div class="metric">
             <div class="value">+25</div>
             <div class="label">Daily XP Ready</div>
           </div>
           <div class="metric">
-            <div class="value">3</div>
-            <div class="label">Quests Today</div>
+            <div class="value">${state.daily.tasks.filter(t => t.done).length}/${state.daily.tasks.length}</div>
+            <div class="label">Tasks Done</div>
           </div>
+          <div class="metric">
+            <div class="value">3</div>
+            <div class="label">Quest Tier</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:0.6rem;">
+          <h3>📋 Daily Tasks</h3>
+          <ul class="task-list">
+            ${tasksHtml}
+          </ul>
+        </div>
+
+        <div class="card" style="margin-top:0.6rem;">
+          <h3>📤 Share Latest Pull</h3>
+          <p>Skicka din senaste Core/Relic-pull som cast (mock) till mesh-social lagret.</p>
+          <button class="btn" id="share-latest">Share latest pull</button>
         </div>
       `;
     }
@@ -720,25 +850,81 @@
       return `
         <div class="card-grid">
           <div class="card">
-            <h3>Theme</h3>
+            <h3>🎨 Theme</h3>
             <p>Dark mode aktiverad. (Light disabled.)</p>
             <button class="btn">Toggle Theme (mock)</button>
           </div>
           <div class="card">
-            <h3>Network</h3>
+            <h3>🌐 Network</h3>
             <p>Aktiv kedja: ${NETWORK_INFO.name}</p>
           </div>
         </div>
       `;
     }
 
+    // --------------------------------------
+    // GLOBAL CLICK HANDLER
+    // --------------------------------------
     document.addEventListener("click", async (e) => {
-      if (e.target && e.target.id === "cast-btn") {
+      const target = e.target;
+
+      // Cast-knapp i Bubbles
+      if (target && target.id === "cast-btn") {
         await postCastMock(
           "Just pulled a Core via SpawnEngine Mesh!",
           "https://spawn-engine.vercel.app"
         );
         alert("Mock-cast skickad (kolla console).");
+      }
+
+      // Share pull i Trading
+      if (target && target.dataset && target.dataset.shareId) {
+        const id = target.dataset.shareId;
+        const ev = state.events.find(e => e.id === id);
+        if (ev) {
+          await postCastMock(
+            `SpawnEngine pull: ${ev.label} (${ev.rarity})`,
+            "https://spawn-engine.vercel.app"
+          );
+          alert("Shared pull (mock).");
+        }
+      }
+
+      // Daily task complete i Profile
+      if (target && target.dataset && target.dataset.taskId) {
+        const id = target.dataset.taskId;
+        const task = state.daily.tasks.find(t => t.id === id);
+        if (task && !task.done) {
+          task.done = true;
+          state.profile.xp += task.xp;
+          // enkel level up-mock
+          if (state.profile.xp >= 1500) state.profile.level = 5;
+          // rerendra profilen
+          if (state.currentTab === "profile") {
+            switchView("profile");
+          }
+        }
+      }
+
+      // Share latest pull från Profile
+      if (target && target.id === "share-latest") {
+        const latestPack = state.events.find(e => e.kind === "pack_open");
+        if (latestPack) {
+          await postCastMock(
+            `SpawnEngine pull: ${latestPack.label} (${latestPack.rarity})`,
+            "https://spawn-engine.vercel.app"
+          );
+          alert("Latest pull shared (mock).");
+          // markera social-task som klar
+          const t = state.daily.tasks.find(t => t.id === "cast-social");
+          if (t && !t.done) {
+            t.done = true;
+            state.profile.xp += t.xp;
+            if (state.currentTab === "profile") switchView("profile");
+          }
+        } else {
+          alert("Ingen pack_open hittades i mesh ännu.");
+        }
       }
     });
 
