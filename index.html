@@ -1,719 +1,748 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpawnEngine</title>
-    <style>
-        :root {
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #1a1a1a;
-            --bg-tertiary: #2a2a2a;
-            --text-primary: #e5e5e5;
-            --text-secondary: #a0a0a0;
-            --accent: #00d4ff;
-            --accent-hover: #00a8cc;
-            --border-color: #333;
-            --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
-        }
+  <meta charset="UTF-8" />
+  <title>SpawnEngine — Onchain Pack Factory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg-primary: #050505;
+      --bg-secondary: #101010;
+      --bg-tertiary: #181818;
+      --text-primary: #f5f5f5;
+      --text-secondary: #9ca3af;
+      --accent: #00d4ff;
+      --accent-soft: rgba(0, 212, 255, 0.18);
+      --border: #2f2f2f;
+      --success: #22c55e;
+      --font-mono: "SF Mono", "Fira Code", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #0b1220 0, #020617 45%, #000 100%);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+    .app-header {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand { display: flex; flex-direction: column; gap: 0.1rem; }
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .brand-sub {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    .header-right { display: flex; align-items: center; gap: 0.5rem; }
+    .network-pill {
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+    .btn {
+      border-radius: 0.35rem;
+      border: 1px solid var(--accent);
+      background: var(--accent-soft);
+      padding: 0.4rem 0.9rem;
+      font-size: 0.8rem;
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.18s, color 0.18s, border-color 0.18s;
+    }
+    .btn:hover { background: var(--accent); color: #020617; }
 
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
+    .tab-bar {
+      display: flex;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--border);
+      background: rgba(3, 7, 18, 0.96);
+    }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 0.7rem 0.9rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
 
-        h1, h2, h3 {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
+    .status-strip {
+      padding: 0.4rem 0.8rem;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+    }
+    .status-left,
+    .status-right {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      color: var(--text-secondary);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #4b5563;
+      display: inline-block;
+      margin-right: 0.25rem;
+    }
+    .status-dot.on { background: var(--success); }
 
-        .main-header,
-        .main-footer {
-            background-color: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .ticker {
+      overflow: hidden;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 0.4rem 0;
+    }
+    .ticker-inner {
+      white-space: nowrap;
+      animation: ticker-scroll 24s linear infinite;
+      padding-left: 100%;
+    }
+    @keyframes ticker-scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-100%); }
+    }
 
-        .main-footer {
-            border-top: 1px solid var(--border-color);
-            border-bottom: none;
-            text-align: center;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
+    .app-main {
+      min-height: calc(100vh - 140px);
+      padding: 0.8rem;
+    }
+    .view-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 0 0 0.8rem;
+    }
 
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-        }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.8rem;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 0.7rem;
+      border: 1px solid var(--border);
+      padding: 0.9rem;
+    }
+    .card h3 {
+      margin: 0 0 0.4rem;
+      color: var(--accent);
+      font-size: 0.95rem;
+    }
+    .card p {
+      margin: 0.15rem 0;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
 
-        .logo h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            color: var(--accent);
-        }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.8rem;
+    }
+    .metric {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 0.7rem;
+      border: 1px solid var(--border);
+      padding: 0.9rem;
+      text-align: center;
+    }
+    .metric .value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .metric .label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
 
-        .logo .tagline {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-left: 0.5rem;
-        }
+    .packmap-wrap { margin-top: 0.8rem; }
+    .packmap-canvas {
+      width: 100%;
+      height: 260px;
+      background: radial-gradient(circle at center, #020617 0, #000 100%);
+      border-radius: 0.7rem;
+      border: 1px solid var(--border);
+      display: block;
+    }
 
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+    .profile-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-bottom: 0.8rem;
+    }
+    .profile-wallet {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .badge {
+      border-radius: 999px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.68rem;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+    }
 
-        main {
-            padding: 0.5rem;
-            min-height: calc(100vh - 150px);
-        }
+    .app-footer {
+      padding: 0.8rem;
+      border-top: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.9);
+      font-size: 0.72rem;
+      text-align: center;
+      color: var(--text-secondary);
+    }
 
-        #view-container {
-            margin-top: 1rem;
-        }
-
-        .btn {
-            background-color: var(--bg-tertiary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            padding: 0.5rem 1rem;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: background-color 0.2s, color 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn:hover {
-            background-color: var(--accent);
-            color: var(--bg-primary);
-        }
-
-        .btn-primary {
-            background-color: var(--accent);
-            color: var(--bg-primary);
-            border-color: var(--accent);
-        }
-
-        .btn-primary:hover {
-            background-color: var(--accent-hover);
-        }
-
-        .network-pill {
-            background-color: var(--bg-tertiary);
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-size: 0.7rem;
-            font-family: var(--font-mono);
-            border: 1px solid var(--border-color);
-        }
-
-        .tab-bar {
-            display: flex;
-            gap: 0.25rem;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.5rem;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-        }
-
-        .tab-bar::-webkit-scrollbar {
-            display: none;
-        }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            padding: 0.5rem 0.75rem;
-            cursor: pointer;
-            white-space: nowrap;
-            font-size: 0.8rem;
-            border-bottom: 2px solid transparent;
-            transition: color 0.2s, border-color 0.2s;
-        }
-
-        .tab-btn:hover {
-            color: var(--text-primary);
-        }
-
-        .tab-btn.active {
-            color: var(--accent);
-            border-bottom-color: var(--accent);
-        }
-
-        .ticker {
-            background-color: var(--bg-secondary);
-            padding: 0.5rem;
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            white-space: nowrap;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .ticker-content {
-            display: inline-block;
-            padding-left: 100%;
-            animation: scroll-left 30s linear infinite;
-        }
-
-        @keyframes scroll-left {
-            0% {
-                transform: translateX(0);
-            }
-            100% {
-                transform: translateX(-100%);
-            }
-        }
-
-        .status-strip {
-            background-color: var(--bg-tertiary);
-            padding: 0.5rem;
-            font-size: 0.7rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: var(--text-secondary);
-        }
-
-        .status-indicator.connected {
-            background-color: #10b981;
-        }
-
-        .view {
-            display: none;
-        }
-
-        .view.active {
-            display: block;
-        }
-
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-
-        .card {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            transition: border-color 0.2s;
-        }
-
-        .card:hover {
-            border-color: var(--accent);
-        }
-
-        .card h3 {
-            margin-top: 0;
-            color: var(--accent);
-            font-size: 1.1rem;
-        }
-
-        .metric-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 1rem;
-        }
-
-        .metric {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            text-align: center;
-        }
-
-        .metric .value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--accent);
-        }
-
-        .metric .label {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .accordion-item {
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .accordion-header {
-            background-color: var(--bg-secondary);
-            padding: 1rem;
-            cursor: pointer;
-            user-select: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .accordion-content {
-            padding: 1rem;
-            display: none;
-        }
-
-        .accordion-item.open .accordion-content {
-            display: block;
-        }
-
-        .rarity-fragment {
-            color: #9CA3AF;
-        }
-
-        .rarity-shard {
-            color: #60A5FA;
-        }
-
-        .rarity-core {
-            color: #A78BFA;
-        }
-
-        .rarity-artifact {
-            color: #F59E0B;
-        }
-
-        .rarity-relic {
-            color: #F97316;
-        }
-
-        /* Pack map canvas */
-        #pack-map-canvas {
-            width: 100%;
-            height: 260px;
-            background-color: #050505;
-            border-radius: 0.5rem;
-            border: 1px solid var(--border-color);
-            display: block;
-        }
-    </style>
+    @media (min-width: 768px) {
+      .app-header { padding: 0.9rem 1.4rem; }
+      .app-main { padding: 1rem 1.4rem 1.2rem; }
+    }
+  </style>
 </head>
 <body>
+  <div id="app"></div>
 
-<div id="app"></div>
-
-<script type="module">
-    // --- CONSTANTS ---
-    const NETWORK_INFO = { name: 'Base Sepolia', chainId: '0x14a34' };
-    const CONTRACTS = { PACK_FACTORY: '0xFACTORY_ADDRESS_HERE' };
-    const TABS = [
-        { id: 'trading', label: 'Trading' },
-        { id: 'my-packs', label: 'My Packs' },
-        { id: 'creator-forge', label: 'Creator Forge' },
-        { id: 'pull-lab', label: 'Pull Lab' },
-        { id: 'pack-maps', label: 'Pack Maps' },
-        { id: 'warp-verified', label: 'Warp Verified' },
-        { id: 'bubbles', label: 'Bubbles' },
-        { id: 'stats-engine', label: 'Stats Engine' },
-        { id: 'deploy-center', label: 'Deploy Center' },
-        { id: 'settings', label: 'Settings' }
+  <script type="module">
+    // --------------------------------------
+    // MOCK DATA / MESH
+    // --------------------------------------
+    const MOCK_EVENTS = [
+      {
+        id: "1",
+        kind: "pack_open",
+        label: "Genesis Pack #42",
+        short: "GEN-42",
+        series: "Genesis",
+        rarity: "Core",
+        owner: "0x1234...beef",
+        tags: ["pull", "core"],
+        score: 420,
+        timestamp: Date.now() - 5000,
+      },
+      {
+        id: "2",
+        kind: "swap",
+        label: "Shard → Core",
+        short: "S>C",
+        series: "Genesis",
+        rarity: "Shard",
+        owner: "0x9999...aaaa",
+        tags: ["swap"],
+        score: 210,
+        timestamp: Date.now() - 25000,
+      },
+      {
+        id: "3",
+        kind: "burn",
+        label: "Burn 10 Fragments",
+        short: "10xF",
+        series: "Genesis",
+        rarity: "Fragment",
+        owner: "0xabcd...0001",
+        tags: ["burn", "gamble"],
+        score: 90,
+        timestamp: Date.now() - 60000,
+      },
+      {
+        id: "4",
+        kind: "zora_buy",
+        label: "ZoraPack Mythic Hit",
+        short: "Z-MYT",
+        series: "ZoraPacks",
+        rarity: "Relic",
+        owner: "0xdeaf...9999",
+        tags: ["zora", "mythic_hit"],
+        score: 9900,
+        timestamp: Date.now() - 120000,
+      },
+      {
+        id: "5",
+        kind: "farcaster_cast",
+        label: "Cast: “Just pulled an Artifact on Base”",
+        short: "CAST",
+        series: "Social",
+        rarity: "Artifact",
+        owner: "0xface...7777",
+        tags: ["farcaster", "social"],
+        score: 300,
+        timestamp: Date.now() - 240000,
+      },
     ];
 
-    // --- STATE MANAGEMENT ---
-    const state = {
-        wallet: { isConnected: false, address: null },
-        theme: 'dark',
-        events: [],
-    };
+    function getUnifiedActivity() {
+      return Promise.resolve(
+        MOCK_EVENTS.slice().sort((a, b) => b.timestamp - a.timestamp)
+      );
+    }
 
-    // --- MOCK DATA ---
-    const mockEvents = [
-        { id: '1', kind: 'pack_open', label: 'Genesis Pack #42', short: 'GEN#42', series: 'Genesis', rarity: 'Relic', owner: '0x123...456', tags: ['mythic'], score: 998, timestamp: new Date(Date.now() - 5000) },
-        { id: '2', kind: 'swap', label: 'Fragment for Shard', short: 'F>S', series: 'Genesis', rarity: 'Shard', owner: '0x789...abc', tags: ['trade'], score: 450, timestamp: new Date(Date.now() - 15000) },
-        { id: '3', kind: 'burn', label: '5x Fragments', short: '5xF', series: 'Genesis', rarity: 'Core', owner: '0xdef...012', tags: ['burn'], score: 120, timestamp: new Date(Date.now() - 45000) },
-        { id: '4', kind: 'zora_buy', label: 'Artifact on Zora', short: 'Z-ART', series: 'Genesis', rarity: 'Artifact', owner: '0x345...678', tags: ['zora', 'buy'], score: 750, timestamp: new Date(Date.now() - 90000) },
-        { id: '5', kind: 'farcaster_cast', label: 'Just pulled a Core!', short: 'FC-CAST', series: 'Genesis', rarity: 'Core', owner: '0xbcde...fgh', tags: ['farcaster', 'social'], score: 250, timestamp: new Date(Date.now() - 180000) },
-    ];
-
-    // --- CORE SERVICES (Simplified) ---
-    const WalletService = {
-        init: () => {
-            const btn = document.getElementById('wallet-btn');
-            if (btn) {
-                btn.addEventListener('click', () => {
-                    alert('Wallet connection would be triggered here.');
-                    state.wallet.isConnected = true;
-                    state.wallet.address = '0x' + Math.random().toString(16).slice(2, 10) + '...';
-                    App.updateWalletUI();
-                });
-            }
-        },
-        connect: () => console.log('Connecting to wallet...'),
-    };
-
-    // --- UI COMPONENTS ---
-    const App = {
-        init: () => {
-            const appContainer = document.getElementById('app');
-            if (!appContainer) return;
-
-            appContainer.innerHTML = `
-                <header class="main-header">
-                    <div class="header-content">
-                        <div class="logo">
-                            <h1>SpawnEngine</h1>
-                            <span class="tagline">Onchain Pack Protocol</span>
-                        </div>
-                        <div class="header-actions">
-                            <div class="network-pill">${NETWORK_INFO.name}</div>
-                            <button id="wallet-btn" class="btn">Connect Wallet</button>
-                        </div>
-                    </div>
-                </header>
-                <div class="tab-bar" id="tab-bar"></div>
-                <div class="status-strip" id="status-strip">
-                    <div class="status-item">
-                        <div class="status-indicator"></div>
-                        <span>Wallet: Disconnected</span>
-                    </div>
-                    <div class="status-item">
-                        <span>Gas: 0.25 Gwei</span>
-                    </div>
-                </div>
-                <div class="ticker">
-                    <div class="ticker-content" id="ticker-content"></div>
-                </div>
-                <main>
-                    <div id="view-container"></div>
-                </main>
-                <footer class="main-footer">
-                    <p>© 2024 SpawnEngine. All rights reserved.</p>
-                </footer>
-            `;
-            App.setupTabs();
-            App.setupTicker();
-            WalletService.init();
-            App.switchView('trading');
-        },
-
-        updateWalletUI: () => {
-            const btn = document.getElementById('wallet-btn');
-            const statusText = document.querySelector('.status-strip span');
-            const indicator = document.querySelector('.status-indicator');
-
-            if (btn) {
-                btn.textContent = state.wallet.address
-                    ? `Connected: ${state.wallet.address.slice(0, 6)}...`
-                    : 'Connect Wallet';
-            }
-
-            if (statusText) {
-                statusText.textContent = `Wallet: ${state.wallet.address ? 'Connected' : 'Disconnected'}`;
-            }
-
-            if (indicator) {
-                indicator.classList.toggle('connected', state.wallet.isConnected);
-            }
-        },
-
-        setupTabs: () => {
-            const tabBar = document.getElementById('tab-bar');
-            if (!tabBar) return;
-
-            TABS.forEach(tab => {
-                const btn = document.createElement('button');
-                btn.className = 'tab-btn';
-                btn.textContent = tab.label;
-                btn.dataset.tab = tab.id;
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    App.switchView(tab.id);
-                });
-                tabBar.appendChild(btn);
-            });
-
-            const first = tabBar.querySelector('.tab-btn');
-            if (first) first.classList.add('active');
-        },
-
-        setupTicker: () => {
-            const tickerContent = document.getElementById('ticker-content');
-            if (!tickerContent) return;
-            const text = mockEvents
-                .map(e => `${e.short} | ${e.rarity} | ${e.owner}`)
-                .join(' • ');
-            tickerContent.textContent = ` • ${text} • `;
-        },
-
-        switchView: (viewId) => {
-            const container = document.getElementById('view-container');
-            if (!container) return;
-
-            const renderer = ViewRenderers[viewId];
-            container.innerHTML = renderer ? renderer() : '<h2>View not found</h2>';
-
-            if (viewId === 'pack-maps') {
-                App.drawPackMap();
-            }
-
-            const headers = container.querySelectorAll('.accordion-header');
-            headers.forEach(header => {
-                header.onclick = () => {
-                    header.parentElement.classList.toggle('open');
-                    const arrow = header.querySelector('span:last-child');
-                    if (arrow) {
-                        arrow.textContent = header.parentElement.classList.contains('open') ? '▲' : '▼';
-                    }
-                };
-            });
-        },
-
-        drawPackMap: () => {
-            const canvas = document.getElementById('pack-map-canvas');
-            if (!canvas || !canvas.getContext) return;
-            const ctx = canvas.getContext('2d');
-
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#00d4ff';
-
-            for (let i = 0; i < 50; i++) {
-                ctx.beginPath();
-                ctx.arc(
-                    Math.random() * canvas.width,
-                    Math.random() * canvas.height,
-                    Math.random() * 3 + 1,
-                    0,
-                    2 * Math.PI
-                );
-                ctx.fill();
-            }
+    function computeStatsFromEvents(events) {
+      const stats = {
+        totalPacks: 0,
+        fragments: 0,
+        shards: 0,
+        cores: 0,
+        artifacts: 0,
+        relics: 0,
+        holderCount: 0,
+      };
+      const holders = new Set();
+      for (const e of events) {
+        if (e.kind === "pack_open") stats.totalPacks++;
+        switch (e.rarity) {
+          case "Fragment": stats.fragments++; break;
+          case "Shard": stats.shards++; break;
+          case "Core": stats.cores++; break;
+          case "Artifact": stats.artifacts++; break;
+          case "Relic": stats.relics++; break;
         }
+        holders.add(e.owner);
+      }
+      stats.holderCount = holders.size;
+      return stats;
+    }
+
+    function postCastMock(message, url) {
+      console.log("[FAKE CAST]", message, url || "");
+      return Promise.resolve({ ok: true, id: "fake_cast_id" });
+    }
+
+    // --------------------------------------
+    // STATE
+    // --------------------------------------
+    const NETWORK_INFO = {
+      name: "Base Sepolia",
+      label: "Base · Pack ecosystems",
     };
 
-    // --- VIEW RENDERERS ---
-    const ViewRenderers = {
-        trading: () => `
-            <h2>Trading Post</h2>
-            <div class="card-grid">
-                <div class="card">
-                    <h3>Public Market</h3>
-                    <p>Swap fragments and shards on the open market.</p>
-                    <button class="btn">Enter Market</button>
-                </div>
-                <div class="card">
-                    <h3>Peer-to-Peer</h3>
-                    <p>Direct trades with other collectors.</p>
-                    <button class="btn">Find Trades</button>
-                </div>
-                <div class="card">
-                    <h3>Zora Bridge</h3>
-                    <p>List your high-value items on Zora.</p>
-                    <button class="btn">Go to Zora</button>
-                </div>
-            </div>
-        `,
-
-        'my-packs': () => {
-            const packs = mockEvents
-                .filter(e => e.kind === 'pack_open')
-                .map(e => `
-                    <div class="card">
-                        <h3 class="rarity-${e.rarity.toLowerCase()}">${e.label}</h3>
-                        <p>Series: ${e.series}</p>
-                        <p>Rarity: <span class="rarity-${e.rarity.toLowerCase()}">${e.rarity}</span></p>
-                        <p>Score: ${e.score}</p>
-                    </div>
-                `)
-                .join('');
-            return `
-                <h2>My Collection</h2>
-                <div class="card-grid">
-                    ${packs || '<p>No packs yet.</p>'}
-                </div>
-            `;
-        },
-
-        'creator-forge': () => `
-            <h2>Creator Forge</h2>
-            <div class="accordion-item">
-                <div class="accordion-header">
-                    <span>Forge New Pack Series</span>
-                    <span>▼</span>
-                </div>
-                <div class="accordion-content">
-                    <p>Define the rules, rarities, and assets for a new pack series.</p>
-                    <button class="btn btn-primary">Start Forging</button>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <div class="accordion-header">
-                    <span>Manage Series</span>
-                    <span>▼</span>
-                </div>
-                <div class="accordion-content">
-                    <p>Update metadata, pause minting, or manage existing series.</p>
-                </div>
-            </div>
-        `,
-
-        'pull-lab': () => `
-            <h2>Pull Lab</h2>
-            <div class="card-grid">
-                <div class="card">
-                    <h3>Standard Pull</h3>
-                    <p>Cost: 100 Fragments</p>
-                    <button class="btn">Pull</button>
-                </div>
-                <div class="card">
-                    <h3>Shard Pull</h3>
-                    <p>Cost: 20 Shards</p>
-                    <button class="btn">Pull</button>
-                </div>
-                <div class="card">
-                    <h3>Core Pull</h3>
-                    <p>Cost: 5 Cores</p>
-                    <button class="btn">Pull</button>
-                </div>
-            </div>
-        `,
-
-        'pack-maps': () => `
-            <h2>Pack Maps</h2>
-            <p>Visualizing the distribution of assets.</p>
-            <canvas id="pack-map-canvas"></canvas>
-        `,
-
-        'warp-verified': () => {
-            const verified = mockEvents
-                .filter(e => e.tags.includes('mythic'))
-                .map(e => `
-                    <div class="card">
-                        <h3 class="rarity-${e.rarity.toLowerCase()}">${e.label}</h3>
-                        <p>Owner: ${e.owner}</p>
-                        <p>Score: ${e.score}</p>
-                    </div>
-                `)
-                .join('');
-            return `
-                <h2>Warp Verified Assets</h2>
-                <div class="card-grid">
-                    ${verified || '<p>No verified assets yet.</p>'}
-                </div>
-            `;
-        },
-
-        bubbles: () => `
-            <h2>Bubbles</h2>
-            <p>Community sentiment and social insights.</p>
-            <div class="card-grid">
-                <div class="card">
-                    <h3>Top Trending</h3>
-                    <p>#GenesisPacks</p>
-                </div>
-                <div class="card">
-                    <h3>Highest Floor</h3>
-                    <p>Relic - 5 ETH</p>
-                </div>
-                <div class="card">
-                    <h3>Biggest Pull</h3>
-                    <p>@farcaster_user pulled an Omega Core!</p>
-                </div>
-            </div>
-        `,
-
-        'stats-engine': () => `
-            <h2>Stats Engine</h2>
-            <div class="metric-grid">
-                <div class="metric">
-                    <div class="value">12,543</div>
-                    <div class="label">Total Packs</div>
-                </div>
-                <div class="metric">
-                    <div class="value">3.2%</div>
-                    <div class="label">Relic Rate</div>
-                </div>
-                <div class="metric">
-                    <div class="value">987</div>
-                    <div class="label">Holders</div>
-                </div>
-                <div class="metric">
-                    <div class="value">1.5M</div>
-                    <div class="label">Total Score</div>
-                </div>
-            </div>
-        `,
-
-        'deploy-center': () => `
-            <h2>Deploy Center</h2>
-            <p>One-click deploy flows for your pack contracts (mocked UI).</p>
-            <div class="card-grid">
-                <div class="card">
-                    <h3>Deploy Pack Factory</h3>
-                    <p>Deploy a new PackFactory instance on ${NETWORK_INFO.name}.</p>
-                    <button class="btn btn-primary">Deploy Factory</button>
-                </div>
-                <div class="card">
-                    <h3>Deploy Series</h3>
-                    <p>Spin up a new series using the existing factory.</p>
-                    <button class="btn">Deploy Series</button>
-                </div>
-                <div class="card">
-                    <h3>Utility Router</h3>
-                    <p>Configure UtilityPackRouter for swaps, burns & rewards.</p>
-                    <button class="btn">Configure Router</button>
-                </div>
-            </div>
-        `,
-
-        settings: () => `
-            <h2>Settings</h2>
-            <div class="card-grid">
-                <div class="card">
-                    <h3>Theme</h3>
-                    <p>Current: Dark</p>
-                    <button class="btn">Toggle Theme (mock)</button>
-                </div>
-                <div class="card">
-                    <h3>Network</h3>
-                    <p>Active: ${NETWORK_INFO.name}</p>
-                    <button class="btn">Change Network (mock)</button>
-                </div>
-                <div class="card">
-                    <h3>About SpawnEngine</h3>
-                    <p>Pack protocol prototype UI with mock data.</p>
-                </div>
-            </div>
-        `
+    const state = {
+      wallet: null,
+      connected: false,
+      theme: "dark",
+      events: [],
+      stats: null,
+      profile: {
+        streakDays: 3,
+        xp: 1250,
+        level: 4,
+        bestHit: "Relic (ZoraPack)",
+      },
     };
 
-    window.addEventListener('load', App.init);
-</script>
+    const TABS = [
+      "trading",
+      "my-packs",
+      "creator-forge",
+      "pull-lab",
+      "pack-maps",
+      "warp-verified",
+      "bubbles",
+      "stats-engine",
+      "deploy-center",
+      "profile",
+      "settings",
+    ];
 
+    function humanTabName(id) {
+      return id
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+
+    // --------------------------------------
+    // INIT
+    // --------------------------------------
+    async function init() {
+      const root = document.getElementById("app");
+      root.innerHTML = `
+        <header class="app-header">
+          <div class="brand">
+            <div class="brand-title">SpawnEngine</div>
+            <div class="brand-sub">Onchain Pack Factory · Pack Mesh Protocol</div>
+          </div>
+          <div class="header-right">
+            <div class="network-pill" id="network-pill">${NETWORK_INFO.label}</div>
+            <button id="wallet-btn" class="btn">Connect Wallet</button>
+          </div>
+        </header>
+
+        <nav class="tab-bar" id="tab-bar"></nav>
+
+        <div class="status-strip">
+          <div class="status-left">
+            <span><span id="wallet-dot" class="status-dot"></span><span id="wallet-status">Wallet: Disconnected</span></span>
+            <span>Theme: Dark</span>
+          </div>
+          <div class="status-right">
+            <span>Gas: 0.26 gwei</span>
+            <span>Mesh: Live</span>
+          </div>
+        </div>
+
+        <div class="ticker">
+          <div class="ticker-inner" id="ticker-inner"></div>
+        </div>
+
+        <main class="app-main">
+          <h2 class="view-title" id="view-title"></h2>
+          <div id="view-body"></div>
+        </main>
+
+        <footer class="app-footer">
+          SpawnEngine · Base · Zora · Farcaster · Unified Activity Mesh
+        </footer>
+      `;
+
+      setupTabs();
+      setupWallet();
+
+      state.events = await getUnifiedActivity();
+      state.stats = computeStatsFromEvents(state.events);
+
+      renderTicker();
+      switchView("trading");
+    }
+
+    function setupTabs() {
+      const bar = document.getElementById("tab-bar");
+      bar.innerHTML = "";
+      TABS.forEach((id) => {
+        const btn = document.createElement("button");
+        btn.className = "tab-btn";
+        btn.dataset.tab = id;
+        btn.textContent = humanTabName(id);
+        btn.addEventListener("click", () => switchView(id));
+        bar.appendChild(btn);
+      });
+      const first = bar.querySelector(".tab-btn");
+      if (first) first.classList.add("active");
+    }
+
+    function setActiveTab(id) {
+      document.querySelectorAll(".tab-btn").forEach((b) => {
+        b.classList.toggle("active", b.dataset.tab === id);
+      });
+    }
+
+    function setupWallet() {
+      const btn = document.getElementById("wallet-btn");
+      const status = document.getElementById("wallet-status");
+      const dot = document.getElementById("wallet-dot");
+
+      btn.addEventListener("click", () => {
+        state.connected = !state.connected;
+        state.wallet = state.connected
+          ? "0x" + Math.random().toString(16).slice(2, 8) + "...mesh"
+          : null;
+
+        btn.textContent = state.connected ? "Disconnect" : "Connect Wallet";
+        status.textContent = state.connected
+          ? `Wallet: ${state.wallet}`
+          : "Wallet: Disconnected";
+        dot.classList.toggle("on", state.connected);
+      });
+    }
+
+    function renderTicker() {
+      const el = document.getElementById("ticker-inner");
+      const line = state.events
+        .map((e) => `${e.short} · ${e.rarity} · ${e.owner}`)
+        .join("   •   ");
+      el.textContent = line;
+    }
+
+    function switchView(id) {
+      setActiveTab(id);
+      const title = document.getElementById("view-title");
+      const body = document.getElementById("view-body");
+
+      title.textContent = humanTabName(id);
+
+      const map = {
+        "trading": viewTrading,
+        "my-packs": viewMyPacks,
+        "creator-forge": viewCreatorForge,
+        "pull-lab": viewPullLab,
+        "pack-maps": viewPackMaps,
+        "warp-verified": viewWarpVerified,
+        "bubbles": viewBubbles,
+        "stats-engine": viewStatsEngine,
+        "deploy-center": viewDeployCenter,
+        "profile": viewProfile,
+        "settings": viewSettings,
+      };
+
+      const renderer = map[id] || (() => "<p>Not implemented yet.</p>");
+      body.innerHTML = renderer();
+
+      if (id === "pack-maps") drawPackMap();
+    }
+
+    // --------------------------------------
+    // VIEWS
+    // --------------------------------------
+    function viewTrading() {
+      const events = state.events;
+      const rows = events.map(e => `
+        <div class="card">
+          <h3>${e.label}</h3>
+          <p>Kind: ${e.kind}</p>
+          <p>Series: ${e.series}</p>
+          <p>Rarity: ${e.rarity}</p>
+          <p>Owner: ${e.owner}</p>
+        </div>
+      `).join("");
+      return `<div class="card-grid">${rows}</div>`;
+    }
+
+    function viewMyPacks() {
+      const packs = state.events.filter(e => e.kind === "pack_open");
+      if (!packs.length) return `<p>Inga packs öppnade ännu.</p>`;
+      const rows = packs.map(e => `
+        <div class="card">
+          <h3>${e.label}</h3>
+          <p>Series: ${e.series}</p>
+          <p>Rarity: ${e.rarity}</p>
+          <p>Score: ${e.score}</p>
+        </div>
+      `).join("");
+      return `<div class="card-grid">${rows}</div>`;
+    }
+
+    function viewCreatorForge() {
+      return `
+        <div class="card-grid">
+          <div class="card">
+            <h3>Forge New Pack Series</h3>
+            <p>Gå från bild → rarity → foil → deploy.</p>
+            <button class="btn">Start Forge Flow</button>
+          </div>
+          <div class="card">
+            <h3>Manage Existing Series</h3>
+            <p>Visa och konfigurera redan deployade serier.</p>
+            <button class="btn">Open Series Panel</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function viewPullLab() {
+      return `
+        <div class="card-grid">
+          <div class="card">
+            <h3>Fragment Gamble</h3>
+            <p>Burn 10x Fragments → chans på Shard/Core.</p>
+            <button class="btn">Simulate Burn</button>
+          </div>
+          <div class="card">
+            <h3>Shard Gamble</h3>
+            <p>Burn 3x Shards → chans på Artifact/Relic.</p>
+            <button class="btn">Simulate Burn</button>
+          </div>
+          <div class="card">
+            <h3>Zora Packs</h3>
+            <p>Köp ZoraPack → rarity multipliers på Zora value.</p>
+            <button class="btn">Open Zora Pack</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function viewPackMaps() {
+      return `
+        <div class="packmap-wrap">
+          <canvas id="packmap-canvas" class="packmap-canvas"></canvas>
+        </div>
+      `;
+    }
+
+    function drawPackMap() {
+      const canvas = document.getElementById("packmap-canvas");
+      if (!canvas || !canvas.getContext) return;
+      const ctx = canvas.getContext("2d");
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < 60; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const r = Math.random() * 4 + 2;
+        const rarityColors = ["#4b5563", "#60a5fa", "#a855f7", "#facc15", "#f97316"];
+        ctx.fillStyle = rarityColors[Math.floor(Math.random() * rarityColors.length)];
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function viewWarpVerified() {
+      const verified = state.events.filter(e => e.tags.includes("mythic_hit"));
+      if (!verified.length) return `<p>Inga Warp Verified mythic hits ännu.</p>`;
+      const rows = verified.map(e => `
+        <div class="card">
+          <h3>${e.label}</h3>
+          <p>Owner: ${e.owner}</p>
+          <p>Score: ${e.score}</p>
+        </div>
+      `).join("");
+      return `<div class="card-grid">${rows}</div>`;
+    }
+
+    function viewBubbles() {
+      return `
+        <div class="card-grid">
+          <div class="card">
+            <h3>Trending Tags</h3>
+            <p>#GenesisPacks · #ZoraPack · #RelicHit</p>
+          </div>
+          <div class="card">
+            <h3>Social Cast</h3>
+            <p>Posta ett mock-cast till Farcaster (framtida Neynar-integration).</p>
+            <button class="btn" id="cast-btn">Post Mock Cast</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function viewStatsEngine() {
+      const s = state.stats;
+      if (!s) return `<p>Stats loading...</p>`;
+      return `
+        <div class="metric-grid">
+          <div class="metric">
+            <div class="value">${s.totalPacks}</div>
+            <div class="label">Total Packs Opened</div>
+          </div>
+          <div class="metric">
+            <div class="value">${s.cores}</div>
+            <div class="label">Core Hits</div>
+          </div>
+          <div class="metric">
+            <div class="value">${s.artifacts}</div>
+            <div class="label">Artifacts</div>
+          </div>
+          <div class="metric">
+            <div class="value">${s.relics}</div>
+            <div class="label">Relics</div>
+          </div>
+          <div class="metric">
+            <div class="value">${s.holderCount}</div>
+            <div class="label">Unique Holders</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function viewDeployCenter() {
+      return `
+        <div class="card-grid">
+          <div class="card">
+            <h3>Deploy Guard + Factory</h3>
+            <p>Deployar ReserveGuard + PackFactory på Base.</p>
+            <button class="btn">Deploy Base Skeleton</button>
+          </div>
+          <div class="card">
+            <h3>Deploy TokenPackSeries</h3>
+            <p>Starta en ny serie med din rarity-tabell.</p>
+            <button class="btn">Launch Series</button>
+          </div>
+          <div class="card">
+            <h3>Creator Registry</h3>
+            <p>Framtida modul för Warp Verified kreatörer.</p>
+            <button class="btn">Open Registry</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function viewProfile() {
+      const p = state.profile;
+      const walletText = state.wallet || "0x….not-connected";
+      return `
+        <div class="profile-header">
+          <div><strong>Spawn Profile</strong></div>
+          <div class="profile-wallet">${walletText}</div>
+          <div class="badge-row">
+            <span class="badge">Streak: ${p.streakDays} days</span>
+            <span class="badge">XP: ${p.xp}</span>
+            <span class="badge">Level ${p.level}</span>
+            <span class="badge">Best hit: ${p.bestHit}</span>
+          </div>
+        </div>
+        <div class="metric-grid">
+          <div class="metric">
+            <div class="value">+25</div>
+            <div class="label">Daily XP Ready</div>
+          </div>
+          <div class="metric">
+            <div class="value">3</div>
+            <div class="label">Quests Today</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function viewSettings() {
+      return `
+        <div class="card-grid">
+          <div class="card">
+            <h3>Theme</h3>
+            <p>Dark mode aktiverad. (Light disabled.)</p>
+            <button class="btn">Toggle Theme (mock)</button>
+          </div>
+          <div class="card">
+            <h3>Network</h3>
+            <p>Aktiv kedja: ${NETWORK_INFO.name}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    document.addEventListener("click", async (e) => {
+      if (e.target && e.target.id === "cast-btn") {
+        await postCastMock(
+          "Just pulled a Core via SpawnEngine Mesh!",
+          "https://spawn-engine.vercel.app"
+        );
+        alert("Mock-cast skickad (kolla console).");
+      }
+    });
+
+    init();
+  </script>
 </body>
 </html>
