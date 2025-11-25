@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpawnEngine</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #e5e5e5;
+            --text-secondary: #a0a0a0;
+            --accent: #00d4ff;
+            --accent-hover: #00a8cc;
+            --border-color: #333;
+            --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .main-header,
+        .main-footer {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .main-footer {
+            border-top: 1px solid var(--border-color);
+            border-bottom: none;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .logo h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        .logo .tagline {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-left: 0.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        main {
+            padding: 0.5rem;
+            min-height: calc(100vh - 150px);
+        }
+
+        #view-container {
+            margin-top: 1rem;
+        }
+
+        .btn {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s, color 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .network-pill {
+            background-color: var(--bg-tertiary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.7rem;
+            font-family: var(--font-mono);
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-bar {
+            display: flex;
+            gap: 0.25rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .tab-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 0.8rem;
+            border-bottom: 2px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .ticker {
+            background-color: var(--bg-secondary);
+            padding: 0.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            white-space: nowrap;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .ticker-content {
+            display: inline-block;
+            padding-left: 100%;
+            animation: scroll-left 30s linear infinite;
+        }
+
+        @keyframes scroll-left {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        .status-strip {
+            background-color: var(--bg-tertiary);
+            padding: 0.5rem;
+            font-size: 0.7rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-secondary);
+        }
+
+        .status-indicator.connected {
+            background-color: #10b981;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .metric .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .metric .label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .accordion-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .accordion-header {
+            background-color: var(--bg-secondary);
+            padding: 1rem;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .accordion-content {
+            padding: 1rem;
+            display: none;
+        }
+
+        .accordion-item.open .accordion-content {
+            display: block;
+        }
+
+        .rarity-fragment {
+            color: #9CA3AF;
+        }
+
+        .rarity-shard {
+            color: #60A5FA;
+        }
+
+        .rarity-core {
+            color: #A78BFA;
+        }
+
+        .rarity-artifact {
+            color: #F59E0B;
+        }
+
+        .rarity-relic {
+            color: #F97316;
+        }
+
+        /* Pack map canvas */
+        #pack-map-canvas {
+            width: 100%;
+            height: 260px;
+            background-color: #050505;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script type="module">
+    // --- CONSTANTS ---
+    const NETWORK_INFO = { name: 'Base Sepolia', chainId: '0x14a34' };
+    const CONTRACTS = { PACK_FACTORY: '0xFACTORY_ADDRESS_HERE' };
+    const TABS = [
+        { id: 'trading', label: 'Trading' },
+        { id: 'my-packs', label: 'My Packs' },
+        { id: 'creator-forge', label: 'Creator Forge' },
+        { id: 'pull-lab', label: 'Pull Lab' },
+        { id: 'pack-maps', label: 'Pack Maps' },
+        { id: 'warp-verified', label: 'Warp Verified' },
+        { id: 'bubbles', label: 'Bubbles' },
+        { id: 'stats-engine', label: 'Stats Engine' },
+        { id: 'deploy-center', label: 'Deploy Center' },
+        { id: 'settings', label: 'Settings' }
+    ];
+
+    // --- STATE MANAGEMENT ---
+    const state = {
+        wallet: { isConnected: false, address: null },
+        theme: 'dark',
+        events: [],
+    };
+
+    // --- MOCK DATA ---
+    const mockEvents = [
+        { id: '1', kind: 'pack_open', label: 'Genesis Pack #42', short: 'GEN#42', series: 'Genesis', rarity: 'Relic', owner: '0x123...456', tags: ['mythic'], score: 998, timestamp: new Date(Date.now() - 5000) },
+        { id: '2', kind: 'swap', label: 'Fragment for Shard', short: 'F>S', series: 'Genesis', rarity: 'Shard', owner: '0x789...abc', tags: ['trade'], score: 450, timestamp: new Date(Date.now() - 15000) },
+        { id: '3', kind: 'burn', label: '5x Fragments', short: '5xF', series: 'Genesis', rarity: 'Core', owner: '0xdef...012', tags: ['burn'], score: 120, timestamp: new Date(Date.now() - 45000) },
+        { id: '4', kind: 'zora_buy', label: 'Artifact on Zora', short: 'Z-ART', series: 'Genesis', rarity: 'Artifact', owner: '0x345...678', tags: ['zora', 'buy'], score: 750, timestamp: new Date(Date.now() - 90000) },
+        { id: '5', kind: 'farcaster_cast', label: 'Just pulled a Core!', short: 'FC-CAST', series: 'Genesis', rarity: 'Core', owner: '0xbcde...fgh', tags: ['farcaster', 'social'], score: 250, timestamp: new Date(Date.now() - 180000) },
+    ];
+
+    // --- CORE SERVICES (Simplified) ---
+    const WalletService = {
+        init: () => {
+            const btn = document.getElementById('wallet-btn');
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    alert('Wallet connection would be triggered here.');
+                    state.wallet.isConnected = true;
+                    state.wallet.address = '0x' + Math.random().toString(16).slice(2, 10) + '...';
+                    App.updateWalletUI();
+                });
+            }
+        },
+        connect: () => console.log('Connecting to wallet...'),
+    };
+
+    // --- UI COMPONENTS ---
+    const App = {
+        init: () => {
+            const appContainer = document.getElementById('app');
+            if (!appContainer) return;
+
+            appContainer.innerHTML = `
+                <header class="main-header">
+                    <div class="header-content">
+                        <div class="logo">
+                            <h1>SpawnEngine</h1>
+                            <span class="tagline">Onchain Pack Protocol</span>
+                        </div>
+                        <div class="header-actions">
+                            <div class="network-pill">${NETWORK_INFO.name}</div>
+                            <button id="wallet-btn" class="btn">Connect Wallet</button>
+                        </div>
+                    </div>
+                </header>
+                <div class="tab-bar" id="tab-bar"></div>
+                <div class="status-strip" id="status-strip">
+                    <div class="status-item">
+                        <div class="status-indicator"></div>
+                        <span>Wallet: Disconnected</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Gas: 0.25 Gwei</span>
+                    </div>
+                </div>
+                <div class="ticker">
+                    <div class="ticker-content" id="ticker-content"></div>
+                </div>
+                <main>
+                    <div id="view-container"></div>
+                </main>
+                <footer class="main-footer">
+                    <p>© 2024 SpawnEngine. All rights reserved.</p>
+                </footer>
+            `;
+            App.setupTabs();
+            App.setupTicker();
+            WalletService.init();
+            App.switchView('trading');
+        },
+
+        updateWalletUI: () => {
+            const btn = document.getElementById('wallet-btn');
+            const statusText = document.querySelector('.status-strip span');
+            const indicator = document.querySelector('.status-indicator');
+
+            if (btn) {
+                btn.textContent = state.wallet.address
+                    ? `Connected: ${state.wallet.address.slice(0, 6)}...`
+                    : 'Connect Wallet';
+            }
+
+            if (statusText) {
+                statusText.textContent = `Wallet: ${state.wallet.address ? 'Connected' : 'Disconnected'}`;
+            }
+
+            if (indicator) {
+                indicator.classList.toggle('connected', state.wallet.isConnected);
+            }
+        },
+
+        setupTabs: () => {
+            const tabBar = document.getElementById('tab-bar');
+            if (!tabBar) return;
+
+            TABS.forEach(tab => {
+                const btn = document.createElement('button');
+                btn.className = 'tab-btn';
+                btn.textContent = tab.label;
+                btn.dataset.tab = tab.id;
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    App.switchView(tab.id);
+                });
+                tabBar.appendChild(btn);
+            });
+
+            const first = tabBar.querySelector('.tab-btn');
+            if (first) first.classList.add('active');
+        },
+
+        setupTicker: () => {
+            const tickerContent = document.getElementById('ticker-content');
+            if (!tickerContent) return;
+            const text = mockEvents
+                .map(e => `${e.short} | ${e.rarity} | ${e.owner}`)
+                .join(' • ');
+            tickerContent.textContent = ` • ${text} • `;
+        },
+
+        switchView: (viewId) => {
+            const container = document.getElementById('view-container');
+            if (!container) return;
+
+            const renderer = ViewRenderers[viewId];
+            container.innerHTML = renderer ? renderer() : '<h2>View not found</h2>';
+
+            if (viewId === 'pack-maps') {
+                App.drawPackMap();
+            }
+
+            const headers = container.querySelectorAll('.accordion-header');
+            headers.forEach(header => {
+                header.onclick = () => {
+                    header.parentElement.classList.toggle('open');
+                    const arrow = header.querySelector('span:last-child');
+                    if (arrow) {
+                        arrow.textContent = header.parentElement.classList.contains('open') ? '▲' : '▼';
+                    }
+                };
+            });
+        },
+
+        drawPackMap: () => {
+            const canvas = document.getElementById('pack-map-canvas');
+            if (!canvas || !canvas.getContext) return;
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00d4ff';
+
+            for (let i = 0; i < 50; i++) {
+                ctx.beginPath();
+                ctx.arc(
+                    Math.random() * canvas.width,
+                    Math.random() * canvas.height,
+                    Math.random() * 3 + 1,
+                    0,
+                    2 * Math.PI
+                );
+                ctx.fill();
+            }
+        }
+    };
+
+    // --- VIEW RENDERERS ---
+    const ViewRenderers = {
+        trading: () => `
+            <h2>Trading Post</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Public Market</h3>
+                    <p>Swap fragments and shards on the open market.</p>
+                    <button class="btn">Enter Market</button>
+                </div>
+                <div class="card">
+                    <h3>Peer-to-Peer</h3>
+                    <p>Direct trades with other collectors.</p>
+                    <button class="btn">Find Trades</button>
+                </div>
+                <div class="card">
+                    <h3>Zora Bridge</h3>
+                    <p>List your high-value items on Zora.</p>
+                    <button class="btn">Go to Zora</button>
+                </div>
+            </div>
+        `,
+
+        'my-packs': () => {
+            const packs = mockEvents
+                .filter(e => e.kind === 'pack_open')
+                .map(e => `
+                    <div class="card">
+                        <h3 class="rarity-${e.rarity.toLowerCase()}">${e.label}</h3>
+                        <p>Series: ${e.series}</p>
+                        <p>Rarity: <span class="rarity-${e.rarity.toLowerCase()}">${e.rarity}</span></p>
+                        <p>Score: ${e.score}</p>
+                    </div>
+                `)
+                .join('');
+            return `
+                <h2>My Collection</h2>
+                <div class="card-grid">
+                    ${packs || '<p>No packs yet.</p>'}
+                </div>
+            `;
+        },
+
+        'creator-forge': () => `
+            <h2>Creator Forge</h2>
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span>Forge New Pack Series</span>
+                    <span>▼</span>
+                </div>
+                <div class="accordion-content">
+                    <p>Define the rules, rarities, and assets for a new pack series.</p>
+                    <button class="btn btn-primary">Start Forging</button>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span>Manage Series</span>
+                    <span>▼</span>
+                </div>
+                <div class="accordion-content">
+                    <p>Update metadata, pause minting, or manage existing series.</p>
+                </div>
+            </div>
+        `,
+
+        'pull-lab': () => `
+            <h2>Pull Lab</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Standard Pull</h3>
+                    <p>Cost: 100 Fragments</p>
+                    <button class="btn">Pull</button>
+                </div>
+                <div class="card">
+                    <h3>Shard Pull</h3>
+                    <p>Cost: 20 Shards</p>
+                    <button class="btn">Pull</button>
+                </div>
+                <div class="card">
+                    <h3>Core Pull</h3>
+                    <p>Cost: 5 Cores</p>
+                    <button class="btn">Pull</button>
+                </div>
+            </div>
+        `,
+
+        'pack-maps': () => `
+            <h2>Pack Maps</h2>
+            <p>Visualizing the distribution of assets.</p>
+            <canvas id="pack-map-canvas"></canvas>
+        `,
+
+        'warp-verified': () => {
+            const verified = mockEvents
+                .filter(e => e.tags.includes('mythic'))
+                .map(e => `
+                    <div class="card">
+                        <h3 class="rarity-${e.rarity.toLowerCase()}">${e.label}</h3>
+                        <p>Owner: ${e.owner}</p>
+                        <p>Score: ${e.score}</p>
+                    </div>
+                `)
+                .join('');
+            return `
+                <h2>Warp Verified Assets</h2>
+                <div class="card-grid">
+                    ${verified || '<p>No verified assets yet.</p>'}
+                </div>
+            `;
+        },
+
+        bubbles: () => `
+            <h2>Bubbles</h2>
+            <p>Community sentiment and social insights.</p>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Top Trending</h3>
+                    <p>#GenesisPacks</p>
+                </div>
+                <div class="card">
+                    <h3>Highest Floor</h3>
+                    <p>Relic - 5 ETH</p>
+                </div>
+                <div class="card">
+                    <h3>Biggest Pull</h3>
+                    <p>@farcaster_user pulled an Omega Core!</p>
+                </div>
+            </div>
+        `,
+
+        'stats-engine': () => `
+            <h2>Stats Engine</h2>
+            <div class="metric-grid">
+                <div class="metric">
+                    <div class="value">12,543</div>
+                    <div class="label">Total Packs</div>
+                </div>
+                <div class="metric">
+                    <div class="value">3.2%</div>
+                    <div class="label">Relic Rate</div>
+                </div>
+                <div class="metric">
+                    <div class="value">987</div>
+                    <div class="label">Holders</div>
+                </div>
+                <div class="metric">
+                    <div class="value">1.5M</div>
+                    <div class="label">Total Score</div>
+                </div>
+            </div>
+        `,
+
+        'deploy-center': () => `
+            <h2>Deploy Center</h2>
+            <p>One-click deploy flows for your pack contracts (mocked UI).</p>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Deploy Pack Factory</h3>
+                    <p>Deploy a new PackFactory instance on ${NETWORK_INFO.name}.</p>
+                    <button class="btn btn-primary">Deploy Factory</button>
+                </div>
+                <div class="card">
+                    <h3>Deploy Series</h3>
+                    <p>Spin up a new series using the existing factory.</p>
+                    <button class="btn">Deploy Series</button>
+                </div>
+                <div class="card">
+                    <h3>Utility Router</h3>
+                    <p>Configure UtilityPackRouter for swaps, burns & rewards.</p>
+                    <button class="btn">Configure Router</button>
+                </div>
+            </div>
+        `,
+
+        settings: () => `
+            <h2>Settings</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Theme</h3>
+                    <p>Current: Dark</p>
+                    <button class="btn">Toggle Theme (mock)</button>
+                </div>
+                <div class="card">
+                    <h3>Network</h3>
+                    <p>Active: ${NETWORK_INFO.name}</p>
+                    <button class="btn">Change Network (mock)</button>
+                </div>
+                <div class="card">
+                    <h3>About SpawnEngine</h3>
+                    <p>Pack protocol prototype UI with mock data.</p>
+                </div>
+            </div>
+        `
+    };
+
+    window.addEventListener('load', App.init);
+</script>
+
+</body>
+</html>
