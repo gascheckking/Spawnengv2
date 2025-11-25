@@ -105,8 +105,8 @@ function init() {
         </footer>
       </div>
     </div>
-  "
-
+  `;
+  
   wireWallet();
   renderTabs();
   renderTicker();
@@ -176,7 +176,6 @@ function renderTicker() {
   const text = mockEvents
     .map((e) => `${e.short} · ${e.label}`)
     .join("   •   ");
-  // duplicate så animationen loopar snyggt
   el.textContent = ` ${text}   •   ${text}   •   ${text}`;
 }
 
