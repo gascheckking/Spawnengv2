@@ -341,7 +341,7 @@
         owner: "0x1234...beef",
         tags: ["pull", "core"],
         score: 420,
-        timestamp: Date.now() - 5_000,
+        timestamp: Date.now() - 5000,
       },
       {
         id: "2",
@@ -353,7 +353,7 @@
         owner: "0x9999...aaaa",
         tags: ["swap"],
         score: 210,
-        timestamp: Date.now() - 25_000,
+        timestamp: Date.now() - 25000,
       },
       {
         id: "3",
@@ -365,7 +365,7 @@
         owner: "0xabcd...0001",
         tags: ["burn", "gamble"],
         score: 90,
-        timestamp: Date.now() - 60_000,
+        timestamp: Date.now() - 60000,
       },
       {
         id: "4",
@@ -376,8 +376,8 @@
         rarity: "Relic",
         owner: "0xdeaf...9999",
         tags: ["zora", "mythic_hit"],
-        score: 9_900,
-        timestamp: Date.now() - 120_000,
+        score: 9900,
+        timestamp: Date.now() - 120000,
       },
       {
         id: "5",
@@ -389,7 +389,7 @@
         owner: "0xface...7777",
         tags: ["farcaster", "social"],
         score: 300,
-        timestamp: Date.now() - 240_000,
+        timestamp: Date.now() - 240000,
       },
     ];
 
@@ -408,6 +408,7 @@
         artifacts: 0,
         relics: 0,
         holderCount: 0,
+        luckIndex: 0,
       };
       const holders = new Set();
       for (const e of events) {
@@ -422,6 +423,15 @@
         holders.add(e.owner);
       }
       stats.holderCount = holders.size;
+
+      // Enkel luck-index: Relic/Artifact/Cores plus, Fragments minus
+      stats.luckIndex =
+        stats.relics * 120 +
+        stats.artifacts * 40 +
+        stats.cores * 5 +
+        stats.shards * 1 -
+        stats.fragments * 2;
+
       return stats;
     }
 
@@ -568,7 +578,7 @@
 
         btn.textContent = state.connected ? "Disconnect" : "Connect";
         status.textContent = state.connected
-          ? `Wallet: ${state.wallet}`
+          ? "Wallet: " + state.wallet
           : "Wallet: Disconnected";
         dot.classList.toggle("on", state.connected);
       });
@@ -577,7 +587,7 @@
     function renderTicker() {
       const el = document.getElementById("ticker-inner");
       const line = state.events
-        .map((e) => `${e.short} · ${e.rarity} · ${e.owner}`)
+        .map((e) => e.short + " · " + e.rarity + " · " + e.owner)
         .join("   •   ");
       el.textContent = line;
     }
@@ -604,10 +614,39 @@
         "settings": viewSettings,
       };
 
-      const renderer = map[id] || (() => "<p>Not implemented yet.</p>");
+      const renderer = map[id] || function () { return "<p>Not implemented yet.</p>"; };
       body.innerHTML = renderer();
 
       if (id === "pack-maps") drawPackMap();
+    }
+
+    // --------------------------------------
+    // HELPERS / DYNAMISKA EVENTS
+    // --------------------------------------
+    function addMeshEvent(evt) {
+      evt.id = "evt-" + (Date.now() + Math.random().toString(16).slice(2, 6));
+      evt.timestamp = Date.now();
+      state.events.unshift(evt);
+      state.stats = computeStatsFromEvents(state.events);
+      renderTicker();
+      if (state.currentTab === "trading") {
+        switchView("trading");
+      }
+      if (state.currentTab === "my-packs") {
+        switchView("my-packs");
+      }
+      if (state.currentTab === "stats-engine") {
+        switchView("stats-engine");
+      }
+    }
+
+    function randomRarityForZoraPack() {
+      const roll = Math.random();
+      if (roll < 0.7) return "Fragment";
+      if (roll < 0.88) return "Shard";
+      if (roll < 0.96) return "Core";
+      if (roll < 0.995) return "Artifact";
+      return "Relic";
     }
 
     // --------------------------------------
@@ -615,78 +654,87 @@
     // --------------------------------------
     function viewTrading() {
       const events = state.events;
-      const rows = events.map(e => `
-        <div class="card">
-          <h3>📦 ${e.label}</h3>
-          <p>Kind: ${e.kind}</p>
-          <p>Series: ${e.series}</p>
-          <p>Rarity: ${e.rarity}</p>
-          <p>Owner: ${e.owner}</p>
-          <button class="btn btn-small" data-share-id="${e.id}">Share pull</button>
-        </div>
-      `).join("");
-      return `<div class="card-grid">${rows}</div>`;
+      const rows = events.map(function(e) {
+        var icon = "📦";
+        if (e.kind === "swap") icon = "🔄";
+        if (e.kind === "burn") icon = "🔥";
+        if (e.kind === "zora_buy") icon = "🪙";
+        if (e.kind === "farcaster_cast") icon = "📡";
+        return (
+          '<div class="card">' +
+            "<h3>" + icon + " " + e.label + "</h3>" +
+            "<p>Kind: " + e.kind + "</p>" +
+            "<p>Series: " + e.series + "</p>" +
+            "<p>Rarity: " + e.rarity + "</p>" +
+            "<p>Owner: " + e.owner + "</p>" +
+            '<button class="btn btn-small" data-share-id="' + e.id + '">Share pull</button>' +
+          "</div>"
+        );
+      }).join("");
+      return '<div class="card-grid">' + rows + "</div>";
     }
 
     function viewMyPacks() {
-      const packs = state.events.filter(e => e.kind === "pack_open");
-      if (!packs.length) return `<p>Inga packs öppnade ännu.</p>`;
-      const rows = packs.map(e => `
-        <div class="card">
-          <h3>🎴 ${e.label}</h3>
-          <p>Series: ${e.series}</p>
-          <p>Rarity: ${e.rarity}</p>
-          <p>Score: ${e.score}</p>
-        </div>
-      `).join("");
-      return `<div class="card-grid">${rows}</div>`;
+      const packs = state.events.filter(function(e) { return e.kind === "pack_open"; });
+      if (!packs.length) return "<p>Inga packs öppnade ännu.</p>";
+      const rows = packs.map(function(e) {
+        return (
+          '<div class="card">' +
+            "<h3>🎴 " + e.label + "</h3>" +
+            "<p>Series: " + e.series + "</p>" +
+            "<p>Rarity: " + e.rarity + "</p>" +
+            "<p>Score: " + e.score + "</p>" +
+          "</div>"
+        );
+      }).join("");
+      return '<div class="card-grid">' + rows + "</div>";
     }
 
     function viewCreatorForge() {
-      return `
-        <div class="card-grid">
-          <div class="card">
-            <h3>🛠 Forge New Pack Series</h3>
-            <p>Gå från bild → rarity → foil → deploy.</p>
-            <button class="btn">Start Forge Flow</button>
-          </div>
-          <div class="card">
-            <h3>📚 Manage Existing Series</h3>
-            <p>Visa och konfigurera redan deployade serier.</p>
-            <button class="btn">Open Series Panel</button>
-          </div>
-        </div>
-      `;
+      return (
+        '<div class="card-grid">' +
+          '<div class="card">' +
+            "<h3>🛠 Forge New Pack Series</h3>" +
+            "<p>Gå från bild → rarity → foil → deploy.</p>" +
+            '<button class="btn" data-action="start-forge">Start Forge Flow</button>' +
+          "</div>" +
+          '<div class="card">' +
+            "<h3>📚 Manage Existing Series</h3>" +
+            "<p>Visa och konfigurera redan deployade serier (kopplas till Factory-lägen senare).</p>" +
+            '<button class="btn">Open Series Panel</button>' +
+          "</div>" +
+        "</div>"
+      );
     }
 
     function viewPullLab() {
-      return `
-        <div class="card-grid">
-          <div class="card">
-            <h3>🔥 Fragment Gamble</h3>
-            <p>Burn 10x Fragments → chans på Shard/Core.</p>
-            <button class="btn">Simulate Burn</button>
-          </div>
-          <div class="card">
-            <h3>⚡ Shard Gamble</h3>
-            <p>Burn 3x Shards → chans på Artifact/Relic.</p>
-            <button class="btn">Simulate Burn</button>
-          </div>
-          <div class="card">
-            <h3>🪙 Zora Packs</h3>
-            <p>Köp ZoraPack → rarity multipliers på Zora value.</p>
-            <button class="btn">Open Zora Pack</button>
-          </div>
-        </div>
-      `;
+      return (
+        '<div class="card-grid">' +
+          '<div class="card">' +
+            "<h3>🔥 Fragment Gamble</h3>" +
+            "<p>Burn 10x Fragments → chans på Shard/Core.</p>" +
+            '<button class="btn" data-action="fragment-burn">Simulate Burn</button>' +
+          "</div>" +
+          '<div class="card">' +
+            "<h3>⚡ Shard Gamble</h3>" +
+            "<p>Burn 3x Shards → chans på Artifact/Relic.</p>" +
+            '<button class="btn" data-action="shard-burn">Simulate Burn</button>' +
+          "</div>" +
+          '<div class="card">' +
+            "<h3>🪙 Zora Packs</h3>" +
+            "<p>Köp ZoraPack → rarity multipliers på Zora value.</p>" +
+            '<button class="btn" data-action="zora-pack">Open Zora Pack</button>' +
+          "</div>" +
+        "</div>"
+      );
     }
 
     function viewPackMaps() {
-      return `
-        <div class="packmap-wrap">
-          <canvas id="packmap-canvas" class="packmap-canvas"></canvas>
-        </div>
-      `;
+      return (
+        '<div class="packmap-wrap">' +
+          '<canvas id="packmap-canvas" class="packmap-canvas"></canvas>' +
+        "</div>"
+      );
     }
 
     function drawPackMap() {
@@ -709,163 +757,173 @@
     }
 
     function viewWarpVerified() {
-      const verified = state.events.filter(e => e.tags.includes("mythic_hit"));
-      if (!verified.length) return `<p>Inga Warp Verified mythic hits ännu.</p>`;
-      const rows = verified.map(e => `
-        <div class="card">
-          <h3>🔒 ${e.label}</h3>
-          <p>Owner: ${e.owner}</p>
-          <p>Score: ${e.score}</p>
-        </div>
-      `).join("");
-      return `<div class="card-grid">${rows}</div>`;
+      const verified = state.events.filter(function(e) { return e.tags.indexOf("mythic_hit") !== -1; });
+      if (!verified.length) return "<p>Inga Warp Verified mythic hits ännu.</p>";
+      const rows = verified.map(function(e) {
+        return (
+          '<div class="card">' +
+            "<h3>🔒 " + e.label + "</h3>" +
+            "<p>Owner: " + e.owner + "</p>" +
+            "<p>Score: " + e.score + "</p>" +
+          "</div>"
+        );
+      }).join("");
+      return '<div class="card-grid">' + rows + "</div>";
     }
 
     function viewBubbles() {
-      return `
-        <div class="card-grid">
-          <div class="card">
-            <h3>📈 Trending Tags</h3>
-            <p>#GenesisPacks · #ZoraPack · #RelicHit</p>
-          </div>
-          <div class="card">
-            <h3>📡 Social Cast</h3>
-            <p>Posta ett mock-cast till Farcaster (framtida Neynar-integration).</p>
-            <button class="btn" id="cast-btn">Post Mock Cast</button>
-          </div>
-        </div>
-      `;
+      return (
+        '<div class="card-grid">' +
+          '<div class="card">' +
+            "<h3>📈 Trending Tags</h3>" +
+            "<p>#GenesisPacks · #ZoraPack · #RelicHit</p>" +
+          "</div>" +
+          '<div class="card">' +
+            "<h3>📡 Social Cast</h3>" +
+            "<p>Posta ett mock-cast till Farcaster (framtida Neynar-integration).</p>" +
+            '<button class="btn" id="cast-btn">Post Mock Cast</button>' +
+          "</div>" +
+        "</div>"
+      );
     }
 
     function viewStatsEngine() {
       const s = state.stats;
-      if (!s) return `<p>Stats loading...</p>`;
-      return `
-        <div class="metric-grid">
-          <div class="metric">
-            <div class="value">${s.totalPacks}</div>
-            <div class="label">Packs Opened</div>
-          </div>
-          <div class="metric">
-            <div class="value">${s.cores}</div>
-            <div class="label">Core Hits</div>
-          </div>
-          <div class="metric">
-            <div class="value">${s.artifacts}</div>
-            <div class="label">Artifacts</div>
-          </div>
-          <div class="metric">
-            <div class="value">${s.relics}</div>
-            <div class="label">Relics</div>
-          </div>
-          <div class="metric">
-            <div class="value">${s.holderCount}</div>
-            <div class="label">Unique Holders</div>
-          </div>
-        </div>
-      `;
+      if (!s) return "<p>Stats loading...</p>";
+      return (
+        '<div class="metric-grid">' +
+          '<div class="metric">' +
+            '<div class="value">' + s.totalPacks + "</div>" +
+            '<div class="label">Packs Opened</div>' +
+          "</div>" +
+          '<div class="metric">' +
+            '<div class="value">' + s.cores + "</div>" +
+            '<div class="label">Core Hits</div>' +
+          "</div>" +
+          '<div class="metric">' +
+            '<div class="value">' + s.artifacts + "</div>" +
+            '<div class="label">Artifacts</div>' +
+          "</div>" +
+          '<div class="metric">' +
+            '<div class="value">' + s.relics + "</div>" +
+            '<div class="label">Relics</div>' +
+          "</div>" +
+          '<div class="metric">' +
+            '<div class="value">' + s.holderCount + "</div>" +
+            '<div class="label">Unique Holders</div>' +
+          "</div>" +
+          '<div class="metric">' +
+            '<div class="value">' + s.luckIndex + "</div>" +
+            '<div class="label">Luck Index</div>' +
+          "</div>" +
+        "</div>"
+      );
     }
 
     function viewDeployCenter() {
-      return `
-        <div class="card-grid">
-          <div class="card">
-            <h3>🏗 Deploy Guard + Factory</h3>
-            <p>ReserveGuard + PackFactory på Base (via Hardhat senare).</p>
-            <button class="btn">Deploy Base Skeleton</button>
-          </div>
-          <div class="card">
-            <h3>🚀 Deploy TokenPackSeries</h3>
-            <p>Starta en ny serie med din rarity-tabell.</p>
-            <button class="btn">Launch Series</button>
-          </div>
-          <div class="card">
-            <h3>✅ Creator Registry</h3>
-            <p>Framtida modul för Warp Verified kreatörer.</p>
-            <button class="btn">Open Registry</button>
-          </div>
-        </div>
-      `;
+      return (
+        '<div class="card-grid">' +
+          '<div class="card">' +
+            "<h3>🏗 Deploy Guard + Factory</h3>" +
+            "<p>ReserveGuard + PackFactory på Base (via Hardhat senare).</p>" +
+            '<button class="btn" data-action="deploy-skeleton">Deploy Base Skeleton</button>' +
+          "</div>" +
+          '<div class="card">' +
+            "<h3>🚀 Deploy TokenPackSeries</h3>" +
+            "<p>Starta en ny serie med din rarity-tabell.</p>" +
+            '<button class="btn" data-action="deploy-series">Launch Series</button>' +
+          "</div>" +
+          '<div class="card">' +
+            "<h3>✅ Creator Registry</h3>" +
+            "<p>Framtida modul för Warp Verified kreatörer.</p>" +
+            '<button class="btn" data-action="open-registry">Open Registry</button>' +
+          "</div>" +
+        "</div>"
+      );
     }
 
     function viewProfile() {
       const p = state.profile;
       const walletText = state.wallet || "0x….not-connected";
 
-      const tasksHtml = state.daily.tasks.map(t => `
-        <li class="task-item ${t.done ? "done" : ""}">
-          <div class="task-label">
-            <span>${t.label}</span>
-            <span class="task-xp">+${t.xp} XP</span>
-          </div>
-          <button class="btn btn-small" data-task-id="${t.id}">
-            ${t.done ? "Done" : "Complete"}
-          </button>
-        </li>
-      `).join("");
+      const tasksHtml = state.daily.tasks.map(function(t) {
+        return (
+          '<li class="task-item ' + (t.done ? "done" : "") + '">' +
+            '<div class="task-label">' +
+              "<span>" + t.label + "</span>" +
+              '<span class="task-xp">+' + t.xp + " XP</span>" +
+            "</div>" +
+            '<button class="btn btn-small" data-task-id="' + t.id + '">' +
+              (t.done ? "Done" : "Complete") +
+            "</button>" +
+          "</li>"
+        );
+      }).join("");
 
-      return `
-        <div class="profile-header">
-          <div><strong>Spawn Profile</strong></div>
-          <div class="profile-wallet">${walletText}</div>
-          <div class="badge-row">
-            <span class="badge">🔥 Streak: ${p.streakDays} days</span>
-            <span class="badge">⭐ XP: ${p.xp}</span>
-            <span class="badge">🏅 Level ${p.level}</span>
-            <span class="badge">🎯 Best hit: ${p.bestHit}</span>
-          </div>
-        </div>
+      const tasksDone = state.daily.tasks.filter(function(t) { return t.done; }).length;
 
-        <div class="metric-grid">
-          <div class="metric">
-            <div class="value">+25</div>
-            <div class="label">Daily XP Ready</div>
-          </div>
-          <div class="metric">
-            <div class="value">${state.daily.tasks.filter(t => t.done).length}/${state.daily.tasks.length}</div>
-            <div class="label">Tasks Done</div>
-          </div>
-          <div class="metric">
-            <div class="value">3</div>
-            <div class="label">Quest Tier</div>
-          </div>
-        </div>
+      return (
+        '<div class="profile-header">' +
+          "<div><strong>Spawn Profile</strong></div>" +
+          '<div class="profile-wallet">' + walletText + "</div>" +
+          '<div class="badge-row">' +
+            '<span class="badge">🔥 Streak: ' + p.streakDays + " days</span>" +
+            '<span class="badge">⭐ XP: ' + p.xp + "</span>" +
+            '<span class="badge">🏅 Level ' + p.level + "</span>" +
+            '<span class="badge">🎯 Best hit: ' + p.bestHit + "</span>" +
+          "</div>" +
+        "</div>" +
 
-        <div class="card" style="margin-top:0.6rem;">
-          <h3>📋 Daily Tasks</h3>
-          <ul class="task-list">
-            ${tasksHtml}
-          </ul>
-        </div>
+        '<div class="metric-grid">' +
+          '<div class="metric">' +
+            "<div class=\"value\">+25</div>" +
+            '<div class="label">Daily XP Ready</div>' +
+          "</div>" +
+          '<div class="metric">' +
+            '<div class="value">' + tasksDone + "/" + state.daily.tasks.length + "</div>" +
+            '<div class="label">Tasks Done</div>' +
+          "</div>" +
+          '<div class="metric">' +
+            "<div class=\"value\">3</div>" +
+            '<div class="label">Quest Tier</div>' +
+          "</div>" +
+        "</div>" +
 
-        <div class="card" style="margin-top:0.6rem;">
-          <h3>📤 Share Latest Pull</h3>
-          <p>Skicka din senaste Core/Relic-pull som cast (mock) till mesh-social lagret.</p>
-          <button class="btn" id="share-latest">Share latest pull</button>
-        </div>
-      `;
+        '<div class="card" style="margin-top:0.6rem;">' +
+          "<h3>📋 Daily Tasks</h3>" +
+          '<ul class="task-list">' +
+            tasksHtml +
+          "</ul>" +
+        "</div>" +
+
+        '<div class="card" style="margin-top:0.6rem;">' +
+          "<h3>📤 Share Latest Pull</h3>" +
+          "<p>Skicka din senaste Core/Relic-pull som cast (mock) till mesh-social lagret.</p>" +
+          '<button class="btn" id="share-latest">Share latest pull</button>' +
+        "</div>"
+      );
     }
 
     function viewSettings() {
-      return `
-        <div class="card-grid">
-          <div class="card">
-            <h3>🎨 Theme</h3>
-            <p>Dark mode aktiverad. (Light disabled.)</p>
-            <button class="btn">Toggle Theme (mock)</button>
-          </div>
-          <div class="card">
-            <h3>🌐 Network</h3>
-            <p>Aktiv kedja: ${NETWORK_INFO.name}</p>
-          </div>
-        </div>
-      `;
+      return (
+        '<div class="card-grid">' +
+          '<div class="card">' +
+            "<h3>🎨 Theme</h3>" +
+            "<p>Dark mode aktiverad. (Light disabled.)</p>" +
+            '<button class="btn">Toggle Theme (mock)</button>' +
+          "</div>" +
+          '<div class="card">' +
+            "<h3>🌐 Network</h3>" +
+            "<p>Aktiv kedja: " + NETWORK_INFO.name + "</p>" +
+          "</div>" +
+        "</div>"
+      );
     }
 
     // --------------------------------------
     // GLOBAL CLICK HANDLER
     // --------------------------------------
-    document.addEventListener("click", async (e) => {
+    document.addEventListener("click", async function(e) {
       const target = e.target;
 
       // Cast-knapp i Bubbles
@@ -880,26 +938,31 @@
       // Share pull i Trading
       if (target && target.dataset && target.dataset.shareId) {
         const id = target.dataset.shareId;
-        const ev = state.events.find(e => e.id === id);
+        const ev = state.events.find(function(ev) { return ev.id === id; });
         if (ev) {
           await postCastMock(
-            `SpawnEngine pull: ${ev.label} (${ev.rarity})`,
+            "SpawnEngine pull: " + ev.label + " (" + ev.rarity + ")",
             "https://spawn-engine.vercel.app"
           );
           alert("Shared pull (mock).");
+          // markera social-task som klar om inte redan
+          const t = state.daily.tasks.find(function(t) { return t.id === "cast-social"; });
+          if (t && !t.done) {
+            t.done = true;
+            state.profile.xp += t.xp;
+            if (state.currentTab === "profile") switchView("profile");
+          }
         }
       }
 
       // Daily task complete i Profile
       if (target && target.dataset && target.dataset.taskId) {
         const id = target.dataset.taskId;
-        const task = state.daily.tasks.find(t => t.id === id);
+        const task = state.daily.tasks.find(function(t) { return t.id === id; });
         if (task && !task.done) {
           task.done = true;
           state.profile.xp += task.xp;
-          // enkel level up-mock
           if (state.profile.xp >= 1500) state.profile.level = 5;
-          // rerendra profilen
           if (state.currentTab === "profile") {
             switchView("profile");
           }
@@ -908,15 +971,14 @@
 
       // Share latest pull från Profile
       if (target && target.id === "share-latest") {
-        const latestPack = state.events.find(e => e.kind === "pack_open");
+        const latestPack = state.events.find(function(e) { return e.kind === "pack_open"; });
         if (latestPack) {
           await postCastMock(
-            `SpawnEngine pull: ${latestPack.label} (${latestPack.rarity})`,
+            "SpawnEngine pull: " + latestPack.label + " (" + latestPack.rarity + ")",
             "https://spawn-engine.vercel.app"
           );
           alert("Latest pull shared (mock).");
-          // markera social-task som klar
-          const t = state.daily.tasks.find(t => t.id === "cast-social");
+          const t = state.daily.tasks.find(function(t) { return t.id === "cast-social"; });
           if (t && !t.done) {
             t.done = true;
             state.profile.xp += t.xp;
@@ -924,6 +986,88 @@
           }
         } else {
           alert("Ingen pack_open hittades i mesh ännu.");
+        }
+      }
+
+      // PullLab actions
+      if (target && target.dataset && target.dataset.action) {
+        const action = target.dataset.action;
+
+        if (action === "fragment-burn") {
+          addMeshEvent({
+            kind: "burn",
+            label: "Burn 10 Fragments (Lab)",
+            short: "10xF",
+            series: "Genesis",
+            rarity: Math.random() < 0.3 ? "Core" : "Shard",
+            owner: state.wallet || "0xlab...user",
+            tags: ["burn", "lab"],
+            score: 200
+          });
+          alert("Simulated fragment burn (mock).");
+          const t = state.daily.tasks.find(function(t) { return t.id === "do-trade"; });
+          if (t && !t.done) {
+            t.done = true;
+            state.profile.xp += t.xp;
+            if (state.currentTab === "profile") switchView("profile");
+          }
+        }
+
+        if (action === "shard-burn") {
+          addMeshEvent({
+            kind: "burn",
+            label: "Burn 3 Shards (Lab)",
+            short: "3xS",
+            series: "Genesis",
+            rarity: Math.random() < 0.5 ? "Artifact" : "Core",
+            owner: state.wallet || "0xlab...user",
+            tags: ["burn", "lab"],
+            score: 800
+          });
+          alert("Simulated shard burn (mock).");
+          const t = state.daily.tasks.find(function(t) { return t.id === "do-trade"; });
+          if (t && !t.done) {
+            t.done = true;
+            state.profile.xp += t.xp;
+            if (state.currentTab === "profile") switchView("profile");
+          }
+        }
+
+        if (action === "zora-pack") {
+          const rarity = randomRarityForZoraPack();
+          addMeshEvent({
+            kind: "pack_open",
+            label: "ZoraPack Pull (" + rarity + ")",
+            short: "ZP-" + rarity.toUpperCase().slice(0, 3),
+            series: "ZoraPacks",
+            rarity: rarity,
+            owner: state.wallet || "0xzora...user",
+            tags: ["zora", "pull"],
+            score: rarity === "Relic" ? 10000 : rarity === "Artifact" ? 4000 : 500
+          });
+          alert("Opened ZoraPack (mock).");
+          const t = state.daily.tasks.find(function(t) { return t.id === "open-pack"; });
+          if (t && !t.done) {
+            t.done = true;
+            state.profile.xp += t.xp;
+            if (state.currentTab === "profile") switchView("profile");
+          }
+        }
+
+        if (action === "deploy-skeleton") {
+          alert("Här kommer Hardhat/Foundry-deploy kopplas in (mock).");
+        }
+
+        if (action === "deploy-series") {
+          alert("Här kommer TokenPackSeries deploy kopplas in (mock).");
+        }
+
+        if (action === "open-registry") {
+          alert("CreatorRegistry-vy kopplas hit senare (mock).");
+        }
+
+        if (action === "start-forge") {
+          alert("Creator Forge-flow (upload → rarity → foil → deploy) kopplas in här (mock).");
         }
       }
     });
