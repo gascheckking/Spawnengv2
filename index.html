@@ -7,21 +7,20 @@
   <style>
     :root {
       --bg-primary: #020617;
-      --bg-secondary: rgba(3, 7, 18, 0.92);
-      --bg-tertiary: rgba(15, 23, 42, 0.9);
+      --bg-secondary: rgba(3, 7, 18, 0.96);
+      --bg-tertiary: rgba(15, 23, 42, 0.98);
       --text-primary: #f9fafb;
       --text-secondary: #9ca3af;
       --accent: #38bdf8;
+      --accent-2: #a855f7;
       --accent-soft: rgba(56, 189, 248, 0.16);
-      --border: rgba(148, 163, 184, 0.35);
+      --border: rgba(148, 163, 184, 0.4);
       --success: #22c55e;
       --danger: #f97373;
       --font-mono: "SF Mono", "Fira Code", monospace;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -34,7 +33,6 @@
       font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
       display: flex;
       justify-content: center;
-      align-items: stretch;
       min-height: 100vh;
       padding: 0.8rem;
     }
@@ -46,9 +44,9 @@
       overflow: hidden;
       border: 1px solid rgba(148, 163, 184, 0.4);
       box-shadow:
-        0 0 0 1px rgba(15, 23, 42, 0.75),
-        0 18px 45px rgba(0, 0, 0, 0.9);
-      background: linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(2, 6, 23, 0.98));
+        0 0 0 1px rgba(15, 23, 42, 0.7),
+        0 18px 45px rgba(0, 0, 0, 0.95);
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(2, 6, 23, 0.99));
       display: flex;
       flex-direction: column;
       backdrop-filter: blur(18px);
@@ -71,12 +69,12 @@
     .brand {
       display: flex;
       flex-direction: column;
-      gap: 0.12rem;
+      gap: 0.15rem;
     }
 
     .brand-title {
       font-size: 1.05rem;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: 0.07em;
       color: var(--accent);
       text-transform: uppercase;
@@ -96,7 +94,7 @@
     .network-pill {
       padding: 0.2rem 0.6rem;
       border-radius: 999px;
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.8));
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.86));
       border: 1px solid rgba(148, 163, 184, 0.6);
       font-family: var(--font-mono);
       font-size: 0.65rem;
@@ -107,7 +105,7 @@
     .btn {
       border-radius: 999px;
       border: 1px solid rgba(56, 189, 248, 0.9);
-      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), rgba(15, 23, 42, 0.95));
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), rgba(15, 23, 42, 0.96));
       padding: 0.38rem 0.95rem;
       font-size: 0.75rem;
       color: var(--accent);
@@ -136,9 +134,19 @@
       padding: 0.25rem 0.7rem;
       font-size: 0.7rem;
     }
+    .btn-small::before { content: ""; }
 
-    .btn-small::before {
-      content: "";
+    .btn-ghost {
+      border-color: rgba(148, 163, 184, 0.55);
+      background: rgba(15, 23, 42, 0.96);
+      color: var(--text-secondary);
+    }
+    .btn-ghost::before { content: ""; }
+
+    .btn-ghost:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: none;
     }
 
     /* TAB BAR */
@@ -149,11 +157,7 @@
       border-bottom: 1px solid rgba(30, 64, 175, 0.75);
       background: radial-gradient(circle at top, rgba(30, 64, 175, 0.55), rgba(15, 23, 42, 0.98));
     }
-
-    .tab-bar::-webkit-scrollbar {
-      height: 0;
-      width: 0;
-    }
+    .tab-bar::-webkit-scrollbar { height: 0; width: 0; }
 
     .tab-btn {
       border: none;
@@ -182,9 +186,7 @@
       opacity: 1;
     }
 
-    .tab-btn.active::before {
-      color: #22c55e;
-    }
+    .tab-btn.active::before { color: #22c55e; }
 
     /* STATUS / TICKER */
 
@@ -196,7 +198,6 @@
       justify-content: space-between;
       font-size: 0.7rem;
     }
-
     .status-left,
     .status-right {
       display: flex;
@@ -214,7 +215,6 @@
       margin-right: 0.2rem;
       box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.9);
     }
-
     .status-dot.on {
       background: var(--success);
       box-shadow: 0 0 6px rgba(34, 197, 94, 0.85);
@@ -228,21 +228,15 @@
       font-size: 0.7rem;
       padding: 0.35rem 0;
     }
-
     .ticker-inner {
       white-space: nowrap;
       animation: ticker-scroll 22s linear infinite;
       padding-left: 100%;
       color: rgba(148, 163, 184, 0.95);
     }
-
     @keyframes ticker-scroll {
-      from {
-        transform: translateX(0);
-      }
-      to {
-        transform: translateX(-100%);
-      }
+      from { transform: translateX(0); }
+      to   { transform: translateX(-100%); }
     }
 
     /* MAIN / VIEW */
@@ -255,13 +249,56 @@
       background: radial-gradient(circle at bottom, rgba(37, 99, 235, 0.32), rgba(15, 23, 42, 0.98));
     }
 
+    .view-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
     .view-title {
       font-size: 0.95rem;
       font-weight: 600;
-      margin: 0 0 0.6rem;
+      margin: 0;
       letter-spacing: 0.03em;
       text-transform: uppercase;
       color: rgba(226, 232, 240, 0.95);
+    }
+
+    .view-sub {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+    .chip {
+      border-radius: 999px;
+      padding: 0.18rem 0.6rem;
+      font-size: 0.65rem;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.98);
+      color: rgba(226, 232, 240, 0.9);
+      cursor: pointer;
+      opacity: 0.8;
+    }
+    .chip.active {
+      border-color: var(--accent);
+      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.18), rgba(15, 23, 42, 0.98));
+      opacity: 1;
+    }
+
+    .select {
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      padding: 0.25rem 0.55rem;
+      font-size: 0.68rem;
+      color: var(--text-secondary);
     }
 
     .card-grid {
@@ -269,11 +306,8 @@
       grid-template-columns: 1fr;
       gap: 0.65rem;
     }
-
     @media (min-width: 480px) {
-      .card-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+      .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     .card {
@@ -298,6 +332,26 @@
       font-size: 0.72rem;
       color: var(--text-secondary);
     }
+
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.25rem;
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+    }
+
+    .tag {
+      border-radius: 999px;
+      padding: 0.12rem 0.4rem;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      font-size: 0.62rem;
+    }
+
+    .tag-core { border-color: #38bdf8; color: #38bdf8; }
+    .tag-artifact { border-color: #facc15; color: #facc15; }
+    .tag-relic { border-color: #f97316; color: #f97316; }
 
     .metric-grid {
       display: grid;
@@ -327,12 +381,60 @@
       color: var(--text-secondary);
     }
 
-    /* PACK MAP */
+    /* ACCORDION / FORGE */
 
-    .packmap-wrap {
-      margin-top: 0.5rem;
+    .accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
     }
 
+    .accordion-item {
+      border-radius: 0.8rem;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      background: rgba(15, 23, 42, 0.98);
+      overflow: hidden;
+    }
+
+    .accordion-header {
+      padding: 0.6rem 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-size: 0.78rem;
+      color: rgba(226, 232, 240, 0.95);
+    }
+
+    .accordion-header span {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .accordion-header small {
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+    }
+
+    .accordion-arrow {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .accordion-content {
+      padding: 0.6rem 0.75rem 0.7rem;
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      display: none;
+    }
+
+    .accordion-item.open .accordion-content { display: block; }
+    .accordion-item.open .accordion-arrow { transform: rotate(180deg); }
+
+    /* PACK MAP */
+
+    .packmap-wrap { margin-top: 0.5rem; }
     .packmap-canvas {
       width: 100%;
       height: 220px;
@@ -375,6 +477,21 @@
         radial-gradient(circle at top, rgba(56, 189, 248, 0.18), transparent 55%),
         rgba(15, 23, 42, 0.98);
       color: rgba(226, 232, 240, 0.95);
+    }
+
+    .xp-bar {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(30, 64, 175, 0.7);
+      overflow: hidden;
+      margin-top: 0.3rem;
+    }
+
+    .xp-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #38bdf8, #a855f7);
+      width: 0%;
+      transition: width 0.25s ease-out;
     }
 
     .task-list {
@@ -423,14 +540,55 @@
       text-align: center;
       color: var(--text-secondary);
     }
+
+    /* TOAST */
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 1.4rem;
+      transform: translateX(-50%) translateY(120%);
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(17, 24, 39, 0.95);
+      border: 1px solid rgba(56, 189, 248, 0.7);
+      color: var(--text-primary);
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+      z-index: 40;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0%);
+      pointer-events: auto;
+    }
+
+    .toast-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
+    }
+
   </style>
 </head>
 <body>
   <div id="app" class="app-frame"></div>
+  <div id="toast" class="toast">
+    <span class="toast-dot"></span>
+    <span id="toast-text"></span>
+  </div>
 
   <script type="module">
     // --------------------------------------
-    // MOCK MESH DATA
+    // MOCK MESH DATA (seed)
     // --------------------------------------
     const MOCK_EVENTS = [
       {
@@ -496,6 +654,7 @@
     ];
 
     function getUnifiedActivity() {
+      // framtida: ersätt med riktig onchain + API mesh
       return Promise.resolve(
         MOCK_EVENTS.slice().sort((a, b) => b.timestamp - a.timestamp)
       );
@@ -525,14 +684,12 @@
         holders.add(e.owner);
       }
       stats.holderCount = holders.size;
-
       stats.luckIndex =
         stats.relics * 120 +
         stats.artifacts * 40 +
         stats.cores * 5 +
         stats.shards * 1 -
         stats.fragments * 2;
-
       return stats;
     }
 
@@ -556,6 +713,8 @@
       currentTab: "trading",
       events: [],
       stats: null,
+      tradingFilterKind: "all",
+      tradingFilterRarity: "all",
       profile: {
         streakDays: 3,
         xp: 1250,
@@ -589,6 +748,21 @@
       return id
         .replace(/-/g, " ")
         .replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+
+    // --------------------------------------
+    // TOAST
+    // --------------------------------------
+    let toastTimer = null;
+    function showToast(text) {
+      const t = document.getElementById("toast");
+      const span = document.getElementById("toast-text");
+      span.textContent = text;
+      t.classList.add("show");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        t.classList.remove("show");
+      }, 2000);
     }
 
     // --------------------------------------
@@ -626,12 +800,18 @@
         </div>
 
         <main class="app-main">
-          <h2 class="view-title" id="view-title"></h2>
+          <div class="view-header">
+            <div>
+              <h2 class="view-title" id="view-title"></h2>
+              <div class="view-sub" id="view-sub"></div>
+            </div>
+            <div class="chip-row" id="view-actions"></div>
+          </div>
           <div id="view-body"></div>
         </main>
 
         <footer class="app-footer">
-          SpawnEngine · Base · Zora · Farcaster · Unified Activity Mesh
+          SpawnEngine · Base · Zora · Farcaster · Multi-Module Pack Mesh
         </footer>
       `;
 
@@ -682,6 +862,7 @@
           ? "Wallet: " + state.wallet
           : "Wallet: Disconnected";
         dot.classList.toggle("on", state.connected);
+        showToast(state.connected ? "Wallet connected (mock)" : "Wallet disconnected");
       });
     }
 
@@ -697,9 +878,13 @@
       state.currentTab = id;
       setActiveTab(id);
       const title = document.getElementById("view-title");
+      const sub = document.getElementById("view-sub");
       const body = document.getElementById("view-body");
+      const actions = document.getElementById("view-actions");
 
       title.textContent = humanTabName(id);
+      sub.textContent = "";
+      actions.innerHTML = "";
 
       const map = {
         "trading": viewTrading,
@@ -716,13 +901,27 @@
       };
 
       const renderer = map[id] || function () { return "<p>Not implemented yet.</p>"; };
-      body.innerHTML = renderer();
+      const result = renderer();
+      body.innerHTML = result.html;
+      sub.textContent = result.sub || "";
+
+      if (result.actions && result.actions.length) {
+        result.actions.forEach((a) => {
+          const chip = document.createElement("button");
+          chip.className = "chip" + (a.active ? " active" : "");
+          chip.textContent = a.label;
+          if (a.id) chip.dataset.actionChip = a.id;
+          actions.appendChild(chip);
+        });
+      }
 
       if (id === "pack-maps") drawPackMap();
+      if (id === "creator-forge") wireAccordions();
+      if (id === "profile") updateXpBar();
     }
 
     // --------------------------------------
-    // HELPERS / DYNAMISKA EVENTS
+    // HELPERS / STATE
     // --------------------------------------
     function addMeshEvent(evt) {
       evt.id = "evt-" + (Date.now() + Math.random().toString(16).slice(2, 6));
@@ -730,15 +929,9 @@
       state.events.unshift(evt);
       state.stats = computeStatsFromEvents(state.events);
       renderTicker();
-      if (state.currentTab === "trading") {
-        switchView("trading");
-      }
-      if (state.currentTab === "my-packs") {
-        switchView("my-packs");
-      }
-      if (state.currentTab === "stats-engine") {
-        switchView("stats-engine");
-      }
+      if (state.currentTab === "trading") switchView("trading");
+      if (state.currentTab === "my-packs") switchView("my-packs");
+      if (state.currentTab === "stats-engine") switchView("stats-engine");
     }
 
     function randomRarityForZoraPack() {
@@ -750,34 +943,91 @@
       return "Relic";
     }
 
+    function wireAccordions() {
+      document.querySelectorAll(".accordion-header").forEach((header) => {
+        header.addEventListener("click", () => {
+          const item = header.closest(".accordion-item");
+          item.classList.toggle("open");
+        });
+      });
+    }
+
+    function updateXpBar() {
+      const fill = document.querySelector(".xp-fill");
+      if (!fill) return;
+      // enkel level-scaling: 0–2000 xp per level
+      const pct = Math.min(100, (state.profile.xp % 2000) / 2000 * 100);
+      fill.style.width = pct + "%";
+    }
+
     // --------------------------------------
     // VIEWS
     // --------------------------------------
+    function filterEventsForTrading() {
+      return state.events.filter((e) => {
+        if (state.tradingFilterKind !== "all" && e.kind !== state.tradingFilterKind) return false;
+        if (state.tradingFilterRarity !== "all" && e.rarity !== state.tradingFilterRarity) return false;
+        return true;
+      });
+    }
+
     function viewTrading() {
-      const events = state.events;
+      const events = filterEventsForTrading();
       const rows = events.map(function(e) {
-        var icon = "📦";
+        let icon = "📦";
         if (e.kind === "swap") icon = "🔄";
         if (e.kind === "burn") icon = "🔥";
         if (e.kind === "zora_buy") icon = "🪙";
         if (e.kind === "farcaster_cast") icon = "📡";
+
+        const rarityTagClass =
+          e.rarity === "Relic" ? "tag tag-relic" :
+          e.rarity === "Artifact" ? "tag tag-artifact" :
+          e.rarity === "Core" ? "tag tag-core" :
+          "tag";
+
         return (
           '<div class="card">' +
             "<h3>" + icon + " " + e.label + "</h3>" +
-            "<p>Kind: " + e.kind + "</p>" +
             "<p>Series: " + e.series + "</p>" +
-            "<p>Rarity: " + e.rarity + "</p>" +
-            "<p>Owner: " + e.owner + "</p>" +
-            '<button class="btn btn-small" data-share-id="' + e.id + '">Share pull</button>' +
+            "<div class=\"card-meta\">" +
+              "<span class=\"" + rarityTagClass + "\">" + e.rarity + "</span>" +
+              "<span class=\"tag\">" + e.kind + "</span>" +
+              "<span class=\"tag\">" + e.owner + "</span>" +
+            "</div>" +
+            '<div style="margin-top:0.45rem;display:flex;justify-content:space-between;align-items:center;gap:0.3rem;">' +
+              '<button class="btn btn-small" data-share-id="' + e.id + '">Share pull</button>' +
+              '<button class="btn btn-small btn-ghost" data-quick-trade="' + e.id + '">Quick trade</button>' +
+            "</div>" +
           "</div>"
         );
       }).join("");
-      return '<div class="card-grid">' + rows + "</div>";
+
+      const html = rows
+        ? '<div class="card-grid">' + rows + "</div>"
+        : "<p>No mesh events yet.</p>";
+
+      return {
+        sub: "Unified mesh feed · pulls · swaps · burns · social",
+        html,
+        actions: [
+          { id: "feed-all", label: "All", active: state.tradingFilterKind === "all" },
+          { id: "feed-packs", label: "Packs", active: state.tradingFilterKind === "pack_open" },
+          { id: "feed-zora", label: "Zora", active: state.tradingFilterKind === "zora_buy" },
+          { id: "feed-social", label: "Social", active: state.tradingFilterKind === "farcaster_cast" },
+        ],
+      };
     }
 
     function viewMyPacks() {
       const packs = state.events.filter(function(e) { return e.kind === "pack_open"; });
-      if (!packs.length) return "<p>Inga packs öppnade ännu.</p>";
+      if (!packs.length) {
+        return {
+          sub: "Your personal inventory view for all series",
+          html: "<p>Inga packs öppnade ännu.</p>",
+          actions: [],
+        };
+      }
       const rows = packs.map(function(e) {
         return (
           '<div class="card">' +
@@ -788,54 +1038,107 @@
           "</div>"
         );
       }).join("");
-      return '<div class="card-grid">' + rows + "</div>";
+
+      return {
+        sub: "Wallet-focused view driven av samma mesh",
+        html: '<div class="card-grid">' + rows + "</div>",
+        actions: [],
+      };
     }
 
     function viewCreatorForge() {
-      return (
-        '<div class="card-grid">' +
-          '<div class="card">' +
-            "<h3>🛠 Forge New Pack Series</h3>" +
-            "<p>Gå från bild → rarity → foil → deploy.</p>" +
-            '<button class="btn" data-action="start-forge">Start Forge Flow</button>' +
+      const html =
+        '<div class="accordion">' +
+          '<div class="accordion-item open">' +
+            '<div class="accordion-header">' +
+              '<span><strong>Step 1 · Artwork & Packshell</strong><small>Upload / referens / frame</small></span>' +
+              '<span class="accordion-arrow">▼</span>' +
+            '</div>' +
+            '<div class="accordion-content">' +
+              "<p>Definiera din visuella identitet: Tiny Legends, Foil Realms, SpawnEngine F1-pack, osv.</p>" +
+              '<button class="btn btn-small" data-action="forge-art">Attach art (mock)</button>' +
+            "</div>" +
           "</div>" +
-          '<div class="card">' +
-            "<h3>📚 Manage Existing Series</h3>" +
-            "<p>Visa och konfigurera redan deployade serier (kopplas till Factory-lägen senare).</p>" +
-            '<button class="btn">Open Series Panel</button>' +
+
+          '<div class="accordion-item">' +
+            '<div class="accordion-header">' +
+              '<span><strong>Step 2 · Rarity Grid</strong><small>Fragments → Relics</small></span>' +
+              '<span class="accordion-arrow">▼</span>' +
+            '</div>' +
+            '<div class="accordion-content">' +
+              "<p>Sätt upp din rarity-tabell med Fragment / Shard / Core / Artifact / Relic.</p>" +
+              "<p>Värden styrs senare från kontraktens config.</p>" +
+              '<button class="btn btn-small" data-action="forge-rarity">Configure grid (mock)</button>' +
+            "</div>" +
           "</div>" +
-        "</div>"
-      );
+
+          '<div class="accordion-item">' +
+            '<div class="accordion-header">' +
+              '<span><strong>Step 3 · Foil & Themes</strong><small>FX-lager / variants</small></span>' +
+              '<span class="accordion-arrow">▼</span>' +
+            "</div>" +
+            '<div class="accordion-content">' +
+              "<p>Välj dina foil-lager: base shine, prism, holo, glitch, halloween, osv.</p>" +
+              '<button class="btn btn-small" data-action="forge-foil">Select foil set (mock)</button>' +
+            "</div>" +
+          "</div>" +
+
+          '<div class="accordion-item">' +
+            '<div class="accordion-header">' +
+              '<span><strong>Step 4 · Deploy Plan</strong><small>Factory + Guard</small></span>' +
+              '<span class="accordion-arrow">▼</span>' +
+            "</div>" +
+            '<div class="accordion-content">' +
+              "<p>Skapa din deploy-plan: pack price, treasury, split, två-mythic-barrier via ReserveGuard.</p>" +
+              '<button class="btn btn-small" data-action="forge-deploy">Generate deploy config (mock)</button>' +
+            "</div>" +
+          "</div>" +
+        "</div>";
+
+      return {
+        sub: "From art → rarity → foil → deploy, kopplad till PackFactory",
+        html,
+        actions: [],
+      };
     }
 
     function viewPullLab() {
-      return (
+      const html =
         '<div class="card-grid">' +
           '<div class="card">' +
             "<h3>🔥 Fragment Gamble</h3>" +
-            "<p>Burn 10x Fragments → chans på Shard/Core.</p>" +
+            "<p>Burn 10x Fragments → chans på Shard/Core (XP, mesh update).</p>" +
             '<button class="btn" data-action="fragment-burn">Simulate Burn</button>' +
           "</div>" +
           '<div class="card">' +
             "<h3>⚡ Shard Gamble</h3>" +
-            "<p>Burn 3x Shards → chans på Artifact/Relic.</p>" +
+            "<p>Burn 3x Shards → chans på Artifact/Relic (XP, mesh update).</p>" +
             '<button class="btn" data-action="shard-burn">Simulate Burn</button>' +
           "</div>" +
           '<div class="card">' +
             "<h3>🪙 Zora Packs</h3>" +
-            "<p>Köp ZoraPack → rarity multipliers på Zora value.</p>" +
+            "<p>Köp ZoraPack → rarity multipliers på Zora-value, kopplas till ZoraIndexOracle senare.</p>" +
             '<button class="btn" data-action="zora-pack">Open Zora Pack</button>' +
           "</div>" +
-        "</div>"
-      );
+        "</div>";
+
+      return {
+        sub: "Gamble-moduler (Fragments / Shards / Zora packs), kopplade till UtilityRouter",
+        html,
+        actions: [],
+      };
     }
 
     function viewPackMaps() {
-      return (
+      const html =
         '<div class="packmap-wrap">' +
           '<canvas id="packmap-canvas" class="packmap-canvas"></canvas>' +
-        "</div>"
-      );
+        "</div>";
+      return {
+        sub: "Visualisering av rarity-distribution och mesh-puls",
+        html,
+        actions: [],
+      };
     }
 
     function drawPackMap() {
@@ -859,7 +1162,13 @@
 
     function viewWarpVerified() {
       const verified = state.events.filter(function(e) { return e.tags.indexOf("mythic_hit") !== -1; });
-      if (!verified.length) return "<p>Inga Warp Verified mythic hits ännu.</p>";
+      if (!verified.length) {
+        return {
+          sub: "Warp Verified layer för mythic events & kreatörer",
+          html: "<p>Inga Warp Verified mythic hits ännu.</p>",
+          actions: [],
+        };
+      }
       const rows = verified.map(function(e) {
         return (
           '<div class="card">' +
@@ -869,11 +1178,16 @@
           "</div>"
         );
       }).join("");
-      return '<div class="card-grid">' + rows + "</div>";
+
+      return {
+        sub: "Verifierade pulls & kreatörer, kopplad till CreatorRegistry senare",
+        html: '<div class="card-grid">' + rows + "</div>",
+        actions: [],
+      };
     }
 
     function viewBubbles() {
-      return (
+      const html =
         '<div class="card-grid">' +
           '<div class="card">' +
             "<h3>📈 Trending Tags</h3>" +
@@ -884,14 +1198,21 @@
             "<p>Posta ett mock-cast till Farcaster (framtida Neynar-integration).</p>" +
             '<button class="btn" id="cast-btn">Post Mock Cast</button>' +
           "</div>" +
-        "</div>"
-      );
+        "</div>";
+
+      return {
+        sub: "Social mesh-lager som kopplar packs → Farcaster / X",
+        html,
+        actions: [],
+      };
     }
 
     function viewStatsEngine() {
       const s = state.stats;
-      if (!s) return "<p>Stats loading...</p>";
-      return (
+      if (!s) {
+        return { sub: "Statistik baserad på Unified Activity Mesh", html: "<p>Stats loading...</p>", actions: [] };
+      }
+      const html =
         '<div class="metric-grid">' +
           '<div class="metric">' +
             '<div class="value">' + s.totalPacks + "</div>" +
@@ -917,30 +1238,40 @@
             '<div class="value">' + s.luckIndex + "</div>" +
             '<div class="label">Luck Index</div>' +
           "</div>" +
-        "</div>"
-      );
+        "</div>";
+
+      return {
+        sub: "Luck, rarity, holders – drivet direkt av mesh-eventen",
+        html,
+        actions: [],
+      };
     }
 
     function viewDeployCenter() {
-      return (
+      const html =
         '<div class="card-grid">' +
           '<div class="card">' +
             "<h3>🏗 Deploy Guard + Factory</h3>" +
-            "<p>ReserveGuard + PackFactory på Base (via Hardhat senare).</p>" +
+            "<p>ReserveGuard + PackFactory på Base (via Hardhat / Foundry).</p>" +
             '<button class="btn" data-action="deploy-skeleton">Deploy Base Skeleton</button>' +
           "</div>" +
           '<div class="card">' +
             "<h3>🚀 Deploy TokenPackSeries</h3>" +
-            "<p>Starta en ny serie med din rarity-tabell.</p>" +
+            "<p>Starta en ny F1-pack-serie med din rarity-modell.</p>" +
             '<button class="btn" data-action="deploy-series">Launch Series</button>' +
           "</div>" +
           '<div class="card">' +
             "<h3>✅ Creator Registry</h3>" +
-            "<p>Framtida modul för Warp Verified kreatörer.</p>" +
+            "<p>Framtida modul för Warp Verified kreatörer & limits.</p>" +
             '<button class="btn" data-action="open-registry">Open Registry</button>' +
           "</div>" +
-        "</div>"
-      );
+        "</div>";
+
+      return {
+        sub: "Onchain skeleton-lager: Factory, Series, Guard, Router",
+        html,
+        actions: [],
+      };
     }
 
     function viewProfile() {
@@ -960,10 +1291,9 @@
           "</li>"
         );
       }).join("");
-
       const tasksDone = state.daily.tasks.filter(function(t) { return t.done; }).length;
 
-      return (
+      const html =
         '<div class="profile-header">' +
           "<div><strong>Spawn Profile</strong></div>" +
           '<div class="profile-wallet">' + walletText + "</div>" +
@@ -973,9 +1303,10 @@
             '<span class="badge">🏅 Level ' + p.level + "</span>" +
             '<span class="badge">🎯 Best hit: ' + p.bestHit + "</span>" +
           "</div>" +
+          '<div class="xp-bar"><div class="xp-fill"></div></div>' +
         "</div>" +
 
-        '<div class="metric-grid">' +
+        '<div class="metric-grid" style="margin-top:0.5rem;">' +
           '<div class="metric">' +
             "<div class=\"value\">+25</div>" +
             '<div class="label">Daily XP Ready</div>' +
@@ -992,33 +1323,41 @@
 
         '<div class="card" style="margin-top:0.6rem;">' +
           "<h3>📋 Daily Tasks</h3>" +
-          '<ul class="task-list">' +
-            tasksHtml +
-          "</ul>" +
+          '<ul class="task-list">' + tasksHtml + "</ul>" +
         "</div>" +
 
         '<div class="card" style="margin-top:0.6rem;">' +
           "<h3>📤 Share Latest Pull</h3>" +
-          "<p>Skicka din senaste Core/Relic-pull som cast (mock) till mesh-social lagret.</p>" +
+          "<p>Skicka din senaste Core/Relic-pull som cast (mock) till social-mesh.</p>" +
           '<button class="btn" id="share-latest">Share latest pull</button>' +
-        "</div>"
-      );
+        "</div>";
+
+      return {
+        sub: "Din onchain vardag: streaks, XP, quests, social",
+        html,
+        actions: [],
+      };
     }
 
     function viewSettings() {
-      return (
+      const html =
         '<div class="card-grid">' +
           '<div class="card">' +
             "<h3>🎨 Theme</h3>" +
-            "<p>Dark mode aktiverad. (Light disabled.)</p>" +
-            '<button class="btn">Toggle Theme (mock)</button>' +
+            "<p>Dark mode aktiverad. (Light disabled tills vidare.)</p>" +
+            '<button class="btn btn-small btn-ghost">Toggle Theme (disabled)</button>' +
           "</div>" +
           '<div class="card">' +
             "<h3>🌐 Network</h3>" +
             "<p>Aktiv kedja: " + NETWORK_INFO.name + "</p>" +
           "</div>" +
-        "</div>"
-      );
+        "</div>";
+
+      return {
+        sub: "Bas-settings tills riktiga wallet / network toggles kopplas in",
+        html,
+        actions: [],
+      };
     }
 
     // --------------------------------------
@@ -1027,14 +1366,26 @@
     document.addEventListener("click", async function(e) {
       const target = e.target;
 
+      // chips i Trading
+      if (target && target.dataset && target.dataset.actionChip) {
+        const id = target.dataset.actionChip;
+        if (id === "feed-all") state.tradingFilterKind = "all";
+        if (id === "feed-packs") state.tradingFilterKind = "pack_open";
+        if (id === "feed-zora") state.tradingFilterKind = "zora_buy";
+        if (id === "feed-social") state.tradingFilterKind = "farcaster_cast";
+        switchView("trading");
+      }
+
+      // cast-knapp i Bubbles
       if (target && target.id === "cast-btn") {
         await postCastMock(
           "Just pulled a Core via SpawnEngine Mesh!",
           "https://spawn-engine.vercel.app"
         );
-        alert("Mock-cast skickad (kolla console).");
+        showToast("Mock cast sent to Farcaster (console)");
       }
 
+      // share pull i Trading
       if (target && target.dataset && target.dataset.shareId) {
         const id = target.dataset.shareId;
         const ev = state.events.find(function(ev) { return ev.id === id; });
@@ -1043,7 +1394,7 @@
             "SpawnEngine pull: " + ev.label + " (" + ev.rarity + ")",
             "https://spawn-engine.vercel.app"
           );
-          alert("Shared pull (mock).");
+          showToast("Pull shared (mock)");
           const t = state.daily.tasks.find(function(t) { return t.id === "cast-social"; });
           if (t && !t.done) {
             t.done = true;
@@ -1053,6 +1404,16 @@
         }
       }
 
+      // quick trade (mock)
+      if (target && target.dataset && target.dataset.quickTrade) {
+        const id = target.dataset.quickTrade;
+        const ev = state.events.find(function(ev) { return ev.id === id; });
+        if (ev) {
+          showToast("Quick trade opened (mock) for " + ev.short);
+        }
+      }
+
+      // daily task complete
       if (target && target.dataset && target.dataset.taskId) {
         const id = target.dataset.taskId;
         const task = state.daily.tasks.find(function(t) { return t.id === id; });
@@ -1063,9 +1424,11 @@
           if (state.currentTab === "profile") {
             switchView("profile");
           }
+          showToast("Task completed: " + task.label);
         }
       }
 
+      // share latest pull
       if (target && target.id === "share-latest") {
         const latestPack = state.events.find(function(e) { return e.kind === "pack_open"; });
         if (latestPack) {
@@ -1073,7 +1436,7 @@
             "SpawnEngine pull: " + latestPack.label + " (" + latestPack.rarity + ")",
             "https://spawn-engine.vercel.app"
           );
-          alert("Latest pull shared (mock).");
+          showToast("Latest pull shared (mock)");
           const t = state.daily.tasks.find(function(t) { return t.id === "cast-social"; });
           if (t && !t.done) {
             t.done = true;
@@ -1081,10 +1444,11 @@
             if (state.currentTab === "profile") switchView("profile");
           }
         } else {
-          alert("Ingen pack_open hittades i mesh ännu.");
+          showToast("No pack_open events in mesh yet");
         }
       }
 
+      // PullLab actions
       if (target && target.dataset && target.dataset.action) {
         const action = target.dataset.action;
 
@@ -1099,7 +1463,7 @@
             tags: ["burn", "lab"],
             score: 200
           });
-          alert("Simulated fragment burn (mock).");
+          showToast("Fragment burn simulated");
           const t = state.daily.tasks.find(function(t) { return t.id === "do-trade"; });
           if (t && !t.done) {
             t.done = true;
@@ -1119,7 +1483,7 @@
             tags: ["burn", "lab"],
             score: 800
           });
-          alert("Simulated shard burn (mock).");
+          showToast("Shard burn simulated");
           const t = state.daily.tasks.find(function(t) { return t.id === "do-trade"; });
           if (t && !t.done) {
             t.done = true;
@@ -1140,7 +1504,7 @@
             tags: ["zora", "pull"],
             score: rarity === "Relic" ? 10000 : rarity === "Artifact" ? 4000 : 500
           });
-          alert("Opened ZoraPack (mock).");
+          showToast("ZoraPack opened (mock)");
           const t = state.daily.tasks.find(function(t) { return t.id === "open-pack"; });
           if (t && !t.done) {
             t.done = true;
@@ -1150,19 +1514,19 @@
         }
 
         if (action === "deploy-skeleton") {
-          alert("Här kommer Hardhat/Foundry-deploy kopplas in (mock).");
+          showToast("Skeleton deploy placeholder (Hardhat senare)");
         }
 
         if (action === "deploy-series") {
-          alert("Här kommer TokenPackSeries deploy kopplas in (mock).");
+          showToast("Series deploy placeholder (TokenPackSeries)");
         }
 
         if (action === "open-registry") {
-          alert("CreatorRegistry-vy kopplas hit senare (mock).");
+          showToast("CreatorRegistry view placeholder");
         }
 
-        if (action === "start-forge") {
-          alert("Creator Forge-flow (upload → rarity → foil → deploy) kopplas in här (mock).");
+        if (action === "start-forge" || action === "forge-art" || action === "forge-rarity" || action === "forge-foil" || action === "forge-deploy") {
+          showToast("Creator Forge-step saved (mock)");
         }
       }
     });
