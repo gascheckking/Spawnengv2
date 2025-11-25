@@ -4,10 +4,11 @@ const state = {
   xp: 1575,
   spawn: 497,
   meshEvents: 9,
-  activeTab: "trading",
+  activeTab: "profile",
 };
 
 const TABS = [
+  { id: "profile", label: "Profile" },
   { id: "overview", label: "Overview" },
   { id: "trading", label: "Trading" },
   { id: "pull-lab", label: "Pull Lab" },
@@ -104,7 +105,7 @@ function init() {
         </footer>
       </div>
     </div>
-  `;
+  "
 
   wireWallet();
   renderTabs();
@@ -175,7 +176,7 @@ function renderTicker() {
   const text = mockEvents
     .map((e) => `${e.short} · ${e.label}`)
     .join("   •   ");
-  // duplicate so animation loops seamlessly
+  // duplicate så animationen loopar snyggt
   el.textContent = ` ${text}   •   ${text}   •   ${text}`;
 }
 
@@ -186,6 +187,9 @@ function renderActiveView() {
   if (!main) return;
 
   switch (state.activeTab) {
+    case "profile":
+      main.innerHTML = renderProfile();
+      break;
     case "overview":
       main.innerHTML = renderOverview();
       break;
@@ -210,6 +214,104 @@ function renderActiveView() {
     default:
       main.innerHTML = "";
   }
+}
+
+/* PROFILE VIEW */
+
+function renderProfile() {
+  const handle = "@spawnengine";
+  const chain = "Base";
+  const modules = ["Factory", "TokenPackSeries", "ReserveGuard", "UtilityRouter"];
+
+  return `
+    <section class="panel">
+      <div class="panel-title">Mesh profile</div>
+      <div class="panel-sub">
+        One wallet, multiple contract types, all flowing into a single activity mesh.
+      </div>
+
+      <div class="trading-card" style="margin-top:9px;">
+        <div class="trading-card-head">
+          <div style="display:flex;align-items:center;gap:9px;">
+            <div class="brand-icon" style="width:36px;height:36px;font-size:14px;">SE</div>
+            <div>
+              <div class="trading-card-title">${handle}</div>
+              <div class="trading-card-sub">
+                Mesh owner on ${chain} · Layer-4 style XP & packs
+              </div>
+            </div>
+          </div>
+          <span class="chip chip-mesh">ONLINE</span>
+        </div>
+        <div class="trading-card-foot">
+          Connected modules: ${modules.join(" · ")} (mock v0.2)
+        </div>
+      </div>
+
+      <div class="overview-grid">
+        <div class="metric-card">
+          <div class="metric-label">XP streak</div>
+          <div class="metric-value">${state.xp}</div>
+          <div class="metric-foot">Grows as you complete daily mesh tasks.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Spawn balance</div>
+          <div class="metric-value">${state.spawn}</div>
+          <div class="metric-foot">Test rewards from packs & quests (mock).</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Today’s events</div>
+          <div class="metric-value">${state.meshEvents}</div>
+          <div class="metric-foot">pack_open · burns · swaps · casts.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Connected surfaces</div>
+          <div class="metric-value">3</div>
+          <div class="metric-foot">Token packs · NFT packs · Zora packs (planned).</div>
+        </div>
+      </div>
+
+      <div class="trading-panel">
+        <div>
+          <div class="trading-row-title">Linked apps</div>
+          <div class="trading-card">
+            <div class="trading-card-head">
+              <div>
+                <div class="trading-card-title">Base wallet</div>
+                <div class="trading-card-sub" id="profile-wallet-row">
+                  ${state.wallet ? state.wallet : "Connect wallet to lock in your mesh identity."}
+                </div>
+              </div>
+              <span class="chip chip-mesh">REQUIRED</span>
+            </div>
+            <div class="trading-card-foot">
+              In v1, XP and Spawn rewards will be tied to this wallet’s onchain activity.
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="trading-row-title">Social surfaces</div>
+          <div class="trading-card">
+            <div class="trading-card-head">
+              <div>
+                <div class="trading-card-title">Farcaster & Zora</div>
+                <div class="trading-card-sub">
+                  Future hooks: casts, mints & creator coins streamed into the mesh.
+                </div>
+              </div>
+              <span class="chip chip-planned">PLANNED</span>
+            </div>
+            <div class="trading-card-foot">
+              Your casts and creator actions will become first-class events in the activity layer.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${renderDailyTasksInner()}
+    </section>
+  `;
 }
 
 function renderOverview() {
