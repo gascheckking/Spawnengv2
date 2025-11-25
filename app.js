@@ -1,461 +1,505 @@
-// app.js
-import { getUnifiedActivity, computeStatsFromEvents } from "./services/activity.js";
-import { getZoraActivityMock } from "./integrations/zora.js";
-import { postCastMock } from "./integrations/farcaster.js";
-
-const NETWORK_INFO = {
-  name: "Base Sepolia",
-  label: "Base · Pack ecosystems",
-};
-
+// Simple mock state
 const state = {
   wallet: null,
-  connected: false,
-  theme: "dark",
-  events: [],
-  stats: null,
-  zora: null,
-  profile: {
-    streakDays: 3,
-    xp: 1250,
-    level: 4,
-    bestHit: "Relic (ZoraPack)",
-  },
+  xp: 1575,
+  spawn: 497,
+  meshEvents: 9,
+  activeTab: "trading",
 };
 
 const TABS = [
-  "trading",
-  "my-packs",
-  "creator-forge",
-  "pull-lab",
-  "pack-maps",
-  "warp-verified",
-  "bubbles",
-  "stats-engine",
-  "deploy-center",
-  "profile",
-  "settings",
+  { id: "overview", label: "Overview" },
+  { id: "trading", label: "Trading" },
+  { id: "pull-lab", label: "Pull Lab" },
+  { id: "pack-maps", label: "Pack Maps" },
+  { id: "stats", label: "Stats" },
+  { id: "tasks", label: "Daily" },
+  { id: "settings", label: "Settings" },
 ];
 
-function humanTabName(id) {
-  return id
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
+const mockEvents = [
+  { short: "pack_open", label: "0xA9…93 → Neon Fragments (Fragment)" },
+  { short: "burn", label: "0x4B…1f → 5x Fragments → Core" },
+  { short: "swap", label: "0xD2…90 → Shard Forge (Legendary)" },
+  { short: "zora_buy", label: "0x91…ff → Base Relics (Epic)" },
+  { short: "fc_cast", label: "@spawnengine casted new pack series" },
+];
 
-/* INIT */
-
-async function init() {
-  const root = document.getElementById("app");
+function init() {
+  const root = document.getElementById("app-root");
   if (!root) return;
 
   root.innerHTML = `
-    <header class="app-header">
-      <div class="brand">
-        <div class="brand-title">SpawnEngine</div>
-        <div class="brand-sub">Onchain Pack Factory · Pack Mesh Protocol</div>
-      </div>
-      <div class="header-right">
-        <div class="network-pill" id="network-pill">${NETWORK_INFO.label}</div>
-        <button id="wallet-btn" class="btn">Connect Wallet</button>
-      </div>
-    </header>
+    <div class="app-shell">
+      <div class="app-frame">
+        <header class="app-header">
+          <div class="brand-row">
+            <div class="brand-left">
+              <div class="brand-icon">SE</div>
+              <div>
+                <div class="brand-copy-title">SPAWNENGINE</div>
+                <div class="brand-copy-sub">
+                  Modular onchain engine for packs, XP, badges & creator modules
+                </div>
+              </div>
+            </div>
+            <div class="brand-right">
+              <div class="pill">
+                <span class="pill-dot"></span>
+                <span class="pill-label">Base · Mesh Layer</span>
+              </div>
+              <button class="btn-wallet" id="btn-wallet">
+                <span>⦿</span><span id="wallet-label">Connect</span>
+              </button>
+            </div>
+          </div>
 
-    <nav class="tab-bar" id="tab-bar"></nav>
+          <div class="status-row">
+            <div class="status-pill">
+              <span class="status-pill-label">Wallet</span>
+              <span class="status-pill-value" id="status-wallet">Disconnected</span>
+            </div>
+            <div class="status-pill">
+              <span class="status-pill-label">Gas</span>
+              <span class="status-pill-value">~0.25 gwei est.</span>
+            </div>
+            <div class="status-pill">
+              <span class="status-pill-label">Mesh</span>
+              <span class="status-pill-value" id="status-mesh">${state.meshEvents} events</span>
+            </div>
+          </div>
 
-    <div class="status-strip">
-      <div class="status-left">
-        <span><span id="wallet-dot" class="status-dot"></span><span id="wallet-status">Wallet: Disconnected</span></span>
-        <span>Theme: Dark</span>
-      </div>
-      <div class="status-right">
-        <span>Gas: 0.26 gwei</span>
-        <span>Mesh: Live</span>
+          <div class="status-row" style="margin-top:6px;">
+            <div class="status-pill">
+              <span class="status-pill-label">XP</span>
+              <span class="status-pill-value" id="status-xp">${state.xp}</span>
+            </div>
+            <div class="status-pill">
+              <span class="status-pill-label">Spawn</span>
+              <span class="status-pill-value" id="status-spawn">${state.spawn}</span>
+            </div>
+            <div class="status-pill">
+              <span class="status-pill-label">Mode</span>
+              <span class="status-pill-value">v0.2 · mock data</span>
+            </div>
+          </div>
+
+          <div class="nav-row">
+            <div class="nav-tabs" id="nav-tabs"></div>
+          </div>
+        </header>
+
+        <div class="ticker">
+          <span class="ticker-label">Live pulls</span>
+          <span class="ticker-stream" id="ticker-stream"></span>
+        </div>
+
+        <main class="main-content" id="main-content"></main>
+
+        <footer class="app-footer">
+          <span>SpawnEngine · Layer on Base</span>
+          <a href="https://warpcast.com/spawnengine" target="_blank" rel="noreferrer">
+            @spawnengine
+          </a>
+        </footer>
       </div>
     </div>
-
-    <div class="ticker">
-      <div class="ticker-inner" id="ticker-inner"></div>
-    </div>
-
-    <main class="app-main">
-      <h2 class="view-title" id="view-title"></h2>
-      <div id="view-body"></div>
-    </main>
-
-    <footer class="app-footer">
-      SpawnEngine · Base · Zora · Farcaster · Unified Activity Mesh
-    </footer>
   `;
 
-  setupTabs();
-  setupWallet();
-
-  // Ladda Unified Activity Mesh
-  state.events = await getUnifiedActivity();
-  state.stats = computeStatsFromEvents(state.events);
-  state.zora = await getZoraActivityMock("0xYourWalletHere");
-
+  wireWallet();
+  renderTabs();
   renderTicker();
-  switchView("trading");
+  renderActiveView();
 }
 
-/* TABS */
+// wallet mock
 
-function setupTabs() {
-  const bar = document.getElementById("tab-bar");
-  bar.innerHTML = "";
-
-  TABS.forEach((id) => {
-    const btn = document.createElement("button");
-    btn.className = "tab-btn";
-    btn.dataset.tab = id;
-    btn.textContent = humanTabName(id);
-    btn.addEventListener("click", () => switchView(id));
-    bar.appendChild(btn);
-  });
-
-  const first = bar.querySelector(".tab-btn");
-  if (first) first.classList.add("active");
-}
-
-function setActiveTab(id) {
-  document.querySelectorAll(".tab-btn").forEach((b) => {
-    b.classList.toggle("active", b.dataset.tab === id);
-  });
-}
-
-/* WALLET MOCK */
-
-function setupWallet() {
-  const btn = document.getElementById("wallet-btn");
-  const status = document.getElementById("wallet-status");
-  const dot = document.getElementById("wallet-dot");
-
+function wireWallet() {
+  const btn = document.getElementById("btn-wallet");
+  if (!btn) return;
   btn.addEventListener("click", () => {
-    state.connected = !state.connected;
-    state.wallet = state.connected
-      ? "0x" + Math.random().toString(16).slice(2, 8) + "...mesh"
-      : null;
+    if (!state.wallet) {
+      const rand = Math.random().toString(16).slice(2, 8);
+      state.wallet = `0x094c…${rand}`;
+    } else {
+      state.wallet = null;
+    }
+    updateWalletUI();
+  });
+  updateWalletUI();
+}
 
-    btn.textContent = state.connected ? "Disconnect" : "Connect Wallet";
-    status.textContent = state.connected
-      ? `Wallet: ${state.wallet}`
-      : "Wallet: Disconnected";
-    dot.classList.toggle("on", state.connected);
+function updateWalletUI() {
+  const label = document.getElementById("wallet-label");
+  const statusWallet = document.getElementById("status-wallet");
+  if (!label || !statusWallet) return;
+
+  if (state.wallet) {
+    label.textContent = state.wallet.slice(0, 6) + "…";
+    statusWallet.textContent = state.wallet;
+  } else {
+    label.textContent = "Connect";
+    statusWallet.textContent = "Disconnected";
+  }
+}
+
+// tabs
+
+function renderTabs() {
+  const nav = document.getElementById("nav-tabs");
+  if (!nav) return;
+  nav.innerHTML = "";
+
+  TABS.forEach((tab) => {
+    const btn = document.createElement("button");
+    btn.className = "nav-tab" + (state.activeTab === tab.id ? " active" : "");
+    btn.dataset.tab = tab.id;
+    btn.innerHTML = `<span class="nav-dot"></span><span>${tab.label}</span>`;
+    btn.addEventListener("click", () => {
+      state.activeTab = tab.id;
+      document
+        .querySelectorAll(".nav-tab")
+        .forEach((el) => el.classList.remove("active"));
+      btn.classList.add("active");
+      renderActiveView();
+    });
+    nav.appendChild(btn);
   });
 }
 
-/* TICKER */
+// ticker
 
 function renderTicker() {
-  const el = document.getElementById("ticker-inner");
-  const line = state.events
-    .map((e) => `${e.short} · ${e.rarity} · ${e.owner}`)
+  const el = document.getElementById("ticker-stream");
+  if (!el) return;
+  const text = mockEvents
+    .map((e) => `${e.short} · ${e.label}`)
     .join("   •   ");
-  el.textContent = line;
+  // duplicate so animation loops seamlessly
+  el.textContent = ` ${text}   •   ${text}   •   ${text}`;
 }
 
-/* VIEW SWITCH */
+// views
 
-function switchView(id) {
-  setActiveTab(id);
-  const title = document.getElementById("view-title");
-  const body = document.getElementById("view-body");
+function renderActiveView() {
+  const main = document.getElementById("main-content");
+  if (!main) return;
 
-  title.textContent = humanTabName(id);
-
-  const map = {
-    "trading": viewTrading,
-    "my-packs": viewMyPacks,
-    "creator-forge": viewCreatorForge,
-    "pull-lab": viewPullLab,
-    "pack-maps": viewPackMaps,
-    "warp-verified": viewWarpVerified,
-    "bubbles": viewBubbles,
-    "stats-engine": viewStatsEngine,
-    "deploy-center": viewDeployCenter,
-    "profile": viewProfile,
-    "settings": viewSettings,
-  };
-
-  const renderer = map[id] || (() => "<p>Not implemented yet.</p>");
-  body.innerHTML = renderer();
-
-  if (id === "pack-maps") {
-    drawPackMap();
+  switch (state.activeTab) {
+    case "overview":
+      main.innerHTML = renderOverview();
+      break;
+    case "trading":
+      main.innerHTML = renderTrading();
+      break;
+    case "pull-lab":
+      main.innerHTML = renderPullLab();
+      break;
+    case "pack-maps":
+      main.innerHTML = renderPackMaps();
+      break;
+    case "stats":
+      main.innerHTML = renderStats();
+      break;
+    case "tasks":
+      main.innerHTML = renderTasks();
+      break;
+    case "settings":
+      main.innerHTML = renderSettings();
+      break;
+    default:
+      main.innerHTML = "";
   }
 }
 
-/* VIEWS */
-
-function viewTrading() {
-  const events = state.events;
-
-  const rows = events
-    .map(
-      (e) => `
-      <div class="card">
-        <h3>${e.label}</h3>
-        <p>Kind: ${e.kind}</p>
-        <p>Series: ${e.series}</p>
-        <p>Rarity: ${e.rarity}</p>
-        <p>Owner: ${e.owner}</p>
-      </div>
-    `
-    )
-    .join("");
-
+function renderOverview() {
   return `
-    <div class="card-grid">
-      ${rows}
-    </div>
+    <section class="panel">
+      <div class="panel-title">Mesh overview</div>
+      <div class="panel-sub">
+        One engine for TokenSeries, NFTSeries, Zora packs & XP modules –
+        all streaming into the same onchain mesh.
+      </div>
+
+      <div class="overview-grid">
+        <div class="metric-card">
+          <div class="metric-label">Today’s mesh events</div>
+          <div class="metric-value">${state.meshEvents}</div>
+          <div class="metric-foot">pack_open · burn · swap · zora_buy · casts</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">XP streak</div>
+          <div class="metric-value">${state.xp}</div>
+          <div class="metric-foot">Keep claiming daily tasks to extend the streak.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Spawn balance</div>
+          <div class="metric-value">${state.spawn}</div>
+          <div class="metric-foot">Mock Spawn tokens from packs & quests.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Connected modules</div>
+          <div class="metric-value">4</div>
+          <div class="metric-foot">Factory · TokenSeries · Guard · UtilityRouter</div>
+        </div>
+      </div>
+
+      ${renderDailyTasksInner()}
+    </section>
   `;
 }
 
-function viewMyPacks() {
-  const packs = state.events.filter((e) => e.kind === "pack_open");
-
-  if (!packs.length) {
-    return `<p>Inga packs öppnade ännu.</p>`;
-  }
-
-  const rows = packs
-    .map(
-      (e) => `
-      <div class="card">
-        <h3>${e.label}</h3>
-        <p>Series: ${e.series}</p>
-        <p>Rarity: ${e.rarity}</p>
-        <p>Score: ${e.score}</p>
-      </div>
-    `
-    )
-    .join("");
-
-  return `<div class="card-grid">${rows}</div>`;
-}
-
-function viewCreatorForge() {
+function renderTrading() {
   return `
-    <div class="card-grid">
-      <div class="card">
-        <h3>Forge New Pack Series</h3>
-        <p>Gå från bild → rarity → foil → deploy.</p>
-        <p>Framtiden: koppla direkt till PackFactory-kontraktet.</p>
-        <button class="btn">Start Forge Flow</button>
+    <section class="panel">
+      <div class="panel-title">Trading hub</div>
+      <div class="panel-sub">
+        Future view: swap packs, fragments, cores & creator tokens in one mesh-driven orderbook.
       </div>
-      <div class="card">
-        <h3>Manage Existing Series</h3>
-        <p>Visa och konfigurera redan deployade serier.</p>
-        <button class="btn">Open Series Panel</button>
+
+      <div class="trading-panel">
+        <div>
+          <div class="trading-row-title">Surfaces</div>
+          <div class="trading-card">
+            <div class="trading-card-head">
+              <div>
+                <div class="trading-card-title">Unified orderbook</div>
+                <div class="trading-card-sub">
+                  TokenSeries · NFTSeries · Zora packs · Mesh-linked liquidity.
+                </div>
+              </div>
+              <span class="chip chip-planned">PLANNED</span>
+            </div>
+            <div class="trading-card-foot">
+              Factory deploys multiple series – all stream into one trading surface.
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="trading-row-title">Risk aware lanes</div>
+          <div class="trading-card">
+            <div class="trading-card-head">
+              <div>
+                <div class="trading-card-title">Fragment & shard markets</div>
+                <div class="trading-card-sub">
+                  ReserveGuard protected pools with anti-rug & treasury checks.
+                </div>
+              </div>
+              <span class="chip chip-risk">RISK-AWARE</span>
+            </div>
+            <div class="trading-card-foot">
+              Guard enforces “two-mythic” safety before any new series can go live.
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="trading-row-title">Mesh mode</div>
+          <div class="trading-card">
+            <div class="trading-card-head">
+              <div>
+                <div class="trading-card-title">Mesh-driven routing</div>
+                <div class="trading-card-sub">
+                  Orders, pulls & burns all show up in the unified activity layer.
+                </div>
+              </div>
+              <span class="chip chip-mesh">MESH-DRIVEN</span>
+            </div>
+            <div class="trading-card-foot">
+              One mesh instead of 10 separate dapps.
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   `;
 }
 
-function viewPullLab() {
+function renderPullLab() {
   return `
-    <div class="card-grid">
-      <div class="card">
-        <h3>Fragment Gamble</h3>
-        <p>Burn 10x Fragments → chans på Shard/Core.</p>
-        <button class="btn">Simulate Burn</button>
+    <section class="panel">
+      <div class="panel-title">Pull lab</div>
+      <div class="panel-sub">
+        Simulated pulls per rarity layer – in v1 only Fragments & Shards will be gambled.
       </div>
-      <div class="card">
-        <h3>Shard Gamble</h3>
-        <p>Burn 3x Shards → chans på Artifact/Relic.</p>
-        <button class="btn">Simulate Burn</button>
+      <div class="overview-grid" style="margin-top:9px;">
+        <div class="metric-card">
+          <div class="metric-label">Standard pack</div>
+          <div class="metric-value">100 000</div>
+          <div class="metric-foot">Base cost per pack (mock).</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Fragment EV</div>
+          <div class="metric-value">9 500–10 000</div>
+          <div class="metric-foot">≈ 90% loss by design.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Relic band</div>
+          <div class="metric-value">100–200×</div>
+          <div class="metric-foot">High-end pulls (no gamble).</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Spawn kickback</div>
+          <div class="metric-value">5–10%</div>
+          <div class="metric-foot">XP/Spawn returned per pack open.</div>
+        </div>
       </div>
-      <div class="card">
-        <h3>Zora Packs</h3>
-        <p>Köp ZoraPack → få rarity multipliers baserat på Zora value.</p>
-        <button class="btn">Open Zora Pack</button>
-      </div>
-    </div>
+      ${renderDailyTasksInner()}
+    </section>
   `;
 }
 
-function viewPackMaps() {
+function renderPackMaps() {
   return `
-    <div class="packmap-wrap">
-      <canvas id="packmap-canvas" class="packmap-canvas"></canvas>
-    </div>
+    <section class="panel">
+      <div class="panel-title">Pack maps</div>
+      <div class="panel-sub">
+        Future: visual mesh of series, creators & risk-zones across Base.
+      </div>
+      <div class="trading-card" style="margin-top:9px;">
+        <div class="trading-card-head">
+          <div>
+            <div class="trading-card-title">Mesh nodes</div>
+            <div class="trading-card-sub">
+              Each deployed series becomes a node: TokenSeries, NFTSeries, Zora packs, XP modules.
+            </div>
+          </div>
+          <span class="chip chip-planned">MAP VIEW</span>
+        </div>
+        <div class="trading-card-foot">
+          This version keeps it UI-only – later we wire real onchain topology.
+        </div>
+      </div>
+    </section>
   `;
 }
 
-function drawPackMap() {
-  const canvas = document.getElementById("packmap-canvas");
-  if (!canvas || !canvas.getContext) return;
-  const ctx = canvas.getContext("2d");
-
-  canvas.width = canvas.offsetWidth;
-  canvas.height = canvas.offsetHeight;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  for (let i = 0; i < 60; i++) {
-    const x = Math.random() * canvas.width;
-    const y = Math.random() * canvas.height;
-    const r = Math.random() * 4 + 2;
-
-    const rarityColors = ["#4b5563", "#60a5fa", "#a855f7", "#facc15", "#f97316"];
-    ctx.fillStyle =
-      rarityColors[Math.floor(Math.random() * rarityColors.length)];
-
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-function viewWarpVerified() {
-  const verified = state.events.filter((e) =>
-    e.tags.includes("mythic_hit")
-  );
-
-  if (!verified.length) {
-    return `<p>Inga Warp Verified mythic hits ännu.</p>`;
-  }
-
-  const rows = verified
-    .map(
-      (e) => `
-      <div class="card">
-        <h3>${e.label}</h3>
-        <p>Owner: ${e.owner}</p>
-        <p>Score: ${e.score}</p>
-      </div>
-    `
-    )
-    .join("");
-
-  return `<div class="card-grid">${rows}</div>`;
-}
-
-function viewBubbles() {
+function renderStats() {
   return `
-    <div class="card-grid">
-      <div class="card">
-        <h3>Trending Tags</h3>
-        <p>#GenesisPacks · #ZoraPack · #RelicHit</p>
+    <section class="panel">
+      <div class="panel-title">Stats & luck engine</div>
+      <div class="panel-sub">
+        v0.2 shows the placeholders – v1 will plug real data from TokenPackSeries events.
       </div>
-      <div class="card">
-        <h3>Social Cast</h3>
-        <p>Posta ett mock-cast till Farcaster (framtida Neynar-integration).</p>
-        <button class="btn" id="cast-btn">Post Mock Cast</button>
+      <div class="overview-grid" style="margin-top:9px;">
+        <div class="metric-card">
+          <div class="metric-label">Total packs (mock)</div>
+          <div class="metric-value">12 543</div>
+          <div class="metric-foot">Combined across all series.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Relic rate</div>
+          <div class="metric-value">3.2%</div>
+          <div class="metric-foot">Will be computed from real payouts.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Unique holders</div>
+          <div class="metric-value">987</div>
+          <div class="metric-foot">Based on wallet mesh activity.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Mesh score</div>
+          <div class="metric-value">1.5M</div>
+          <div class="metric-foot">Weighted sum of pulls, burns, swaps & quests.</div>
+        </div>
       </div>
-    </div>
+    </section>
   `;
 }
 
-function viewStatsEngine() {
-  const s = state.stats;
-  if (!s) return `<p>Stats loading...</p>`;
-
+function renderTasks() {
   return `
-    <div class="metric-grid">
-      <div class="metric">
-        <div class="value">${s.totalPacks}</div>
-        <div class="label">Total Packs Opened</div>
+    <section class="panel">
+      <div class="panel-title">Daily mesh tasks</div>
+      <div class="panel-sub">
+        Simple layer-4 style tasks – later wired to real XP & Spawn minting.
       </div>
-      <div class="metric">
-        <div class="value">${s.cores}</div>
-        <div class="label">Core Hits</div>
-      </div>
-      <div class="metric">
-        <div class="value">${s.artifacts}</div>
-        <div class="label">Artifacts</div>
-      </div>
-      <div class="metric">
-        <div class="value">${s.relics}</div>
-        <div class="label">Relics</div>
-      </div>
-      <div class="metric">
-        <div class="value">${s.holderCount}</div>
-        <div class="label">Unique Holders</div>
-      </div>
-    </div>
+      ${renderDailyTasksInner()}
+    </section>
   `;
 }
 
-function viewDeployCenter() {
+function renderDailyTasksInner() {
   return `
-    <div class="card-grid">
-      <div class="card">
-        <h3>Deploy Guard + Factory</h3>
-        <p>Deployar ReserveGuard + PackFactory på Base.</p>
-        <p>(När du kopplar på Hardhat/kontrakt och RPC.)</p>
-        <button class="btn">Deploy Base Skeleton</button>
+    <div class="task-list">
+      <div class="task-header">
+        <span>Today’s loop</span>
+        <span style="color:#22c55e;">+250 XP available</span>
       </div>
-      <div class="card">
-        <h3>Deploy TokenPackSeries</h3>
-        <p>Starta en ny serie med din rarity-tabell.</p>
-        <button class="btn">Launch Series</button>
-      </div>
-      <div class="card">
-        <h3>Creator Registry</h3>
-        <p>Framtida modul för Warp Verified kreatörer.</p>
-        <button class="btn">Open Registry</button>
-      </div>
-    </div>
-  `;
-}
-
-function viewProfile() {
-  const p = state.profile;
-  const walletText = state.wallet || "0x….not-connected";
-
-  return `
-    <div class="profile-header">
-      <div><strong>Spawn Profile</strong></div>
-      <div class="profile-wallet">${walletText}</div>
-      <div class="badge-row">
-        <span class="badge">Streak: ${p.streakDays} days</span>
-        <span class="badge">XP: ${p.xp}</span>
-        <span class="badge">Level ${p.level}</span>
-        <span class="badge">Best hit: ${p.bestHit}</span>
-      </div>
-    </div>
-
-    <div class="metric-grid">
-      <div class="metric">
-        <div class="value">+25</div>
-        <div class="label">Daily XP Ready</div>
-      </div>
-      <div class="metric">
-        <div class="value">3</div>
-        <div class="label">Quests Today</div>
-      </div>
-    </div>
-  `;
-}
-
-function viewSettings() {
-  return `
-    <div class="card-grid">
-      <div class="card">
-        <h3>Theme</h3>
-        <p>Dark mode aktiverad. (Light disabled – protokoll gillar mörker.)</p>
-        <button class="btn">Toggle Theme (mock)</button>
-      </div>
-      <div class="card">
-        <h3>Network</h3>
-        <p>Aktiv kedja: ${NETWORK_INFO.name}</p>
+      <div class="task-items">
+        <div class="task-item">
+          <div class="task-left">
+            <div class="task-dot"></div>
+            <div>
+              <div class="task-label-main">Open a test pack</div>
+              <div class="task-label-sub">Trigger one mock pack_open event</div>
+            </div>
+          </div>
+          <div class="task-xp">+50 XP</div>
+        </div>
+        <div class="task-item">
+          <div class="task-left">
+            <div class="task-dot done"></div>
+            <div>
+              <div class="task-label-main">Connect wallet</div>
+              <div class="task-label-sub">Any Base wallet counts</div>
+            </div>
+          </div>
+          <div class="task-xp">+100 XP</div>
+        </div>
+        <div class="task-item">
+          <div class="task-left">
+            <div class="task-dot"></div>
+            <div>
+              <div class="task-label-main">Share your mesh</div>
+              <div class="task-label-sub">Post a cast with your stats</div>
+            </div>
+          </div>
+          <div class="task-xp">+100 XP</div>
+        </div>
       </div>
     </div>
   `;
 }
 
-/* EXTRA: KOPPLA KNAPPAR I BUBBLES EFTER RENDER */
-
-document.addEventListener("click", async (e) => {
-  if (e.target && e.target.id === "cast-btn") {
-    await postCastMock("Just pulled a Core via SpawnEngine Mesh!", "https://spawn-engine.vercel.app");
-    alert("Mock-cast skickad (loggas i console).");
-  }
-});
-
-/* START */
+function renderSettings() {
+  return `
+    <section class="panel">
+      <div class="panel-title">Settings & modules</div>
+      <div class="panel-sub">
+        Later this becomes the control room for connected wallets, creator modules and Zora/Farcaster hooks.
+      </div>
+      <div class="trading-panel" style="margin-top:9px;">
+        <div class="trading-card">
+          <div class="trading-card-head">
+            <div>
+              <div class="trading-card-title">Wallets</div>
+              <div class="trading-card-sub">
+                Multi-wallet mesh planned – award XP per connected wallet.
+              </div>
+            </div>
+          </div>
+          <div class="trading-card-foot">
+            v0.2 keeps a single wallet mock; we will expand this once onchain reads are live.
+          </div>
+        </div>
+        <div class="trading-card">
+          <div class="trading-card-head">
+            <div>
+              <div class="trading-card-title">Creator modules</div>
+              <div class="trading-card-sub">
+                Factory, TokenPackSeries, ReserveGuard, UtilityRouter & future NFT/Zora modules.
+              </div>
+            </div>
+          </div>
+          <div class="trading-card-foot">
+            This app is the mesh layer UI – contracts stay modular under the hood.
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+}
 
 init();
