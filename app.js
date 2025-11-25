@@ -98,14 +98,19 @@ function init() {
         <main class="main-content" id="main-content"></main>
 
         <footer class="app-footer">
-          <span>SpawnEngine · Layer on Base</span>
-          <a href="https://warpcast.com/spawnengine" target="_blank" rel="noreferrer">
-            @spawnengine
-          </a>
-        </footer>
-      </div>
-    </div>
-  `;
+  <span>SpawnEngine · Layer on Base</span>
+  <div class="footer-links">
+    <a href="https://warpcast.com/spawnengine" target="_blank" rel="noreferrer">
+      Warpcast
+    </a>
+    <a href="https://farcaster.xyz/spawniz" target="_blank" rel="noreferrer">
+      Farcaster
+    </a>
+    <a href="https://x.com/spawnizz" target="_blank" rel="noreferrer">
+      X
+    </a>
+  </div>
+</footer>
   
   wireWallet();
   renderTabs();
