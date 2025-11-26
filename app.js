@@ -8,7 +8,8 @@ const state = {
   tasks: {
     openPack: false,
     connectWallet: false,
-    shareMesh: false,
+    shareWarpcast: false,
+    shareX: false,
   },
 };
 
@@ -563,13 +564,25 @@ function renderTasks() {
 function renderDailyTasksInner() {
   const openDone = state.tasks.openPack;
   const connectDone = state.tasks.connectWallet;
-  const shareDone = state.tasks.shareMesh;
+  const warpDone = state.tasks.shareWarpcast;
+  const xDone = state.tasks.shareX;
+
+  const taskConfig = [
+    { id: "openPack", xp: 50, done: openDone },
+    { id: "connectWallet", xp: 100, done: connectDone },
+    { id: "shareWarpcast", xp: 50, done: warpDone },
+    { id: "shareX", xp: 50, done: xDone },
+  ];
+
+  const remainingXP = taskConfig
+    .filter((t) => !t.done)
+    .reduce((sum, t) => sum + t.xp, 0);
 
   return `
     <div class="task-list">
       <div class="task-header">
         <span>Today’s loop</span>
-        <span class="task-header-xp">+250 XP available</span>
+        <span class="task-header-xp">${remainingXP > 0 ? `+${remainingXP} XP available` : "All tasks done"}</span>
       </div>
       <div class="task-items">
         <div class="task-item${openDone ? " completed" : ""}" data-task="openPack" data-xp="50">
@@ -594,15 +607,26 @@ function renderDailyTasksInner() {
           <div class="task-xp">${connectDone ? "Done" : "+100 XP"}</div>
         </div>
 
-        <div class="task-item${shareDone ? " completed" : ""}" data-task="shareMesh" data-xp="100">
+        <div class="task-item${warpDone ? " completed" : ""}" data-task="shareWarpcast" data-xp="50" data-url="https://warpcast.com/~/composer?text=Checking%20in%20on%20my%20SpawnEngine%20mesh%20stats">
           <div class="task-left">
-            <div class="task-dot${shareDone ? " done" : ""}"></div>
+            <div class="task-dot${warpDone ? " done" : ""}"></div>
             <div>
-              <div class="task-label-main">Share your mesh</div>
-              <div class="task-label-sub">${shareDone ? "Shared once today" : "Post a cast with your stats"}</div>
+              <div class="task-label-main">Share on Warpcast</div>
+              <div class="task-label-sub">${warpDone ? "Shared once today" : "Post a cast with your mesh stats"}</div>
             </div>
           </div>
-          <div class="task-xp">${shareDone ? "Done" : "+100 XP"}</div>
+          <div class="task-xp">${warpDone ? "Done" : "+50 XP"}</div>
+        </div>
+
+        <div class="task-item${xDone ? " completed" : ""}" data-task="shareX" data-xp="50" data-url="https://x.com/intent/tweet?text=Running%20my%20onchain%20packs%20through%20SpawnEngine%20mesh%20layer%20%E2%9A%A1">
+          <div class="task-left">
+            <div class="task-dot${xDone ? " done" : ""}"></div>
+            <div>
+              <div class="task-label-main">Share on X</div>
+              <div class="task-label-sub">${xDone ? "Shared once today" : "Tweet your daily mesh pulse"}</div>
+            </div>
+          </div>
+          <div class="task-xp">${xDone ? "Done" : "+50 XP"}</div>
         </div>
       </div>
     </div>
@@ -659,10 +683,15 @@ function wireTasks() {
   items.forEach((item) => {
     const taskId = item.dataset.task;
     const xpAmount = parseInt(item.dataset.xp || "0", 10);
+    const url = item.dataset.url;
 
     item.onclick = () => {
       if (!taskId) return;
-      if (state.tasks[taskId]) return;
+      if (state.tasks[taskId]) {
+        // redan klar – om det finns url kan vi ändå öppna
+        if (url) window.open(url, "_blank");
+        return;
+      }
 
       state.tasks[taskId] = true;
       state.xp += xpAmount;
@@ -674,6 +703,10 @@ function wireTasks() {
         state.meshEvents += 1;
         const meshEl = document.getElementById("status-mesh");
         if (meshEl) meshEl.textContent = `${state.meshEvents} events`;
+      }
+
+      if (url) {
+        window.open(url, "_blank");
       }
 
       renderActiveView();
