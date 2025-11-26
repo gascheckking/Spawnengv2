@@ -4,17 +4,20 @@ const state = {
   xp: 1575,
   spawn: 497,
   meshEvents: 9,
-  activeTab: "overview",        // landar på Overview
-  overviewInnerTab: "summary",  // inner flikar på Overview
+  activeTab: "overview",
+  chat: [
+    { from: "bot", text: "Welcome to Spawnbot. How can I help you build today?" }
+  ]
 };
 
 const TABS = [
   { id: "overview", label: "Overview" },
+  { id: "profile", label: "Profile" },
+  { id: "daily", label: "Daily" },
   { id: "trading", label: "Trading" },
   { id: "pull-lab", label: "Pull Lab" },
-  { id: "pack-maps", label: "Pack Maps" },
-  { id: "stats", label: "Stats" },
-  { id: "settings", label: "Settings" },
+  { id: "chat", label: "Spawnbot" },
+  { id: "settings", label: "Settings" }
 ];
 
 const mockEvents = [
@@ -22,7 +25,7 @@ const mockEvents = [
   { short: "burn", label: "0x4B…1f → 5x Fragments → Core" },
   { short: "swap", label: "0xD2…90 → Shard Forge (Legendary)" },
   { short: "zora_buy", label: "0x91…ff → Base Relics (Epic)" },
-  { short: "fc_cast", label: "@spawnengine casted new pack series" },
+  { short: "fc_cast", label: "@spawnengine casted new pack series" }
 ];
 
 function init() {
@@ -69,21 +72,6 @@ function init() {
             </div>
           </div>
 
-          <div class="status-row" style="margin-top:6px;">
-            <div class="status-pill">
-              <span class="status-pill-label">XP</span>
-              <span class="status-pill-value" id="status-xp">${state.xp}</span>
-            </div>
-            <div class="status-pill">
-              <span class="status-pill-label">Spawn</span>
-              <span class="status-pill-value" id="status-spawn">${state.spawn}</span>
-            </div>
-            <div class="status-pill">
-              <span class="status-pill-label">Mode</span>
-              <span class="status-pill-value">v0.3 · mock mesh</span>
-            </div>
-          </div>
-
           <div class="nav-row">
             <div class="nav-tabs" id="nav-tabs"></div>
           </div>
@@ -96,22 +84,29 @@ function init() {
 
         <main class="main-content" id="main-content"></main>
 
-        <footer class="app-footer">
-          <span>SpawnEngine · Layer on Base</span>
-          <div class="footer-links">
-            <a href="https://zora.co/@spawniz" target="_blank" rel="noreferrer">
-              Zora
-            </a>
-            <a href="https://farcaster.xyz/spawniz" target="_blank" rel="noreferrer">
-              Farcaster
-            </a>
-            <a href="https://x.com/spawnizz" target="_blank" rel="noreferrer">
-              X/Twitter
-              <a href="https://base.app/profile/0x4A9bBB6FC9602C53aC84D59d8A1C12c89274f7Da" target="_blank" rel="noreferrer">
-              TBA
-            </a>
-          </div>
-        </footer>
+    <footer class="app-footer">
+  <span>SpawnEngine · Layer on Base</span>
+  <div class="footer-links">
+
+    <a href="https://zora.co/@spawniz" target="_blank" rel="noreferrer">
+      Zora
+    </a>
+
+    <a href="https://farcaster.xyz/spawniz" target="_blank" rel="noreferrer">
+      Farcaster
+    </a>
+
+    <a href="https://x.com/spawnizz" target="_blank" rel="noreferrer">
+      X / Twitter
+    </a>
+
+    <a href="https://base.app/profile/0x4A9bBB6FC9602C53aC84D59d8A1C12c89274f7Da"
+       target="_blank" rel="noreferrer">
+      BaseApp (TBA)
+    </a>
+
+  </div>
+</footer>
       </div>
     </div>
   `;
@@ -151,13 +146,6 @@ function updateWalletUI() {
     label.textContent = "Connect";
     statusWallet.textContent = "Disconnected";
   }
-
-  const profileWalletRow = document.getElementById("profile-wallet-row");
-  if (profileWalletRow) {
-    profileWalletRow.textContent = state.wallet
-      ? state.wallet
-      : "Connect wallet to lock in your mesh identity.";
-  }
 }
 
 // tabs
@@ -195,7 +183,7 @@ function renderTicker() {
   el.textContent = ` ${text}   •   ${text}   •   ${text}`;
 }
 
-// main view switch
+// view router
 
 function renderActiveView() {
   const main = document.getElementById("main-content");
@@ -204,7 +192,12 @@ function renderActiveView() {
   switch (state.activeTab) {
     case "overview":
       main.innerHTML = renderOverview();
-      wireOverviewInnerTabs();
+      break;
+    case "profile":
+      main.innerHTML = renderProfile();
+      break;
+    case "daily":
+      main.innerHTML = renderDaily();
       break;
     case "trading":
       main.innerHTML = renderTrading();
@@ -212,11 +205,9 @@ function renderActiveView() {
     case "pull-lab":
       main.innerHTML = renderPullLab();
       break;
-    case "pack-maps":
-      main.innerHTML = renderPackMaps();
-      break;
-    case "stats":
-      main.innerHTML = renderStats();
+    case "chat":
+      main.innerHTML = renderChat();
+      wireChatInput();
       break;
     case "settings":
       main.innerHTML = renderSettings();
@@ -226,358 +217,180 @@ function renderActiveView() {
   }
 }
 
-/* OVERVIEW VIEW + inner flikar */
+/* ========== SPAWNBOT CHAT VIEW ========== */
 
-function renderOverview() {
+function renderChat() {
+  const bubbles = state.chat
+    .map((msg) => {
+      return `
+        <div class="chat-bubble ${msg.from}">
+          ${msg.text}
+        </div>
+      `;
+    })
+    .join("");
+
   return `
     <section class="panel">
-      <div class="panel-title">Mesh overview</div>
+      <div class="panel-title">Spawnbot</div>
       <div class="panel-sub">
-        One engine for TokenSeries, NFTSeries, Zora packs & XP modules –
-        all streaming into the same onchain mesh.
+        Talk to your engine. Create packs, modules, XP lanes & more.
       </div>
 
-      <div class="inner-tabs" id="inner-tabs">
-        <button class="inner-tab" data-inner="summary">Summary</button>
-        <button class="inner-tab" data-inner="profile">Profile</button>
-        <button class="inner-tab" data-inner="daily">Daily</button>
-        <button class="inner-tab" data-inner="leaderboard">Leaderboard</button>
-        <button class="inner-tab" data-inner="spawn">Spawn Token</button>
-      </div>
+      <div class="chat-window">${bubbles}</div>
 
-      <div id="overview-inner-body">
-        ${renderOverviewInnerBody()}
+      <div class="chat-input-row">
+        <input id="chat-input" class="chat-input" placeholder="Type a command..." />
+        <button id="chat-send" class="chat-send">→</button>
       </div>
     </section>
   `;
 }
 
-function wireOverviewInnerTabs() {
-  const container = document.getElementById("inner-tabs");
-  if (!container) return;
-  const buttons = container.querySelectorAll(".inner-tab");
-  buttons.forEach((btn) => {
-    const id = btn.getAttribute("data-inner");
-    if (id === state.overviewInnerTab) {
-      btn.classList.add("active");
-    }
-    btn.addEventListener("click", () => {
-      state.overviewInnerTab = id;
-      buttons.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      const body = document.getElementById("overview-inner-body");
-      if (body) {
-        body.innerHTML = renderOverviewInnerBody();
-      }
-      updateWalletUI();
-    });
+function wireChatInput() {
+  const input = document.getElementById("chat-input");
+  const btn = document.getElementById("chat-send");
+
+  if (!input || !btn) return;
+
+  btn.addEventListener("click", () => sendChat());
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendChat();
   });
 }
 
-function renderOverviewInnerBody() {
-  switch (state.overviewInnerTab) {
-    case "profile":
-      return renderOverviewProfile();
-    case "daily":
-      return renderOverviewDaily();
-    case "leaderboard":
-      return renderOverviewLeaderboard();
-    case "spawn":
-      return renderOverviewSpawnToken();
-    case "summary":
-    default:
-      return renderOverviewSummary();
-  }
+function sendChat() {
+  const input = document.getElementById("chat-input");
+  if (!input || !input.value.trim()) return;
+
+  const text = input.value.trim();
+  input.value = "";
+
+  state.chat.push({ from: "user", text });
+
+  state.chat.push({
+    from: "bot",
+    text: `I registered your request: "${text}". Soon I will be able to deploy modules automatically.`
+  });
+
+  renderActiveView();
 }
 
-function renderOverviewSummary() {
-  return `
-    <div class="overview-grid">
-      <div class="metric-card">
-        <div class="metric-label">Today’s mesh events</div>
-        <div class="metric-value">${state.meshEvents}</div>
-        <div class="metric-foot">pack_open · burn · swap · zora_buy · casts</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">XP streak</div>
-        <div class="metric-value">${state.xp}</div>
-        <div class="metric-foot">Keep claiming daily tasks to extend the streak.</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Spawn balance</div>
-        <div class="metric-value">${state.spawn}</div>
-        <div class="metric-foot">Mock Spawn tokens from packs & quests.</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Connected modules</div>
-        <div class="metric-value">4</div>
-        <div class="metric-foot">Factory · TokenSeries · Guard · UtilityRouter</div>
-      </div>
-    </div>
-  `;
-}
+/* ========== OTHER VIEWS (OVERVIEW, PROFILE, DAILY, etc) ========== */
 
-function renderOverviewProfile() {
-  const handle = "@spawnengine";
-  const chain = "Base";
-  const modules = ["Factory", "TokenPackSeries", "ReserveGuard", "UtilityRouter"];
-
+function renderOverview() {
   return `
-    <div style="margin-top:9px;">
-      <div class="trading-card">
-        <div class="trading-card-head">
-          <div style="display:flex;align-items:center;gap:9px;">
-            <div class="brand-icon" style="width:34px;height:34px;font-size:13px;">SE</div>
-            <div>
-              <div class="trading-card-title">${handle}</div>
-              <div class="trading-card-sub">
-                Mesh owner on ${chain} · Layer-4 style XP & packs
-              </div>
-            </div>
-          </div>
-          <span class="chip chip-mesh">ONLINE</span>
-        </div>
-        <div class="trading-card-foot">
-          Connected modules: ${modules.join(" · ")} (mock v0.3).
-        </div>
-      </div>
+    <section class="panel">
+      <div class="panel-title">Overview</div>
+      <div class="panel-sub">Your layer on Base: packs · modules · XP · mesh activity</div>
 
       <div class="overview-grid">
         <div class="metric-card">
           <div class="metric-label">XP streak</div>
           <div class="metric-value">${state.xp}</div>
-          <div class="metric-foot">Grows as you complete daily mesh tasks.</div>
+          <div class="metric-foot">Completing daily tasks extends it.</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Spawn balance</div>
           <div class="metric-value">${state.spawn}</div>
-          <div class="metric-foot">Test rewards from packs & quests (mock).</div>
+          <div class="metric-foot">Mock rewards.</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Today’s events</div>
+          <div class="metric-label">Today’s mesh</div>
           <div class="metric-value">${state.meshEvents}</div>
-          <div class="metric-foot">pack_open · burns · swaps · casts.</div>
+          <div class="metric-foot">Actual feeds coming soon.</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Connected surfaces</div>
-          <div class="metric-value">3</div>
-          <div class="metric-foot">Token packs · NFT packs · Zora packs (planned).</div>
+          <div class="metric-label">Modules</div>
+          <div class="metric-value">4</div>
+          <div class="metric-foot">Factory / Series / Guard / Router</div>
         </div>
       </div>
+    </section>
+  `;
+}
 
-      <div class="trading-panel">
-        <div>
-          <div class="trading-row-title">Linked apps</div>
-          <div class="trading-card">
-            <div class="trading-card-head">
+function renderProfile() {
+  return `
+    <section class="panel">
+      <div class="panel-title">Profile</div>
+      <div class="panel-sub">Wallet identity & surfaces</div>
+
+      <div class="trading-card">
+        <div class="trading-card-head">
+          <div>
+            <div class="trading-card-title">@spawnengine</div>
+            <div class="trading-card-sub">
+              Layer-4 mesh identity (mock).
+            </div>
+          </div>
+          <span class="chip chip-mesh">ONLINE</span>
+        </div>
+        <div class="trading-card-foot">
+          Wallet: ${state.wallet ? state.wallet : "Disconnected"}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderDaily() {
+  return `
+    <section class="panel">
+      <div class="panel-title">Daily tasks</div>
+      <div class="panel-sub">Simple mock streak & XP</div>
+
+      <div class="task-list">
+        <div class="task-header">
+          <span>Today’s loop</span>
+          <span style="color:#22c55e;">+250 XP</span>
+        </div>
+
+        <div class="task-items">
+          <div class="task-item">
+            <div class="task-left">
+              <div class="task-dot"></div>
               <div>
-                <div class="trading-card-title">Base wallet</div>
-                <div class="trading-card-sub" id="profile-wallet-row">
-                  ${state.wallet ? state.wallet : "Connect wallet to lock in your mesh identity."}
-                </div>
+                <div class="task-label-main">Open one test pack</div>
+                <div class="task-label-sub">Triggers a mock event</div>
               </div>
-              <span class="chip chip-mesh">REQUIRED</span>
             </div>
-            <div class="trading-card-foot">
-              In v1, XP and Spawn rewards will be tied to this wallet’s onchain activity.
-            </div>
+            <div class="task-xp">+50 XP</div>
           </div>
-        </div>
 
-        <div>
-          <div class="trading-row-title">Social surfaces</div>
-          <div class="trading-card">
-            <div class="trading-card-head">
+          <div class="task-item">
+            <div class="task-left">
+              <div class="task-dot done"></div>
               <div>
-                <div class="trading-card-title">Farcaster & Zora</div>
-                <div class="trading-card-sub">
-                  Future hooks: casts, mints & creator coins streamed into the mesh.
-                </div>
+                <div class="task-label-main">Connect wallet</div>
+                <div class="task-label-sub">Any Base wallet counts</div>
               </div>
-              <span class="chip chip-planned">PLANNED</span>
             </div>
-            <div class="trading-card-foot">
-              Your casts and creator actions will become first-class events in the activity layer.
+            <div class="task-xp">+100 XP</div>
+          </div>
+
+          <div class="task-item">
+            <div class="task-left">
+              <div class="task-dot"></div>
+              <div>
+                <div class="task-label-main">Share your mesh</div>
+                <div class="task-label-sub">Post a cast</div>
+              </div>
             </div>
+            <div class="task-xp">+100 XP</div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   `;
 }
-
-function renderOverviewDaily() {
-  return `
-    <div style="margin-top:9px;">
-      ${renderDailyTasksInner()}
-    </div>
-  `;
-}
-
-function renderOverviewLeaderboard() {
-  return `
-    <div style="margin-top:9px;">
-      <div class="trading-row-title">Mesh leaderboard (mock)</div>
-      <div class="leaderboard-list">
-        <div class="leader-row">
-          <div class="leader-left">
-            <span class="leader-rank">#1</span>
-            <span class="leader-handle">@spawnengine</span>
-          </div>
-          <span class="leader-score">42 000 XP</span>
-        </div>
-        <div class="leader-row">
-          <div class="leader-left">
-            <span class="leader-rank">#2</span>
-            <span class="leader-handle">@meshcollector</span>
-          </div>
-          <span class="leader-score">31 500 XP</span>
-        </div>
-        <div class="leader-row">
-          <div class="leader-left">
-            <span class="leader-rank">#3</span>
-            <span class="leader-handle">@basepacks</span>
-          </div>
-          <span class="leader-score">27 800 XP</span>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function renderOverviewSpawnToken() {
-  return `
-    <div class="spawn-panel">
-      <div style="margin-bottom:4px;color:#e5e7eb;font-size:10px;font-weight:600;">
-        <span class="spawn-highlight">Spawn</span> as the mesh reward rail
-      </div>
-      <div>
-        XP & Spawn stay off-treasury: every pack open can kick back 5–10% of
-        card value in <span class="spawn-highlight">Spawn</span> or XP, without
-        touching the underlying series reserves.
-      </div>
-      <div style="margin-top:6px;">
-        Later, this view will control:
-        <ul style="margin:3px 0 0 16px;padding:0;font-size:9px;">
-          <li>daily Spawn faucets for active wallets</li>
-          <li>XP → Spawn conversion ranges</li>
-          <li>bonus bands for Relic / Mythic pulls</li>
-        </ul>
-      </div>
-    </div>
-  `;
-}
-
-/* DAILY TASK BLOCK */
-
-function renderDailyTasksInner() {
-  return `
-    <div class="task-list">
-      <div class="task-header">
-        <span>Today’s loop</span>
-        <span style="color:#22c55e;">+250 XP available</span>
-      </div>
-      <div class="task-items">
-        <div class="task-item">
-          <div class="task-left">
-            <div class="task-dot"></div>
-            <div>
-              <div class="task-label-main">Open a test pack</div>
-              <div class="task-label-sub">Trigger one mock pack_open event</div>
-            </div>
-          </div>
-          <div class="task-xp">+50 XP</div>
-        </div>
-        <div class="task-item">
-          <div class="task-left">
-            <div class="task-dot done"></div>
-            <div>
-              <div class="task-label-main">Connect wallet</div>
-              <div class="task-label-sub">Any Base wallet counts</div>
-            </div>
-          </div>
-          <div class="task-xp">+100 XP</div>
-        </div>
-        <div class="task-item">
-          <div class="task-left">
-            <div class="task-dot"></div>
-            <div>
-              <div class="task-label-main">Share your mesh</div>
-              <div class="task-label-sub">Post a cast with your stats</div>
-            </div>
-          </div>
-          <div class="task-xp">+100 XP</div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-/* ÖVRIGA TABBAR */
 
 function renderTrading() {
   return `
     <section class="panel">
-      <div class="panel-title">Trading hub</div>
-      <div class="panel-sub">
-        Future view: swap packs, fragments, cores & creator tokens in one mesh-driven orderbook.
-      </div>
-
-      <div class="trading-panel">
-        <div>
-          <div class="trading-row-title">Surfaces</div>
-          <div class="trading-card">
-            <div class="trading-card-head">
-              <div>
-                <div class="trading-card-title">Unified orderbook</div>
-                <div class="trading-card-sub">
-                  TokenSeries · NFTSeries · Zora packs · Mesh-linked liquidity.
-                </div>
-              </div>
-              <span class="chip chip-planned">PLANNED</span>
-            </div>
-            <div class="trading-card-foot">
-              Factory deploys multiple series – all stream into one trading surface.
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div class="trading-row-title">Risk aware lanes</div>
-          <div class="trading-card">
-            <div class="trading-card-head">
-              <div>
-                <div class="trading-card-title">Fragment & shard markets</div>
-                <div class="trading-card-sub">
-                  ReserveGuard protected pools with anti-rug & treasury checks.
-                </div>
-              </div>
-              <span class="chip chip-risk">RISK-AWARE</span>
-            </div>
-            <div class="trading-card-foot">
-              Guard enforces “two-mythic” safety before any new series can go live.
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div class="trading-row-title">Mesh mode</div>
-          <div class="trading-card">
-            <div class="trading-card-head">
-              <div>
-                <div class="trading-card-title">Mesh-driven routing</div>
-                <div class="trading-card-sub">
-                  Orders, pulls & burns all show up in the unified activity layer.
-                </div>
-              </div>
-              <span class="chip chip-mesh">MESH-DRIVEN</span>
-            </div>
-            <div class="trading-card-foot">
-              One mesh instead of 10 separate dapps.
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="panel-title">Trading</div>
+      <div class="panel-sub">Unified surfaces (mock)</div>
+      <p style="opacity:0.5;margin-top:8px;">v0.4 UI only</p>
     </section>
   `;
 }
@@ -585,90 +398,9 @@ function renderTrading() {
 function renderPullLab() {
   return `
     <section class="panel">
-      <div class="panel-title">Pull lab</div>
-      <div class="panel-sub">
-        Simulated pulls per rarity layer – in v1 only Fragments & Shards will be gambled.
-      </div>
-      <div class="overview-grid" style="margin-top:9px;">
-        <div class="metric-card">
-          <div class="metric-label">Standard pack</div>
-          <div class="metric-value">100 000</div>
-          <div class="metric-foot">Base cost per pack (mock).</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Fragment EV</div>
-          <div class="metric-value">9 500–10 000</div>
-          <div class="metric-foot">≈ 90% loss by design.</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Relic band</div>
-          <div class="metric-value">100–200×</div>
-          <div class="metric-foot">High-end pulls (no gamble).</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Spawn kickback</div>
-          <div class="metric-value">5–10%</div>
-          <div class="metric-foot">XP/Spawn returned per pack open.</div>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
-function renderPackMaps() {
-  return `
-    <section class="panel">
-      <div class="panel-title">Pack maps</div>
-      <div class="panel-sub">
-        Future: visual mesh of series, creators & risk-zones across Base.
-      </div>
-      <div class="trading-card" style="margin-top:9px;">
-        <div class="trading-card-head">
-          <div>
-            <div class="trading-card-title">Mesh nodes</div>
-            <div class="trading-card-sub">
-              Each deployed series becomes a node: TokenSeries, NFTSeries, Zora packs, XP modules.
-            </div>
-          </div>
-          <span class="chip chip-planned">MAP VIEW</span>
-        </div>
-        <div class="trading-card-foot">
-          This version keeps it UI-only – later we wire real onchain topology.
-        </div>
-      </div>
-    </section>
-  `;
-}
-
-function renderStats() {
-  return `
-    <section class="panel">
-      <div class="panel-title">Stats & luck engine</div>
-      <div class="panel-sub">
-        v0.3 shows the placeholders – v1 will plug real data from TokenPackSeries events.
-      </div>
-      <div class="overview-grid" style="margin-top:9px;">
-        <div class="metric-card">
-          <div class="metric-label">Total packs (mock)</div>
-          <div class="metric-value">12 543</div>
-          <div class="metric-foot">Combined across all series.</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Relic rate</div>
-          <div class="metric-value">3.2%</div>
-          <div class="metric-foot">Will be computed from real payouts.</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Unique holders</div>
-          <div class="metric-value">987</div>
-          <div class="metric-foot">Based on wallet mesh activity.</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Mesh score</div>
-          <div class="metric-value">1.5M</div>
-          <div class="metric-foot">Weighted sum of pulls, burns, swaps & quests.</div>
-        </div>
-      </div>
+      <div class="panel-title">Pull Lab</div>
+      <div class="panel-sub">Rarity ranges (mock)</div>
+      <p style="opacity:0.5;margin-top:8px;">v0.4 UI only</p>
     </section>
   `;
 }
@@ -676,38 +408,9 @@ function renderStats() {
 function renderSettings() {
   return `
     <section class="panel">
-      <div class="panel-title">Settings & modules</div>
-      <div class="panel-sub">
-        Later this becomes the control room for connected wallets, creator modules and Zora/Farcaster hooks.
-      </div>
-      <div class="trading-panel" style="margin-top:9px;">
-        <div class="trading-card">
-          <div class="trading-card-head">
-            <div>
-              <div class="trading-card-title">Wallets</div>
-              <div class="trading-card-sub">
-                Multi-wallet mesh planned – award XP per connected wallet.
-              </div>
-            </div>
-          </div>
-          <div class="trading-card-foot">
-            v0.3 keeps a single wallet mock; we will expand this once onchain reads are live.
-          </div>
-        </div>
-        <div class="trading-card">
-          <div class="trading-card-head">
-            <div>
-              <div class="trading-card-title">Creator modules</div>
-              <div class="trading-card-sub">
-                Factory, TokenPackSeries, ReserveGuard, UtilityRouter & future NFT/Zora modules.
-              </div>
-            </div>
-          </div>
-          <div class="trading-card-foot">
-            This app is the mesh layer UI – contracts stay modular under the hood.
-          </div>
-        </div>
-      </div>
+      <div class="panel-title">Settings</div>
+      <div class="panel-sub">Modules, wallets, surfaces (mock)</div>
+      <p style="opacity:0.5;margin-top:8px;">v0.4 UI only</p>
     </section>
   `;
 }
