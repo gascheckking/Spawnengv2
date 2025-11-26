@@ -99,7 +99,7 @@ function init() {
         <footer class="app-footer">
           <span>SpawnEngine · Layer on Base</span>
           <div class="footer-links">
-            <a href="https://warpcast.com/spawnengine" target="_blank" rel="noreferrer">
+            <a href="https://warpcast.com/spawniz" target="_blank" rel="noreferrer">
               Warpcast
             </a>
             <a href="https://farcaster.xyz/spawniz" target="_blank" rel="noreferrer">
