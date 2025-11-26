@@ -99,14 +99,14 @@ function init() {
         <footer class="app-footer">
           <span>SpawnEngine · Layer on Base</span>
           <div class="footer-links">
-            <a href="https://warpcast.com/spawniz" target="_blank" rel="noreferrer">
-              Warpcast
+            <a href="https://zora.co/@spawniz" target="_blank" rel="noreferrer">
+              Zora
             </a>
             <a href="https://farcaster.xyz/spawniz" target="_blank" rel="noreferrer">
               Farcaster
             </a>
             <a href="https://x.com/spawnizz" target="_blank" rel="noreferrer">
-              X
+              X/Twitter
             </a>
           </div>
         </footer>
