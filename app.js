@@ -5,6 +5,11 @@ const state = {
   spawn: 497,
   meshEvents: 9,
   activeTab: "profile",
+  tasks: {
+    openPack: false,
+    connectWallet: false,
+    shareMesh: false,
+  },
 };
 
 const TABS = [
@@ -45,7 +50,7 @@ function init() {
               </div>
             </div>
             <div class="brand-right">
-              <div class="pill">
+              <div class="pill pill-network">
                 <span class="pill-dot"></span>
                 <span class="pill-label">Base · Mesh Layer</span>
               </div>
@@ -70,7 +75,7 @@ function init() {
             </div>
           </div>
 
-          <div class="status-row" style="margin-top:6px;">
+          <div class="status-row status-row-secondary">
             <div class="status-pill">
               <span class="status-pill-label">XP</span>
               <span class="status-pill-value" id="status-xp">${state.xp}</span>
@@ -121,20 +126,32 @@ function init() {
   renderActiveView();
 }
 
-// wallet mock
+/* wallet mock */
 
 function wireWallet() {
   const btn = document.getElementById("btn-wallet");
   if (!btn) return;
+
   btn.addEventListener("click", () => {
     if (!state.wallet) {
       const rand = Math.random().toString(16).slice(2, 8);
       state.wallet = `0x094c…${rand}`;
+
+      // complete "connect wallet" task if not done
+      if (!state.tasks.connectWallet) {
+        state.tasks.connectWallet = true;
+        state.xp += 100;
+        const xpEl = document.getElementById("status-xp");
+        if (xpEl) xpEl.textContent = state.xp;
+      }
     } else {
       state.wallet = null;
     }
+
     updateWalletUI();
+    renderActiveView();
   });
+
   updateWalletUI();
 }
 
@@ -152,7 +169,7 @@ function updateWalletUI() {
   }
 }
 
-// tabs
+/* tabs */
 
 function renderTabs() {
   const nav = document.getElementById("nav-tabs");
@@ -176,7 +193,7 @@ function renderTabs() {
   });
 }
 
-// ticker
+/* ticker */
 
 function renderTicker() {
   const el = document.getElementById("ticker-stream");
@@ -187,7 +204,7 @@ function renderTicker() {
   el.textContent = ` ${text}   •   ${text}   •   ${text}`;
 }
 
-// views
+/* main view switch */
 
 function renderActiveView() {
   const main = document.getElementById("main-content");
@@ -221,9 +238,11 @@ function renderActiveView() {
     default:
       main.innerHTML = "";
   }
+
+  wireTasks();
 }
 
-/* PROFILE VIEW */
+/* PROFILE */
 
 function renderProfile() {
   const handle = "@spawnengine";
@@ -237,10 +256,10 @@ function renderProfile() {
         One wallet, multiple contract types, all flowing into a single activity mesh.
       </div>
 
-      <div class="trading-card" style="margin-top:9px;">
+      <div class="trading-card trading-card-hero">
         <div class="trading-card-head">
-          <div style="display:flex;align-items:center;gap:9px;">
-            <div class="brand-icon" style="width:36px;height:36px;font-size:14px;">SE</div>
+          <div class="hero-head-left">
+            <div class="brand-icon hero-icon">SE</div>
             <div>
               <div class="trading-card-title">${handle}</div>
               <div class="trading-card-sub">
@@ -321,6 +340,8 @@ function renderProfile() {
   `;
 }
 
+/* OVERVIEW */
+
 function renderOverview() {
   return `
     <section class="panel">
@@ -357,6 +378,8 @@ function renderOverview() {
     </section>
   `;
 }
+
+/* TRADING */
 
 function renderTrading() {
   return `
@@ -425,6 +448,8 @@ function renderTrading() {
   `;
 }
 
+/* PULL LAB */
+
 function renderPullLab() {
   return `
     <section class="panel">
@@ -432,7 +457,7 @@ function renderPullLab() {
       <div class="panel-sub">
         Simulated pulls per rarity layer – in v1 only Fragments & Shards will be gambled.
       </div>
-      <div class="overview-grid" style="margin-top:9px;">
+      <div class="overview-grid overview-grid-tight">
         <div class="metric-card">
           <div class="metric-label">Standard pack</div>
           <div class="metric-value">100 000</div>
@@ -459,6 +484,8 @@ function renderPullLab() {
   `;
 }
 
+/* PACK MAPS */
+
 function renderPackMaps() {
   return `
     <section class="panel">
@@ -484,6 +511,8 @@ function renderPackMaps() {
   `;
 }
 
+/* STATS */
+
 function renderStats() {
   return `
     <section class="panel">
@@ -491,7 +520,7 @@ function renderStats() {
       <div class="panel-sub">
         v0.2 shows the placeholders – v1 will plug real data from TokenPackSeries events.
       </div>
-      <div class="overview-grid" style="margin-top:9px;">
+      <div class="overview-grid overview-grid-tight">
         <div class="metric-card">
           <div class="metric-label">Total packs (mock)</div>
           <div class="metric-value">12 543</div>
@@ -517,6 +546,8 @@ function renderStats() {
   `;
 }
 
+/* TASKS */
+
 function renderTasks() {
   return `
     <section class="panel">
@@ -530,47 +561,55 @@ function renderTasks() {
 }
 
 function renderDailyTasksInner() {
+  const openDone = state.tasks.openPack;
+  const connectDone = state.tasks.connectWallet;
+  const shareDone = state.tasks.shareMesh;
+
   return `
     <div class="task-list">
       <div class="task-header">
         <span>Today’s loop</span>
-        <span style="color:#22c55e;">+250 XP available</span>
+        <span class="task-header-xp">+250 XP available</span>
       </div>
       <div class="task-items">
-        <div class="task-item">
+        <div class="task-item${openDone ? " completed" : ""}" data-task="openPack" data-xp="50">
           <div class="task-left">
-            <div class="task-dot"></div>
+            <div class="task-dot${openDone ? " done" : ""}"></div>
             <div>
               <div class="task-label-main">Open a test pack</div>
-              <div class="task-label-sub">Trigger one mock pack_open event</div>
+              <div class="task-label-sub">${openDone ? "Completed" : "Trigger one mock pack_open event"}</div>
             </div>
           </div>
-          <div class="task-xp">+50 XP</div>
+          <div class="task-xp">${openDone ? "Done" : "+50 XP"}</div>
         </div>
-        <div class="task-item">
+
+        <div class="task-item${connectDone ? " completed" : ""}" data-task="connectWallet" data-xp="100">
           <div class="task-left">
-            <div class="task-dot done"></div>
+            <div class="task-dot${connectDone ? " done" : ""}"></div>
             <div>
               <div class="task-label-main">Connect wallet</div>
-              <div class="task-label-sub">Any Base wallet counts</div>
+              <div class="task-label-sub">${connectDone ? "Wallet linked to mesh" : "Any Base wallet counts"}</div>
             </div>
           </div>
-          <div class="task-xp">+100 XP</div>
+          <div class="task-xp">${connectDone ? "Done" : "+100 XP"}</div>
         </div>
-        <div class="task-item">
+
+        <div class="task-item${shareDone ? " completed" : ""}" data-task="shareMesh" data-xp="100">
           <div class="task-left">
-            <div class="task-dot"></div>
+            <div class="task-dot${shareDone ? " done" : ""}"></div>
             <div>
               <div class="task-label-main">Share your mesh</div>
-              <div class="task-label-sub">Post a cast with your stats</div>
+              <div class="task-label-sub">${shareDone ? "Shared once today" : "Post a cast with your stats"}</div>
             </div>
           </div>
-          <div class="task-xp">+100 XP</div>
+          <div class="task-xp">${shareDone ? "Done" : "+100 XP"}</div>
         </div>
       </div>
     </div>
   `;
 }
+
+/* SETTINGS */
 
 function renderSettings() {
   return `
@@ -579,7 +618,7 @@ function renderSettings() {
       <div class="panel-sub">
         Later this becomes the control room for connected wallets, creator modules and Zora/Farcaster hooks.
       </div>
-      <div class="trading-panel" style="margin-top:9px;">
+      <div class="trading-panel trading-panel-settings">
         <div class="trading-card">
           <div class="trading-card-head">
             <div>
@@ -611,4 +650,35 @@ function renderSettings() {
   `;
 }
 
-init();
+/* wire daily tasks */
+
+function wireTasks() {
+  const items = document.querySelectorAll(".task-item");
+  if (!items.length) return;
+
+  items.forEach((item) => {
+    const taskId = item.dataset.task;
+    const xpAmount = parseInt(item.dataset.xp || "0", 10);
+
+    item.onclick = () => {
+      if (!taskId) return;
+      if (state.tasks[taskId]) return;
+
+      state.tasks[taskId] = true;
+      state.xp += xpAmount;
+
+      const xpEl = document.getElementById("status-xp");
+      if (xpEl) xpEl.textContent = state.xp;
+
+      if (taskId === "openPack") {
+        state.meshEvents += 1;
+        const meshEl = document.getElementById("status-mesh");
+        if (meshEl) meshEl.textContent = `${state.meshEvents} events`;
+      }
+
+      renderActiveView();
+    };
+  });
+}
+
+document.addEventListener("DOMContentLoaded", init);
