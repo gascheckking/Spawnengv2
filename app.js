@@ -4,17 +4,16 @@ const state = {
   xp: 1575,
   spawn: 497,
   meshEvents: 9,
-  activeTab: "profile",
+  activeTab: "overview",        // landar på Overview
+  overviewInnerTab: "summary",  // inner flikar på Overview
 };
 
 const TABS = [
-  { id: "profile", label: "Profile" },
   { id: "overview", label: "Overview" },
   { id: "trading", label: "Trading" },
   { id: "pull-lab", label: "Pull Lab" },
   { id: "pack-maps", label: "Pack Maps" },
   { id: "stats", label: "Stats" },
-  { id: "tasks", label: "Daily" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -40,7 +39,7 @@ function init() {
               <div>
                 <div class="brand-copy-title">SPAWNENGINE</div>
                 <div class="brand-copy-sub">
-                  Modular onchain mesh for packs, XP, badges & creator modules
+                  Modular onchain engine for packs, XP, badges & creator modules
                 </div>
               </div>
             </div>
@@ -70,7 +69,7 @@ function init() {
             </div>
           </div>
 
-          <div class="status-row" style="margin-top:4px;">
+          <div class="status-row" style="margin-top:6px;">
             <div class="status-pill">
               <span class="status-pill-label">XP</span>
               <span class="status-pill-value" id="status-xp">${state.xp}</span>
@@ -81,7 +80,7 @@ function init() {
             </div>
             <div class="status-pill">
               <span class="status-pill-label">Mode</span>
-              <span class="status-pill-value">v0.2 · mock mesh</span>
+              <span class="status-pill-value">v0.3 · mock mesh</span>
             </div>
           </div>
 
@@ -134,8 +133,6 @@ function wireWallet() {
       state.wallet = null;
     }
     updateWalletUI();
-    // re-render profile so wallet row + daily-task state updates
-    renderActiveView();
   });
   updateWalletUI();
 }
@@ -151,6 +148,13 @@ function updateWalletUI() {
   } else {
     label.textContent = "Connect";
     statusWallet.textContent = "Disconnected";
+  }
+
+  const profileWalletRow = document.getElementById("profile-wallet-row");
+  if (profileWalletRow) {
+    profileWalletRow.textContent = state.wallet
+      ? state.wallet
+      : "Connect wallet to lock in your mesh identity.";
   }
 }
 
@@ -189,18 +193,16 @@ function renderTicker() {
   el.textContent = ` ${text}   •   ${text}   •   ${text}`;
 }
 
-// main view router
+// main view switch
 
 function renderActiveView() {
   const main = document.getElementById("main-content");
   if (!main) return;
 
   switch (state.activeTab) {
-    case "profile":
-      main.innerHTML = renderProfile();
-      break;
     case "overview":
       main.innerHTML = renderOverview();
+      wireOverviewInnerTabs();
       break;
     case "trading":
       main.innerHTML = renderTrading();
@@ -214,55 +216,127 @@ function renderActiveView() {
     case "stats":
       main.innerHTML = renderStats();
       break;
-    case "tasks":
-      main.innerHTML = renderTasks();
-      break;
     case "settings":
       main.innerHTML = renderSettings();
       break;
     default:
       main.innerHTML = "";
   }
+}
 
-  wireTaskClicks();
-  // sync wallet text on profile view
-  const profileWalletRow = document.getElementById("profile-wallet-row");
-  if (profileWalletRow) {
-    profileWalletRow.textContent = state.wallet
-      ? state.wallet
-      : "Connect wallet to lock in your mesh identity.";
+/* OVERVIEW VIEW + inner flikar */
+
+function renderOverview() {
+  return `
+    <section class="panel">
+      <div class="panel-title">Mesh overview</div>
+      <div class="panel-sub">
+        One engine for TokenSeries, NFTSeries, Zora packs & XP modules –
+        all streaming into the same onchain mesh.
+      </div>
+
+      <div class="inner-tabs" id="inner-tabs">
+        <button class="inner-tab" data-inner="summary">Summary</button>
+        <button class="inner-tab" data-inner="profile">Profile</button>
+        <button class="inner-tab" data-inner="daily">Daily</button>
+        <button class="inner-tab" data-inner="leaderboard">Leaderboard</button>
+        <button class="inner-tab" data-inner="spawn">Spawn Token</button>
+      </div>
+
+      <div id="overview-inner-body">
+        ${renderOverviewInnerBody()}
+      </div>
+    </section>
+  `;
+}
+
+function wireOverviewInnerTabs() {
+  const container = document.getElementById("inner-tabs");
+  if (!container) return;
+  const buttons = container.querySelectorAll(".inner-tab");
+  buttons.forEach((btn) => {
+    const id = btn.getAttribute("data-inner");
+    if (id === state.overviewInnerTab) {
+      btn.classList.add("active");
+    }
+    btn.addEventListener("click", () => {
+      state.overviewInnerTab = id;
+      buttons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      const body = document.getElementById("overview-inner-body");
+      if (body) {
+        body.innerHTML = renderOverviewInnerBody();
+      }
+      updateWalletUI();
+    });
+  });
+}
+
+function renderOverviewInnerBody() {
+  switch (state.overviewInnerTab) {
+    case "profile":
+      return renderOverviewProfile();
+    case "daily":
+      return renderOverviewDaily();
+    case "leaderboard":
+      return renderOverviewLeaderboard();
+    case "spawn":
+      return renderOverviewSpawnToken();
+    case "summary":
+    default:
+      return renderOverviewSummary();
   }
 }
 
-/* PROFILE VIEW */
+function renderOverviewSummary() {
+  return `
+    <div class="overview-grid">
+      <div class="metric-card">
+        <div class="metric-label">Today’s mesh events</div>
+        <div class="metric-value">${state.meshEvents}</div>
+        <div class="metric-foot">pack_open · burn · swap · zora_buy · casts</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">XP streak</div>
+        <div class="metric-value">${state.xp}</div>
+        <div class="metric-foot">Keep claiming daily tasks to extend the streak.</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Spawn balance</div>
+        <div class="metric-value">${state.spawn}</div>
+        <div class="metric-foot">Mock Spawn tokens from packs & quests.</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Connected modules</div>
+        <div class="metric-value">4</div>
+        <div class="metric-foot">Factory · TokenSeries · Guard · UtilityRouter</div>
+      </div>
+    </div>
+  `;
+}
 
-function renderProfile() {
+function renderOverviewProfile() {
   const handle = "@spawnengine";
   const chain = "Base";
   const modules = ["Factory", "TokenPackSeries", "ReserveGuard", "UtilityRouter"];
 
   return `
-    <section class="panel">
-      <div class="panel-title">Mesh profile</div>
-      <div class="panel-sub">
-        One wallet, multiple contract types, all flowing into a single activity mesh.
-      </div>
-
-      <div class="trading-card trading-card-hero" style="margin-top:9px;">
+    <div style="margin-top:9px;">
+      <div class="trading-card">
         <div class="trading-card-head">
-          <div class="hero-head-left">
-            <div class="brand-icon hero-icon">SE</div>
+          <div style="display:flex;align-items:center;gap:9px;">
+            <div class="brand-icon" style="width:34px;height:34px;font-size:13px;">SE</div>
             <div>
               <div class="trading-card-title">${handle}</div>
               <div class="trading-card-sub">
-                Mesh owner on ${chain} · Layer-4 style XP & modular series
+                Mesh owner on ${chain} · Layer-4 style XP & packs
               </div>
             </div>
           </div>
           <span class="chip chip-mesh">ONLINE</span>
         </div>
         <div class="trading-card-foot">
-          Connected modules: ${modules.join(" · ")} (mock v0.2).
+          Connected modules: ${modules.join(" · ")} (mock v0.3).
         </div>
       </div>
 
@@ -285,7 +359,7 @@ function renderProfile() {
         <div class="metric-card">
           <div class="metric-label">Connected surfaces</div>
           <div class="metric-value">3</div>
-          <div class="metric-foot">Token packs · NFT packs · creator packs (Base apps).</div>
+          <div class="metric-foot">Token packs · NFT packs · Zora packs (planned).</div>
         </div>
       </div>
 
@@ -313,7 +387,7 @@ function renderProfile() {
           <div class="trading-card">
             <div class="trading-card-head">
               <div>
-                <div class="trading-card-title">Farcaster & creator apps</div>
+                <div class="trading-card-title">Farcaster & Zora</div>
                 <div class="trading-card-sub">
                   Future hooks: casts, mints & creator coins streamed into the mesh.
                 </div>
@@ -326,48 +400,118 @@ function renderProfile() {
           </div>
         </div>
       </div>
-
-      ${renderDailyTasksInner()}
-    </section>
+    </div>
   `;
 }
 
-function renderOverview() {
+function renderOverviewDaily() {
   return `
-    <section class="panel">
-      <div class="panel-title">Mesh overview</div>
-      <div class="panel-sub">
-        One engine for TokenSeries, NFTSeries, creator packs & XP modules –
-        all streaming into the same onchain mesh.
-      </div>
-
-      <div class="overview-grid">
-        <div class="metric-card">
-          <div class="metric-label">Today’s mesh events</div>
-          <div class="metric-value">${state.meshEvents}</div>
-          <div class="metric-foot">pack_open · burn · swap · zora_buy · casts</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">XP streak</div>
-          <div class="metric-value">${state.xp}</div>
-          <div class="metric-foot">Keep claiming daily tasks to extend the streak.</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Spawn balance</div>
-          <div class="metric-value">${state.spawn}</div>
-          <div class="metric-foot">Mock Spawn tokens from packs & quests.</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Connected modules</div>
-          <div class="metric-value">4</div>
-          <div class="metric-foot">Factory · TokenSeries · Guard · UtilityRouter</div>
-        </div>
-      </div>
-
+    <div style="margin-top:9px;">
       ${renderDailyTasksInner()}
-    </section>
+    </div>
   `;
 }
+
+function renderOverviewLeaderboard() {
+  return `
+    <div style="margin-top:9px;">
+      <div class="trading-row-title">Mesh leaderboard (mock)</div>
+      <div class="leaderboard-list">
+        <div class="leader-row">
+          <div class="leader-left">
+            <span class="leader-rank">#1</span>
+            <span class="leader-handle">@spawnengine</span>
+          </div>
+          <span class="leader-score">42 000 XP</span>
+        </div>
+        <div class="leader-row">
+          <div class="leader-left">
+            <span class="leader-rank">#2</span>
+            <span class="leader-handle">@meshcollector</span>
+          </div>
+          <span class="leader-score">31 500 XP</span>
+        </div>
+        <div class="leader-row">
+          <div class="leader-left">
+            <span class="leader-rank">#3</span>
+            <span class="leader-handle">@basepacks</span>
+          </div>
+          <span class="leader-score">27 800 XP</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderOverviewSpawnToken() {
+  return `
+    <div class="spawn-panel">
+      <div style="margin-bottom:4px;color:#e5e7eb;font-size:10px;font-weight:600;">
+        <span class="spawn-highlight">Spawn</span> as the mesh reward rail
+      </div>
+      <div>
+        XP & Spawn stay off-treasury: every pack open can kick back 5–10% of
+        card value in <span class="spawn-highlight">Spawn</span> or XP, without
+        touching the underlying series reserves.
+      </div>
+      <div style="margin-top:6px;">
+        Later, this view will control:
+        <ul style="margin:3px 0 0 16px;padding:0;font-size:9px;">
+          <li>daily Spawn faucets for active wallets</li>
+          <li>XP → Spawn conversion ranges</li>
+          <li>bonus bands for Relic / Mythic pulls</li>
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
+/* DAILY TASK BLOCK */
+
+function renderDailyTasksInner() {
+  return `
+    <div class="task-list">
+      <div class="task-header">
+        <span>Today’s loop</span>
+        <span style="color:#22c55e;">+250 XP available</span>
+      </div>
+      <div class="task-items">
+        <div class="task-item">
+          <div class="task-left">
+            <div class="task-dot"></div>
+            <div>
+              <div class="task-label-main">Open a test pack</div>
+              <div class="task-label-sub">Trigger one mock pack_open event</div>
+            </div>
+          </div>
+          <div class="task-xp">+50 XP</div>
+        </div>
+        <div class="task-item">
+          <div class="task-left">
+            <div class="task-dot done"></div>
+            <div>
+              <div class="task-label-main">Connect wallet</div>
+              <div class="task-label-sub">Any Base wallet counts</div>
+            </div>
+          </div>
+          <div class="task-xp">+100 XP</div>
+        </div>
+        <div class="task-item">
+          <div class="task-left">
+            <div class="task-dot"></div>
+            <div>
+              <div class="task-label-main">Share your mesh</div>
+              <div class="task-label-sub">Post a cast with your stats</div>
+            </div>
+          </div>
+          <div class="task-xp">+100 XP</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ÖVRIGA TABBAR */
 
 function renderTrading() {
   return `
@@ -385,7 +529,7 @@ function renderTrading() {
               <div>
                 <div class="trading-card-title">Unified orderbook</div>
                 <div class="trading-card-sub">
-                  TokenSeries · NFTSeries · creator packs · mesh-linked liquidity.
+                  TokenSeries · NFTSeries · Zora packs · Mesh-linked liquidity.
                 </div>
               </div>
               <span class="chip chip-planned">PLANNED</span>
@@ -465,7 +609,6 @@ function renderPullLab() {
           <div class="metric-foot">XP/Spawn returned per pack open.</div>
         </div>
       </div>
-      ${renderDailyTasksInner()}
     </section>
   `;
 }
@@ -482,7 +625,7 @@ function renderPackMaps() {
           <div>
             <div class="trading-card-title">Mesh nodes</div>
             <div class="trading-card-sub">
-              Each deployed series becomes a node: TokenSeries, NFTSeries, creator packs, XP modules.
+              Each deployed series becomes a node: TokenSeries, NFTSeries, Zora packs, XP modules.
             </div>
           </div>
           <span class="chip chip-planned">MAP VIEW</span>
@@ -500,7 +643,7 @@ function renderStats() {
     <section class="panel">
       <div class="panel-title">Stats & luck engine</div>
       <div class="panel-sub">
-        v0.2 shows the placeholders – v1 will plug real data from TokenPackSeries events.
+        v0.3 shows the placeholders – v1 will plug real data from TokenPackSeries events.
       </div>
       <div class="overview-grid" style="margin-top:9px;">
         <div class="metric-card">
@@ -528,72 +671,14 @@ function renderStats() {
   `;
 }
 
-function renderTasks() {
-  return `
-    <section class="panel">
-      <div class="panel-title">Daily mesh tasks</div>
-      <div class="panel-sub">
-        Simple layer-4 style tasks – later wired to real XP & Spawn minting.
-      </div>
-      ${renderDailyTasksInner()}
-    </section>
-  `;
-}
-
-function renderDailyTasksInner() {
-  const connectDoneClass = state.wallet ? "task-item completed" : "task-item";
-  const connectDotClass = state.wallet ? "task-dot done" : "task-dot";
-
-  return `
-    <div class="task-list">
-      <div class="task-header">
-        <span>Today’s loop</span>
-        <span class="task-header-xp">+250 XP available</span>
-      </div>
-      <div class="task-items">
-        <div class="task-item" data-task="open-pack">
-          <div class="task-left">
-            <div class="task-dot"></div>
-            <div>
-              <div class="task-label-main">Open a test pack</div>
-              <div class="task-label-sub">Trigger one mock pack_open event</div>
-            </div>
-          </div>
-          <div class="task-xp">+50 XP</div>
-        </div>
-        <div class="${connectDoneClass}" data-task="connect-wallet">
-          <div class="task-left">
-            <div class="${connectDotClass}"></div>
-            <div>
-              <div class="task-label-main">Connect wallet</div>
-              <div class="task-label-sub">Any Base wallet counts</div>
-            </div>
-          </div>
-          <div class="task-xp">+100 XP</div>
-        </div>
-        <div class="task-item" data-task="share-mesh">
-          <div class="task-left">
-            <div class="task-dot"></div>
-            <div>
-              <div class="task-label-main">Share your mesh</div>
-              <div class="task-label-sub">Post a cast or X post with your stats</div>
-            </div>
-          </div>
-          <div class="task-xp">+100 XP</div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 function renderSettings() {
   return `
     <section class="panel">
       <div class="panel-title">Settings & modules</div>
       <div class="panel-sub">
-        Control room for connected wallets, creator modules and external app hooks.
+        Later this becomes the control room for connected wallets, creator modules and Zora/Farcaster hooks.
       </div>
-      <div class="trading-panel trading-panel-settings">
+      <div class="trading-panel" style="margin-top:9px;">
         <div class="trading-card">
           <div class="trading-card-head">
             <div>
@@ -604,7 +689,7 @@ function renderSettings() {
             </div>
           </div>
           <div class="trading-card-foot">
-            v0.2 keeps a single wallet mock; we will expand this once onchain reads are live.
+            v0.3 keeps a single wallet mock; we will expand this once onchain reads are live.
           </div>
         </div>
         <div class="trading-card">
@@ -612,7 +697,7 @@ function renderSettings() {
             <div>
               <div class="trading-card-title">Creator modules</div>
               <div class="trading-card-sub">
-                Factory, TokenPackSeries, ReserveGuard, UtilityRouter & future NFT/creator-app modules.
+                Factory, TokenPackSeries, ReserveGuard, UtilityRouter & future NFT/Zora modules.
               </div>
             </div>
           </div>
@@ -620,43 +705,9 @@ function renderSettings() {
             This app is the mesh layer UI – contracts stay modular under the hood.
           </div>
         </div>
-        <div class="trading-card">
-          <div class="trading-card-head">
-            <div>
-              <div class="trading-card-title">AI helper</div>
-              <div class="trading-card-sub">
-                Planned: built-in AI to suggest series, odds & XP loops based on your wallet mesh.
-              </div>
-            </div>
-            <span class="chip chip-planned">PLANNED</span>
-          </div>
-          <div class="trading-card-foot">
-            For now this is just a placeholder tile – real AI wiring comes once core mesh is stable.
-          </div>
-        </div>
       </div>
     </section>
   `;
 }
 
-// simple UI-only completion toggle for daily tasks
-function wireTaskClicks() {
-  const items = document.querySelectorAll(".task-item");
-  if (!items.length) return;
-  items.forEach((item) => {
-    item.addEventListener("click", () => {
-      if (item.dataset.task === "connect-wallet" && !state.wallet) {
-        // hint: clicking here should make you connect wallet instead
-        const btn = document.getElementById("btn-wallet");
-        if (btn) btn.focus();
-      }
-      item.classList.toggle("completed");
-      const dot = item.querySelector(".task-dot");
-      if (dot) {
-        dot.classList.toggle("done");
-      }
-    });
-  });
-}
-
-window.addEventListener("DOMContentLoaded", init);
+init();
