@@ -107,6 +107,8 @@ function init() {
             </a>
             <a href="https://x.com/spawnizz" target="_blank" rel="noreferrer">
               X/Twitter
+              <a href="https://base.app/profile/0x4A9bBB6FC9602C53aC84D59d8A1C12c89274f7Da" target="_blank" rel="noreferrer">
+              TBA
             </a>
           </div>
         </footer>
