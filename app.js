@@ -84,10 +84,15 @@ function init() {
           </div>
 
           <div class="status-row">
-            <div class="status-pill">
-              <span class="status-pill-label">Wallet</span>
-              <span class="status-pill-value" id="status-wallet">Disconnected</span>
-            </div>
+  <div class="status-pill">
+    <span class="status-pill-label">Gas</span>
+    <span class="status-pill-value">~0.25 gwei est.</span>
+  </div>
+  <div class="status-pill">
+    <span class="status-pill-label">Mesh</span>
+    <span class="status-pill-value" id="status-mesh">${state.meshEvents} events</span>
+  </div>
+</div>
             <div class="status-pill">
               <span class="status-pill-label">Gas</span>
               <span class="status-pill-value" id="status-gas">~0.25 gwei est.</span>
