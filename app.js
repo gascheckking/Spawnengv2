@@ -289,10 +289,23 @@ function wireWallet() {
 
 function updateWalletUI() {
   const label = document.getElementById("wallet-label");
-  const statusWallet = document.getElementById("status-wallet");
+  const addr = document.getElementById("wallet-address-display");
+  const icon = document.getElementById("wallet-status-icon");
   const btn = document.getElementById("btn-wallet");
-  if (!label || !statusWallet || !btn) return;
+  if (!label || !addr || !btn) return;
 
+  if (state.wallet) {
+    label.textContent = "Disconnect";
+    addr.textContent = state.wallet;
+    btn.classList.add("wallet-connected");
+    if (icon) icon.textContent = "●";
+  } else {
+    label.textContent = "Connect";
+    addr.textContent = "No wallet connected";
+    btn.classList.remove("wallet-connected");
+    if (icon) icon.textContent = "⦿";
+  }
+}
   if (state.wallet) {
     label.textContent = "Disconnect";
     statusWallet.textContent = state.wallet;
