@@ -74,9 +74,9 @@ function init() {
                 <span class="pill-label">Base · Mesh Layer</span>
               </div>
               <button class="btn-wallet" id="btn-wallet">
-                <span>⦿</span><span id="wallet-label">Connect</span>
-              </button>
-            </div>
+  <span>⦿</span><span id="wallet-label">Connect</span>
+</button>
+</div>
           </div>
 
           <div class="mode-tag">
