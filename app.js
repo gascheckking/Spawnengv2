@@ -10,6 +10,7 @@ const state = {
     connect: false,
     share: false,
   },
+  theme: "dark",
 };
 
 const TABS = [
@@ -20,21 +21,22 @@ const TABS = [
   { id: "pack-maps", label: "Pack Maps" },
   { id: "campaigns", label: "Campaigns" },
   { id: "stats", label: "Stats" },
+  { id: "pnl", label: "PNL" },
   { id: "tasks", label: "Daily" },
   { id: "settings", label: "Settings" },
 ];
 
 const livePulls = [
-  { pack: "Neon Fragments", rarity: "epic", text: "Hit EPIC in 4 pulls" },
-  { pack: "Base Relics", rarity: "legendary", text: "LEGENDARY after 37 pulls" },
-  { pack: "Shard Forge", rarity: "mythic", text: "RELIC in 1 923 pulls" },
-  { pack: "Mesh Trials", rarity: "epic", text: "Double EPIC back-to-back" },
+  { pack: "Neon Fragments", tier: "shard", band: "Shard", text: "hit in 4 pulls" },
+  { pack: "Base Relics", tier: "relic", band: "Relic", text: "after 37 pulls" },
+  { pack: "Shard Forge", tier: "relic", band: "Relic", text: "in 1 923 pulls" },
+  { pack: "Mesh Trials", tier: "fragment", band: "Fragment", text: "streak x10" },
 ];
 
 const recentPullsMock = [
-  { pack: "Neon Fragments", rarity: "Epic", amount: 10, odds: "1 / 420" },
-  { pack: "Base Relics", rarity: "Legendary", amount: 3, odds: "1 / 1 200" },
-  { pack: "Shard Forge", rarity: "Relic", amount: 1, odds: "1 / 2 000" },
+  { pack: "Neon Fragments", band: "Shard", amount: 10, odds: "1 / 420" },
+  { pack: "Base Relics", band: "Relic", amount: 3, odds: "1 / 1 200" },
+  { pack: "Shard Forge", band: "Relic", amount: 1, odds: "1 / 2 000" },
 ];
 
 function remainingXP() {
@@ -155,10 +157,23 @@ function init() {
                 <div class="side-menu-sub">Mesh layer controls · mock v0.2</div>
               </div>
             </div>
+
+            <div class="side-settings-group">
+              <div class="side-settings-title">App settings</div>
+              <div class="side-theme-row">
+                <button class="side-theme-btn active" data-theme="dark">Dark</button>
+                <button class="side-theme-btn" data-theme="jurassic">Jurassic</button>
+                <button class="side-theme-btn" data-theme="hologram">Hologram</button>
+              </div>
+              <button class="side-menu-item" data-menu="multiwallet">
+                Connect more wallets (mock)
+              </button>
+            </div>
+
             <ul class="side-menu-list">
               <li>
                 <button class="side-menu-item" data-menu="docs">
-                  Dev docs (GitHub) – open
+                  Dev docs – GitHub (later spawnengine.xyz/docs)
                 </button>
               </li>
               <li>
@@ -201,11 +216,14 @@ function init() {
           <div class="modal-panel">
             <div class="modal-title">Daily check-in streak?</div>
             <div class="modal-sub">
-              Claim a small mock bonus to keep the streak warm before real XP goes live.
+              Claim a small mock bonus to keep the streak warm. You can also stake it for a tiny extra boost.
             </div>
             <div class="modal-actions">
               <button class="modal-btn primary" id="checkin-claim">
-                Yes, add +10 XP (mock)
+                Claim +10 XP
+              </button>
+              <button class="modal-btn" id="checkin-claim-stake">
+                Claim +10 XP & stake (+3% mock boost)
               </button>
             </div>
             <div class="modal-footer-row">
@@ -218,6 +236,7 @@ function init() {
     </div>
   `;
 
+  applyTheme();
   wireWallet();
   renderTabs();
   renderTicker();
@@ -227,6 +246,18 @@ function init() {
   renderActiveView();
   updateGasMeter();
   startGasInterval();
+}
+
+/* theme */
+
+function applyTheme() {
+  const body = document.body;
+  body.classList.remove("theme-jurassic", "theme-hologram");
+  if (state.theme === "jurassic") {
+    body.classList.add("theme-jurassic");
+  } else if (state.theme === "hologram") {
+    body.classList.add("theme-hologram");
+  }
 }
 
 /* wallet */
@@ -301,21 +332,20 @@ function renderTicker() {
   const pills = livePulls
     .map((p) => {
       const rarityClass =
-        p.rarity === "epic"
-          ? "rarity-epic"
-          : p.rarity === "legendary"
-          ? "rarity-legendary"
-          : "rarity-mythic";
+        p.tier === "fragment"
+          ? "rarity-fragment"
+          : p.tier === "shard"
+          ? "rarity-shard"
+          : "rarity-relic";
       return `
         <span class="ticker-pill">
           <span>${p.pack}</span>
-          <span class="${rarityClass}">${p.text}</span>
+          <span class="${rarityClass}">${p.band} · ${p.text}</span>
         </span>
       `;
     })
     .join("");
 
-  // loop twice så den rullar snyggt
   inner.innerHTML = pills + pills;
 }
 
@@ -342,8 +372,23 @@ function wireMenu() {
         resetMockState();
       } else if (action === "docs") {
         window.open("https://github.com/gascheckking/SpawnEngine", "_blank");
+      } else if (action === "multiwallet") {
+        alert("Multi-wallet mesh: mock only for now. Later this opens a real manager.");
       }
       toggle(false);
+    });
+  });
+
+  // theme buttons
+  menu.querySelectorAll(".side-theme-btn").forEach((btnTheme) => {
+    btnTheme.addEventListener("click", () => {
+      const theme = btnTheme.dataset.theme;
+      state.theme = theme;
+      menu
+        .querySelectorAll(".side-theme-btn")
+        .forEach((b) => b.classList.remove("active"));
+      btnTheme.classList.add("active");
+      applyTheme();
     });
   });
 }
@@ -409,18 +454,21 @@ function openShareModal() {
 function initCheckinModal() {
   const modal = document.getElementById("checkin-modal");
   const claimBtn = document.getElementById("checkin-claim");
-  if (!modal || !claimBtn) return;
+  const claimStakeBtn = document.getElementById("checkin-claim-stake");
+  if (!modal || !claimBtn || !claimStakeBtn) return;
 
-  // öppna direkt vid load
   modal.classList.add("open");
 
-  claimBtn.addEventListener("click", () => {
-    state.xp += 10;
+  const addCheckinXp = (amount) => {
+    state.xp += amount;
     const xpEl = document.getElementById("status-xp");
     if (xpEl) xpEl.textContent = state.xp;
     modal.classList.remove("open");
     renderActiveView();
-  });
+  };
+
+  claimBtn.addEventListener("click", () => addCheckinXp(10));
+  claimStakeBtn.addEventListener("click", () => addCheckinXp(13)); // 10 + ~3% mock
 
   modal.querySelectorAll("[data-close='checkin']").forEach((btn) =>
     btn.addEventListener("click", () => modal.classList.remove("open")),
@@ -477,6 +525,9 @@ function renderActiveView() {
       break;
     case "stats":
       html = renderStats();
+      break;
+    case "pnl":
+      html = renderPnl();
       break;
     case "tasks":
       html = renderTasks();
@@ -603,7 +654,7 @@ function renderOverview() {
       <div class="recent-pull-item">
         <div class="recent-left">
           <div class="recent-pack">${r.pack}</div>
-          <div class="recent-meta">${r.rarity} · ${r.amount} packs</div>
+          <div class="recent-meta">${r.band} · ${r.amount} packs</div>
         </div>
         <div class="recent-right">
           <div class="luck-label">Luck ${r.odds}</div>
@@ -654,14 +705,14 @@ function renderOverview() {
   `;
 }
 
-/* TRADING / PULL LAB / MAPS / CAMPAIGNS / STATS / TASKS / SETTINGS */
+/* TRADING / PULL LAB / MAPS / CAMPAIGNS / STATS / PNL / TASKS / SETTINGS */
 
 function renderTrading() {
   return `
     <section class="panel">
       <div class="panel-title">Trading hub</div>
       <div class="panel-sub">
-        Future view: swap packs, fragments, cores & creator tokens in one mesh-driven orderbook.
+        Future view: swap packs, fragments, shards, relics & creator tokens in one mesh-driven orderbook.
       </div>
 
       <div class="trading-panel">
@@ -696,7 +747,7 @@ function renderTrading() {
               <span class="chip chip-risk">RISK-AWARE</span>
             </div>
             <div class="trading-card-foot">
-              Guard enforces “two-mythic” safety before any new series can go live.
+              Guard enforces “two-relic” safety before any new series can go live.
             </div>
           </div>
         </div>
@@ -728,7 +779,7 @@ function renderPullLab() {
     <section class="panel">
       <div class="panel-title">Pull lab</div>
       <div class="panel-sub">
-        Simulated pulls per rarity layer – in v1 only Fragments & Shards will be gambled.
+        Simulated pulls per rarity layer – in v1 bara Fragments & Shards är “gambly”; Relics är rena premiums.
       </div>
       <div class="overview-grid" style="margin-top:9px;">
         <div class="metric-card">
@@ -744,7 +795,7 @@ function renderPullLab() {
         <div class="metric-card">
           <div class="metric-label">Relic band</div>
           <div class="metric-value">100–200×</div>
-          <div class="metric-foot">High-end pulls (no gamble).</div>
+          <div class="metric-foot">High-end relics, inga gamble-lotter.</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Spawn kickback</div>
@@ -787,7 +838,7 @@ function renderCampaigns() {
     <section class="panel">
       <div class="panel-title">Campaigns</div>
       <div class="panel-sub">
-        Creator-defined reward lanes – e.g. “pull a mythic from this series → win extra packs or Spawn”.
+        Creator-defined reward lanes – e.g. “pull a Relic from this series → win extra packs or Spawn”.
       </div>
 
       <div class="trading-panel">
@@ -839,9 +890,9 @@ function renderStats() {
           <div class="metric-foot">Combined across all series.</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Relic rate</div>
+          <div class="metric-label">Relic hit rate</div>
           <div class="metric-value">3.2%</div>
-          <div class="metric-foot">Will be computed from real payouts.</div>
+          <div class="metric-foot">Will be computed from real pulls.</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Unique holders</div>
@@ -858,12 +909,77 @@ function renderStats() {
   `;
 }
 
+/* PNL view */
+
+function renderPnl() {
+  const pnlSummary = {
+    total: "+ 4.21 ETH",
+    realized: "+ 2.40 ETH",
+    unrealized: "+ 1.81 ETH",
+    winRate: "63%",
+  };
+
+  const pnlSeries = [+0.8, -0.4, +1.2, +0.3, -0.1, +0.9, +1.5]; // mock ETH per day
+
+  const barsHtml = pnlSeries
+    .map((v) => {
+      const isNeg = v < 0;
+      const mag = Math.min(Math.abs(v) / 1.5, 1); // scale
+      const height = Math.max(10, Math.round(mag * 100));
+      return `
+        <div class="pnl-bar ${isNeg ? "pnl-bar-negative" : ""}">
+          <div class="pnl-bar-inner" style="--h:${height}%;"></div>
+        </div>
+      `;
+    })
+    .join("");
+
+  return `
+    <section class="panel">
+      <div class="panel-title">PNL view</div>
+      <div class="panel-sub">
+        Mock PNL layer for everything the mesh has seen – later wired to real pulls, swaps & Zora buys.
+      </div>
+
+      <div class="pnl-summary-grid">
+        <div class="metric-card">
+          <div class="metric-label">Total mesh PNL</div>
+          <div class="metric-value">${pnlSummary.total}</div>
+          <div class="metric-foot">All packs, fees & rewards combined.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Realized</div>
+          <div class="metric-value">${pnlSummary.realized}</div>
+          <div class="metric-foot">Closed positions only.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Unrealized</div>
+          <div class="metric-value">${pnlSummary.unrealized}</div>
+          <div class="metric-foot">Open packs / relics.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Win rate</div>
+          <div class="metric-value">${pnlSummary.winRate}</div>
+          <div class="metric-foot">Profitable pulls vs total.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;font-size:10px;color:#9ca3af;">
+        Last 7 mesh days (ETH-denominated, mock):
+      </div>
+      <div class="pnl-chart">
+        ${barsHtml}
+      </div>
+    </section>
+  `;
+}
+
 function renderTasks() {
   return `
     <section class="panel">
       <div class="panel-title">Daily mesh tasks</div>
       <div class="panel-sub">
-        Simple layer-4 style tasks – later wired to real XP & Spawn minting.
+        Simple layer-4 style tasks – later wired to real XP, Spawn & maybe stake-yield per pack.
       </div>
       ${renderDailyTasksInner()}
     </section>
@@ -883,7 +999,7 @@ function renderSettings() {
             <div>
               <div class="trading-card-title">Wallets</div>
               <div class="trading-card-sub">
-                Multi-wallet mesh planned – award XP per connected wallet.
+                Multi-wallet mesh planned – track PNL per wallet and per pack-series.
               </div>
             </div>
           </div>
@@ -1005,7 +1121,7 @@ function wireTaskButtons() {
         if (walletBtn) walletBtn.click();
       } else if (task === "share") {
         openShareModal();
-        return; // render när modalen stänger
+        return;
       }
       renderActiveView();
     });
