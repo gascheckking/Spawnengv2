@@ -840,42 +840,84 @@ function renderPackMaps() {
   `;
 }
 
-function renderCampaigns() {
+function renderPullLab() {
   return `
     <section class="panel">
-      <div class="panel-title">Campaigns</div>
+      <div class="panel-title">Pull lab · rarity bands</div>
       <div class="panel-sub">
-        Creator-defined reward lanes – e.g. “pull a Relic from this series → win extra packs or Spawn”.
+        Simulated pulls per band. Fragments = common floor, Shards = rare spikes,
+        Relics = top mythic band. In v1 kan de här siffrorna kopplas till riktiga serier.
       </div>
 
-      <div class="trading-panel">
+      <div class="overview-grid" style="margin-top:9px;">
+        <div class="metric-card">
+          <div class="metric-label">Standard pack cost</div>
+          <div class="metric-value">100 000</div>
+          <div class="metric-foot">Base cost per pack (mock).</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Fragment band</div>
+          <div class="metric-value">~75–85%</div>
+          <div class="metric-foot">Common “Fragment” hits, nästan alltid förlust.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Shard band</div>
+          <div class="metric-value">~10–20%</div>
+          <div class="metric-foot">“Shard” = rare band, ersätter klassisk Rare/Epic.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Relic band</div>
+          <div class="metric-value">≤ 1–3%</div>
+          <div class="metric-foot">“Relic” = toppbandet, ersätter Legendary/Mythic.</div>
+        </div>
+      </div>
+
+      <div class="trading-panel" style="margin-top:9px;">
         <div class="trading-card">
           <div class="trading-card-head">
             <div>
-              <div class="trading-card-title">SpawnEngine launch lane</div>
+              <div class="trading-card-title">Fragments · Common floor</div>
               <div class="trading-card-sub">
-                Win extra packs from the first onchain series. All rewards pre-funded by creators.
+                Billiga volym-hits. Bygger XP/Spawn, men EV är medvetet låg – typisk
+                70–90% förlustzon som känns mer som “scrap”.
               </div>
             </div>
-            <span class="chip chip-mesh">LIVE MOCK</span>
+            <span class="chip chip-risk">FRAGMENT</span>
           </div>
           <div class="trading-card-foot">
-            Example: pull any “Relic” from Series #1 → auto-credit 3 extra packs to your wallet.
+            I UI kan Fragments ersätta “Common” helt. Bra för grind, dålig för PNL.
           </div>
         </div>
 
         <div class="trading-card">
           <div class="trading-card-head">
             <div>
-              <div class="trading-card-title">Community quests</div>
+              <div class="trading-card-title">Shards · Mid-band</div>
               <div class="trading-card-sub">
-                Future: creators design their own missions – pulls, burns, or Zora buys – with custom pots.
+                Det som i andra spel motsvarar Rare/Epic. Ska kännas “woah, nice hit”
+                men inte livsförändrande. Bra band för kampanjer & quests.
               </div>
             </div>
-            <span class="chip chip-planned">PLANNED</span>
+            <span class="chip chip-mesh">SHARD</span>
           </div>
           <div class="trading-card-foot">
-            The idea is “set it once in the contract, let SpawnEngine handle all payouts automatically.”
+            Kan få egna bonusar i SpawnEngine – t.ex. extra XP, små fee-rebates osv.
+          </div>
+        </div>
+
+        <div class="trading-card">
+          <div class="trading-card-head">
+            <div>
+              <div class="trading-card-title">Relics · Premium band</div>
+              <div class="trading-card-sub">
+                Ersätter hela Epic/Legendary/Mythic-trädet. Få, dyra, tydligt värde.
+                Inga “lotter” – mer som premium-objekt med utility eller treasury-backing.
+              </div>
+            </div>
+            <span class="chip chip-planned">RELIC</span>
+          </div>
+          <div class="trading-card-foot">
+            Bra ställe att visa verkliga PNL-spikar i framtiden när onchain-data är inkopplad.
           </div>
         </div>
       </div>
