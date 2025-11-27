@@ -4,20 +4,18 @@ const state = {
   xp: 1575,
   spawn: 497,
   meshEvents: 9,
-  diamonds: 12,
-  streakDays: 1,
-  activeTab: "profile",
+  activeTab: "overview", // landningssida
 };
 
 const TABS = [
-  { id: "profile", label: "Profile" },
   { id: "overview", label: "Overview" },
+  { id: "profile", label: "Profile" },
   { id: "trading", label: "Trading" },
   { id: "pull-lab", label: "Pull Lab" },
   { id: "pack-maps", label: "Pack Maps" },
   { id: "campaigns", label: "Campaigns" },
-  { id: "tasks", label: "Daily" },
   { id: "stats", label: "Stats" },
+  { id: "tasks", label: "Daily" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -29,35 +27,7 @@ const mockEvents = [
   { short: "fc_cast", label: "@spawnengine casted new pack series" },
 ];
 
-const mockCampaigns = [
-  {
-    title: "Tiny Relic Rush",
-    type: "Creator campaign",
-    series: "Tiny Legends S2",
-    reward: "20 bonus packs pool",
-    timeLeft: "5d 06h",
-    tag: "LIVE",
-    desc: "Pull any Relic from Tiny Legends S2 to share a 20-pack reward pool.",
-  },
-  {
-    title: "SpawnMesh Starter",
-    type: "Mesh quest",
-    series: "Any SpawnEngine series",
-    reward: "5 000 Spawn XP",
-    timeLeft: "13d 02h",
-    tag: "SOON",
-    desc: "Open 10 packs + complete a 3-day streak to unlock bonus XP.",
-  },
-  {
-    title: "Zora Signal Pot",
-    type: "Zora-linked",
-    series: "Creator coin packs",
-    reward: "0.05 ETH + packs",
-    timeLeft: "TBA",
-    tag: "PLANNED",
-    desc: "Future hook: hit a Mythic in Zora coin packs to tap a shared ETH pot.",
-  },
-];
+// boot
 
 function init() {
   const root = document.getElementById("app-root");
@@ -142,6 +112,13 @@ function init() {
             <a href="https://x.com/spawnizz" target="_blank" rel="noreferrer">
               X/Twitter
             </a>
+            <a
+              href="https://base.app/profile/0x4A9bBB6FC9602C53aC84D59d8A1C12c89274f7Da"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Base
+            </a>
           </div>
         </footer>
       </div>
@@ -159,6 +136,7 @@ function init() {
 function wireWallet() {
   const btn = document.getElementById("btn-wallet");
   if (!btn) return;
+
   btn.addEventListener("click", () => {
     if (!state.wallet) {
       const rand = Math.random().toString(16).slice(2, 8);
@@ -167,12 +145,8 @@ function wireWallet() {
       state.wallet = null;
     }
     updateWalletUI();
-    // liten XP-boost när man "connectar"
-    if (state.wallet) {
-      state.xp += 25;
-      document.getElementById("status-xp").textContent = state.xp;
-    }
   });
+
   updateWalletUI();
 }
 
@@ -225,7 +199,7 @@ function renderTicker() {
   el.textContent = ` ${text}   •   ${text}   •   ${text}`;
 }
 
-// views
+// view router
 
 function renderActiveView() {
   const main = document.getElementById("main-content");
@@ -250,11 +224,11 @@ function renderActiveView() {
     case "campaigns":
       main.innerHTML = renderCampaigns();
       break;
-    case "tasks":
-      main.innerHTML = renderTasks();
-      break;
     case "stats":
       main.innerHTML = renderStats();
+      break;
+    case "tasks":
+      main.innerHTML = renderTasks();
       break;
     case "settings":
       main.innerHTML = renderSettings();
@@ -274,11 +248,11 @@ function renderProfile() {
   return `
     <section class="panel">
       <div class="panel-title">Mesh profile</div>
-      <div class="panel-sub">
+      <div class="panel-sub mesh-profile-header">
         One wallet, multiple contract types, all flowing into a single activity mesh.
       </div>
 
-      <div class="trading-card" style="margin-top:9px;">
+      <div class="trading-card">
         <div class="trading-card-head">
           <div style="display:flex;align-items:center;gap:9px;">
             <div class="brand-icon" style="width:36px;height:36px;font-size:14px;">SE</div>
@@ -289,7 +263,7 @@ function renderProfile() {
               </div>
             </div>
           </div>
-          <span class="chip chip-mesh">ONLINE</span>
+          <span class="chip chip-online">ONLINE</span>
         </div>
         <div class="trading-card-foot">
           Connected modules: ${modules.join(" · ")} (mock v0.2)
@@ -362,6 +336,8 @@ function renderProfile() {
   `;
 }
 
+/* OVERVIEW */
+
 function renderOverview() {
   return `
     <section class="panel">
@@ -398,6 +374,8 @@ function renderOverview() {
     </section>
   `;
 }
+
+/* TRADING */
 
 function renderTrading() {
   return `
@@ -466,6 +444,8 @@ function renderTrading() {
   `;
 }
 
+/* PULL LAB */
+
 function renderPullLab() {
   return `
     <section class="panel">
@@ -500,6 +480,8 @@ function renderPullLab() {
   `;
 }
 
+/* PACK MAPS */
+
 function renderPackMaps() {
   return `
     <section class="panel">
@@ -525,62 +507,52 @@ function renderPackMaps() {
   `;
 }
 
-function renderCampaigns() {
-  const cards = mockCampaigns
-    .map(
-      (c) => `
-      <article class="campaign-card">
-        <div class="campaign-head">
-          <div>
-            <div class="campaign-title">${c.title}</div>
-            <div class="campaign-sub">${c.type} · ${c.series}</div>
-          </div>
-          <span class="campaign-tag">${c.tag}</span>
-        </div>
-        <div class="campaign-body">
-          <p>${c.desc}</p>
-        </div>
-        <div class="campaign-foot">
-          <div class="campaign-meta">
-            <span>Reward: <strong>${c.reward}</strong></span>
-            <span>Time left: ${c.timeLeft}</span>
-          </div>
-          <div class="campaign-actions">
-            <button class="btn-ghost">View series</button>
-            <button class="btn-primary-small">Join</button>
-          </div>
-        </div>
-      </article>
-    `
-    )
-    .join("");
+/* CAMPAIGNS – inspirerad av dina screenshots */
 
+function renderCampaigns() {
   return `
     <section class="panel">
-      <div class="panel-title">Creator campaigns</div>
+      <div class="panel-title">Campaigns</div>
       <div class="panel-sub">
-        Onchain quests funded by creators – pull specific hits, complete streaks
-        or farm XP to share their reward pools.
+        Creator-defined reward lanes – e.g. “pull a mythic from this series → win extra packs or Spawn”.
       </div>
 
-      <div class="campaign-header-row">
-        <div class="diamond-pill">
-          <span class="diamond-icon">◆</span>
-          <span class="diamond-value">${state.diamonds}</span>
+      <div class="trading-panel">
+        <div class="trading-card">
+          <div class="trading-card-head">
+            <div>
+              <div class="trading-card-title">SpawnEngine launch lane</div>
+              <div class="trading-card-sub">
+                Win extra packs from the first onchain series. All rewards pre-funded by creators.
+              </div>
+            </div>
+            <span class="chip chip-mesh">LIVE MOCK</span>
+          </div>
+          <div class="trading-card-foot">
+            Example: pull any “Relic” from Series #1 → auto-credit 3 extra packs to your wallet.
+          </div>
         </div>
-        <div class="campaign-filters">
-          <button class="chip-filter active">All</button>
-          <button class="chip-filter">Live</button>
-          <button class="chip-filter">Planned</button>
-        </div>
-      </div>
 
-      <div class="campaign-list">
-        ${cards}
+        <div class="trading-card">
+          <div class="trading-card-head">
+            <div>
+              <div class="trading-card-title">Community quests</div>
+              <div class="trading-card-sub">
+                Future: creators design their own missions – pulls, burns, or Zora buys – with custom pots.
+              </div>
+            </div>
+            <span class="chip chip-planned">PLANNED</span>
+          </div>
+          <div class="trading-card-foot">
+            The idea is “set it once in the contract, let SpawnEngine handle all payouts automatically.”
+          </div>
+        </div>
       </div>
     </section>
   `;
 }
+
+/* STATS */
 
 function renderStats() {
   return `
@@ -615,73 +587,26 @@ function renderStats() {
   `;
 }
 
+/* TASKS */
+
 function renderTasks() {
   return `
     <section class="panel">
-      <div class="panel-title">Daily missions</div>
+      <div class="panel-title">Daily mesh tasks</div>
       <div class="panel-sub">
-        Crypto.com-style loop for SpawnEngine – streaks, diamonds & XP,
-        wired later to real onchain actions.
+        Simple layer-4 style tasks – later wired to real XP & Spawn minting.
       </div>
-
-      <div class="streak-card">
-        <div class="streak-top-row">
-          <div>
-            <div class="streak-title">${state.streakDays}-day streak</div>
-            <div class="streak-sub">Keep your mesh alive for more rewards.</div>
-          </div>
-          <div class="diamond-pill">
-            <span class="diamond-icon">◆</span>
-            <span class="diamond-value">${state.diamonds}</span>
-          </div>
-        </div>
-        <div class="streak-days">
-          <div class="streak-day active">
-            <span>Wed</span>
-            <span class="streak-diamond">+1</span>
-          </div>
-          <div class="streak-day">
-            <span>Thu</span>
-            <span class="streak-diamond">+1</span>
-          </div>
-          <div class="streak-day">
-            <span>Fri</span>
-            <span class="streak-diamond">+1</span>
-          </div>
-          <div class="streak-day">
-            <span>Sat</span>
-            <span class="streak-diamond">+1</span>
-          </div>
-          <div class="streak-day">
-            <span>Sun</span>
-            <span class="streak-diamond">+1</span>
-          </div>
-          <div class="streak-day">
-            <span>Mon</span>
-            <span class="streak-diamond">+1</span>
-          </div>
-          <div class="streak-day">
-            <span>Tue</span>
-            <span class="streak-diamond">+2</span>
-          </div>
-        </div>
-        <div class="streak-reset-row">
-          Daily reset in <span>08:04:51</span>
-        </div>
-      </div>
-
-      ${renderDailyTasksInner(true)}
+      ${renderDailyTasksInner()}
     </section>
   `;
 }
 
-// shared daily-layout (profile/overview/pull-lab använder denna också)
-function renderDailyTasksInner(compact = false) {
+function renderDailyTasksInner() {
   return `
-    <div class="task-list ${compact ? "task-list-full" : ""}">
+    <div class="task-list">
       <div class="task-header">
-        <span>Daily missions</span>
-        <span class="task-header-xp">+250 XP available</span>
+        <span>Today’s loop</span>
+        <span style="color:#22c55e;">+250 XP available</span>
       </div>
       <div class="task-items">
         <div class="task-item">
@@ -692,10 +617,7 @@ function renderDailyTasksInner(compact = false) {
               <div class="task-label-sub">Trigger one mock pack_open event</div>
             </div>
           </div>
-          <div class="task-right">
-            <span class="task-xp">+50 XP</span>
-            <button class="btn-ghost-small">Simulate</button>
-          </div>
+          <div class="task-xp">+50 XP</div>
         </div>
         <div class="task-item">
           <div class="task-left">
@@ -705,10 +627,7 @@ function renderDailyTasksInner(compact = false) {
               <div class="task-label-sub">Any Base wallet counts</div>
             </div>
           </div>
-          <div class="task-right">
-            <span class="task-xp">+100 XP</span>
-            <span class="task-status-done">Done</span>
-          </div>
+          <div class="task-xp">+100 XP</div>
         </div>
         <div class="task-item">
           <div class="task-left">
@@ -718,15 +637,14 @@ function renderDailyTasksInner(compact = false) {
               <div class="task-label-sub">Post a cast / X post with your stats</div>
             </div>
           </div>
-          <div class="task-right">
-            <span class="task-xp">+100 XP</span>
-            <button class="btn-ghost-small">Copy text</button>
-          </div>
+          <div class="task-xp">+100 XP</div>
         </div>
       </div>
     </div>
   `;
 }
+
+/* SETTINGS */
 
 function renderSettings() {
   return `
