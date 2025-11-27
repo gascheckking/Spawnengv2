@@ -73,10 +73,16 @@ function init() {
                 <span class="pill-dot"></span>
                 <span class="pill-label">Base · Mesh Layer</span>
               </div>
-              <button class="btn-wallet" id="btn-wallet">
-  <span>⦿</span><span id="wallet-label">Connect</span>
-</button>
-</div>
+              <div class="wallet-block">
+                <button class="btn-wallet" id="btn-wallet">
+                  <span id="wallet-status-icon">⦿</span>
+                  <span id="wallet-label">Connect</span>
+                </button>
+                <div class="wallet-address" id="wallet-address-display">
+                  No wallet connected
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="mode-tag">
@@ -84,15 +90,6 @@ function init() {
           </div>
 
           <div class="status-row">
-  <div class="status-pill">
-    <span class="status-pill-label">Gas</span>
-    <span class="status-pill-value">~0.25 gwei est.</span>
-  </div>
-  <div class="status-pill">
-    <span class="status-pill-label">Mesh</span>
-    <span class="status-pill-value" id="status-mesh">${state.meshEvents} events</span>
-  </div>
-</div>
             <div class="status-pill">
               <span class="status-pill-label">Gas</span>
               <span class="status-pill-value" id="status-gas">~0.25 gwei est.</span>
@@ -124,7 +121,9 @@ function init() {
 
         <div class="ticker">
           <span class="ticker-label">Live pulls</span>
-          <div class="ticker-stream"><div class="ticker-inner" id="ticker-inner"></div></div>
+          <div class="ticker-stream">
+            <div class="ticker-inner" id="ticker-inner"></div>
+          </div>
         </div>
 
         <main class="main-content" id="main-content"></main>
@@ -304,16 +303,6 @@ function updateWalletUI() {
     addr.textContent = "No wallet connected";
     btn.classList.remove("wallet-connected");
     if (icon) icon.textContent = "⦿";
-  }
-}
-  if (state.wallet) {
-    label.textContent = "Disconnect";
-    statusWallet.textContent = state.wallet;
-    btn.classList.add("connected");
-  } else {
-    label.textContent = "Connect";
-    statusWallet.textContent = "Disconnected";
-    btn.classList.remove("connected");
   }
 }
 
