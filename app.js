@@ -1,10 +1,15 @@
-// Simple mock state
+// Enkel mock-state
 const state = {
   wallet: null,
   xp: 1575,
   spawn: 497,
   meshEvents: 9,
-  activeTab: "overview", // landningssida
+  activeTab: "overview",
+  tasks: {
+    testPack: false,
+    connect: false,
+    share: false,
+  },
 };
 
 const TABS = [
@@ -27,6 +32,14 @@ const mockEvents = [
   { short: "fc_cast", label: "@spawnengine casted new pack series" },
 ];
 
+function remainingXP() {
+  let total = 250;
+  if (state.tasks.testPack) total -= 50;
+  if (state.tasks.connect) total -= 100;
+  if (state.tasks.share) total -= 100;
+  return total;
+}
+
 // boot
 
 function init() {
@@ -39,6 +52,9 @@ function init() {
         <header class="app-header">
           <div class="brand-row">
             <div class="brand-left">
+              <button class="menu-btn" id="menu-btn" aria-label="Menu">
+                <span></span><span></span><span></span>
+              </button>
               <div class="brand-icon">SE</div>
               <div>
                 <div class="brand-copy-title">SPAWNENGINE</div>
@@ -121,6 +137,37 @@ function init() {
             </a>
           </div>
         </footer>
+
+        <div class="side-menu" id="side-menu">
+          <div class="side-menu-backdrop" id="side-menu-backdrop"></div>
+          <div class="side-menu-panel">
+            <div class="side-menu-header">
+              <div class="side-menu-avatar">SE</div>
+              <div>
+                <div class="side-menu-title">@spawnengine</div>
+                <div class="side-menu-sub">Mesh layer menu · mock v0.2</div>
+              </div>
+            </div>
+            <ul class="side-menu-list">
+              <li>
+                <button class="side-menu-item" data-menu="disconnect">
+                  Disconnect wallet
+                </button>
+              </li>
+              <li>
+                <button class="side-menu-item" data-menu="reset">
+                  Reset mock state
+                </button>
+              </li>
+              <li>
+                <button class="side-menu-item" data-menu="docs">
+                  Open SpawnEngine docs
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+
       </div>
     </div>
   `;
@@ -128,6 +175,7 @@ function init() {
   wireWallet();
   renderTabs();
   renderTicker();
+  wireMenu();
   renderActiveView();
 }
 
@@ -141,10 +189,13 @@ function wireWallet() {
     if (!state.wallet) {
       const rand = Math.random().toString(16).slice(2, 8);
       state.wallet = `0x094c…${rand}`;
+      state.tasks.connect = true;
     } else {
       state.wallet = null;
+      state.tasks.connect = false;
     }
     updateWalletUI();
+    renderActiveView();
   });
 
   updateWalletUI();
@@ -188,7 +239,7 @@ function renderTabs() {
   });
 }
 
-// ticker
+// ticker – lugn text
 
 function renderTicker() {
   const el = document.getElementById("ticker-stream");
@@ -196,7 +247,47 @@ function renderTicker() {
   const text = mockEvents
     .map((e) => `${e.short} · ${e.label}`)
     .join("   •   ");
-  el.textContent = ` ${text}   •   ${text}   •   ${text}`;
+  el.textContent = text;
+}
+
+// side menu
+
+function wireMenu() {
+  const btn = document.getElementById("menu-btn");
+  const menu = document.getElementById("side-menu");
+  const backdrop = document.getElementById("side-menu-backdrop");
+  if (!btn || !menu || !backdrop) return;
+
+  const toggle = (open) => {
+    if (open) menu.classList.add("open");
+    else menu.classList.remove("open");
+  };
+
+  btn.addEventListener("click", () => toggle(true));
+  backdrop.addEventListener("click", () => toggle(false));
+
+  menu.querySelectorAll(".side-menu-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      const action = item.dataset.menu;
+      if (action === "disconnect") {
+        state.wallet = null;
+        state.tasks.connect = false;
+        updateWalletUI();
+        renderActiveView();
+      } else if (action === "reset") {
+        state.wallet = null;
+        state.tasks = { testPack: false, connect: false, share: false };
+        state.meshEvents = 9;
+        state.xp = 1575;
+        state.spawn = 497;
+        updateWalletUI();
+        renderActiveView();
+      } else if (action === "docs") {
+        window.open("https://github.com/gascheckking/SpawnEngine", "_blank");
+      }
+      toggle(false);
+    });
+  });
 }
 
 // view router
@@ -205,37 +296,41 @@ function renderActiveView() {
   const main = document.getElementById("main-content");
   if (!main) return;
 
+  let html = "";
   switch (state.activeTab) {
     case "profile":
-      main.innerHTML = renderProfile();
+      html = renderProfile();
       break;
     case "overview":
-      main.innerHTML = renderOverview();
+      html = renderOverview();
       break;
     case "trading":
-      main.innerHTML = renderTrading();
+      html = renderTrading();
       break;
     case "pull-lab":
-      main.innerHTML = renderPullLab();
+      html = renderPullLab();
       break;
     case "pack-maps":
-      main.innerHTML = renderPackMaps();
+      html = renderPackMaps();
       break;
     case "campaigns":
-      main.innerHTML = renderCampaigns();
+      html = renderCampaigns();
       break;
     case "stats":
-      main.innerHTML = renderStats();
+      html = renderStats();
       break;
     case "tasks":
-      main.innerHTML = renderTasks();
+      html = renderTasks();
       break;
     case "settings":
-      main.innerHTML = renderSettings();
+      html = renderSettings();
       break;
     default:
-      main.innerHTML = "";
+      html = "";
   }
+
+  main.innerHTML = html;
+  wireTaskButtons();
 }
 
 /* PROFILE VIEW */
@@ -507,7 +602,7 @@ function renderPackMaps() {
   `;
 }
 
-/* CAMPAIGNS – inspirerad av dina screenshots */
+/* CAMPAIGNS */
 
 function renderCampaigns() {
   return `
@@ -602,42 +697,72 @@ function renderTasks() {
 }
 
 function renderDailyTasksInner() {
+  const remaining = remainingXP();
+  const t = state.tasks;
+
+  const connectLabel = state.wallet ? "Done" : "Connect";
+  const connectDone = !!state.wallet && t.connect;
+
   return `
     <div class="task-list">
       <div class="task-header">
         <span>Today’s loop</span>
-        <span style="color:#22c55e;">+250 XP available</span>
+        <span style="color:#22c55e;">+${remaining} XP available</span>
       </div>
       <div class="task-items">
         <div class="task-item">
           <div class="task-left">
-            <div class="task-dot"></div>
+            <div class="task-dot ${t.testPack ? "done" : ""}"></div>
             <div>
               <div class="task-label-main">Open a test pack</div>
               <div class="task-label-sub">Trigger one mock pack_open event</div>
             </div>
           </div>
-          <div class="task-xp">+50 XP</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="task-xp">+50 XP</div>
+            <button
+              class="task-cta ${t.testPack ? "done" : ""}"
+              data-task="test-pack"
+            >
+              ${t.testPack ? "Done" : "Simulate"}
+            </button>
+          </div>
         </div>
         <div class="task-item">
           <div class="task-left">
-            <div class="task-dot done"></div>
+            <div class="task-dot ${connectDone ? "done" : ""}"></div>
             <div>
               <div class="task-label-main">Connect wallet</div>
               <div class="task-label-sub">Any Base wallet counts</div>
             </div>
           </div>
-          <div class="task-xp">+100 XP</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="task-xp">+100 XP</div>
+            <button
+              class="task-cta ${connectDone ? "done" : ""}"
+              data-task="connect"
+            >
+              ${connectLabel}
+            </button>
+          </div>
         </div>
         <div class="task-item">
           <div class="task-left">
-            <div class="task-dot"></div>
+            <div class="task-dot ${t.share ? "done" : ""}"></div>
             <div>
               <div class="task-label-main">Share your mesh</div>
               <div class="task-label-sub">Post a cast / X post with your stats</div>
             </div>
           </div>
-          <div class="task-xp">+100 XP</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="task-xp">+100 XP</div>
+            <button
+              class="task-cta ${t.share ? "done" : ""}"
+              data-task="share"
+            >
+              ${t.share ? "Copied" : "Copy text"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -683,6 +808,43 @@ function renderSettings() {
       </div>
     </section>
   `;
+}
+
+/* task-knappar */
+
+function wireTaskButtons() {
+  const buttons = document.querySelectorAll(".task-cta");
+  if (!buttons.length) return;
+
+  buttons.forEach((btn) => {
+    const task = btn.dataset.task;
+    btn.addEventListener("click", () => {
+      if (task === "test-pack") {
+        if (!state.tasks.testPack) {
+          state.tasks.testPack = true;
+          state.meshEvents += 1;
+          const meshEl = document.getElementById("status-mesh");
+          if (meshEl) meshEl.textContent = `${state.meshEvents} events`;
+        }
+      } else if (task === "connect") {
+        if (!state.wallet) {
+          const walletBtn = document.getElementById("btn-wallet");
+          if (walletBtn) walletBtn.click();
+        } else {
+          state.tasks.connect = true;
+        }
+      } else if (task === "share") {
+        if (!state.tasks.share) {
+          const text = `SpawnEngine mesh stats · XP ${state.xp} · Spawn ${state.spawn} · events ${state.meshEvents}.`;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch(() => {});
+          }
+          state.tasks.share = true;
+        }
+      }
+      renderActiveView();
+    });
+  });
 }
 
 init();
