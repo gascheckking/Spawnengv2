@@ -1,7 +1,8 @@
+// Simple mock state
 const state = {
   wallet: null,
   xp: 1575,
-  spawn: 497,
+  spawn: 497,           // din token, visas som "SpEngine"
   meshEvents: 9,
   activeTab: "overview",
   gasLevel: 0.35,
@@ -11,17 +12,20 @@ const state = {
     share: false,
   },
   theme: "dark",
+  bountyExp: 1200,      // låst EXP för bounties (mock)
+  bountySpawn: 340,     // låst Spawn/SpEngine för bounties (mock)
 };
 
 const TABS = [
-  { id: "overview", label: "Home" },
+  { id: "overview", label: "Overview" },
   { id: "profile", label: "Profile" },
   { id: "trading", label: "Trading" },
   { id: "pull-lab", label: "Pull Lab" },
   { id: "pack-maps", label: "Pack Maps" },
-  { id: "campaigns", label: "Campaigns" },
+  { id: "quests", label: "Creator Quests" },
   { id: "stats", label: "Stats" },
   { id: "pnl", label: "PNL" },
+  { id: "tasks", label: "Daily" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -72,12 +76,12 @@ function init() {
                 <span class="pill-dot"></span>
                 <span class="pill-label">Base · Mesh Layer</span>
               </div>
-              <div class="wallet-stack">
+              <div class="wallet-block">
                 <button class="btn-wallet" id="btn-wallet">
                   <span id="wallet-status-icon">⦿</span>
                   <span id="wallet-label">Connect</span>
                 </button>
-                <div class="wallet-sub" id="wallet-address-display">
+                <div class="wallet-address" id="wallet-address-display">
                   No wallet connected
                 </div>
               </div>
@@ -120,7 +124,9 @@ function init() {
 
         <div class="ticker">
           <span class="ticker-label">Live pulls</span>
-          <div class="ticker-stream"><div class="ticker-inner" id="ticker-inner"></div></div>
+          <div class="ticker-stream">
+            <div class="ticker-inner" id="ticker-inner"></div>
+          </div>
         </div>
 
         <main class="main-content" id="main-content"></main>
@@ -249,19 +255,30 @@ function init() {
   startGasInterval();
 }
 
-/* theme */
+/* THEME */
 
 function applyTheme() {
   const body = document.body;
   body.classList.remove("theme-jurassic", "theme-hologram");
+
   if (state.theme === "jurassic") {
     body.classList.add("theme-jurassic");
   } else if (state.theme === "hologram") {
     body.classList.add("theme-hologram");
   }
+
+  // uppdatera aktiva knappar i sidomenyn om den finns
+  const menu = document.getElementById("side-menu");
+  if (menu) {
+    menu
+      .querySelectorAll(".side-theme-btn")
+      .forEach((b) => b.classList.remove("active"));
+    const activeBtn = menu.querySelector(`.side-theme-btn[data-theme="${state.theme}"]`);
+    if (activeBtn) activeBtn.classList.add("active");
+  }
 }
 
-/* wallet */
+/* WALLET */
 
 function wireWallet() {
   const btn = document.getElementById("btn-wallet");
@@ -303,7 +320,7 @@ function updateWalletUI() {
   }
 }
 
-/* tabs */
+/* TABS */
 
 function renderTabs() {
   const nav = document.getElementById("nav-tabs");
@@ -327,7 +344,7 @@ function renderTabs() {
   });
 }
 
-/* ticker */
+/* TICKER */
 
 function renderTicker() {
   const inner = document.getElementById("ticker-inner");
@@ -353,7 +370,7 @@ function renderTicker() {
   inner.innerHTML = pills + pills;
 }
 
-/* side menu */
+/* SIDE MENU */
 
 function wireMenu() {
   const btn = document.getElementById("menu-btn");
@@ -387,10 +404,6 @@ function wireMenu() {
     btnTheme.addEventListener("click", () => {
       const theme = btnTheme.dataset.theme;
       state.theme = theme;
-      menu
-        .querySelectorAll(".side-theme-btn")
-        .forEach((b) => b.classList.remove("active"));
-      btnTheme.classList.add("active");
       applyTheme();
     });
   });
@@ -402,11 +415,13 @@ function resetMockState() {
   state.meshEvents = 9;
   state.xp = 1575;
   state.spawn = 497;
+  state.bountyExp = 1200;
+  state.bountySpawn = 340;
   updateWalletUI();
   renderActiveView();
 }
 
-/* share modal */
+/* SHARE MODAL */
 
 function initShareModal() {
   const modal = document.getElementById("share-modal");
@@ -420,9 +435,7 @@ function initShareModal() {
   modal.querySelectorAll("[data-share-dest]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const dest = btn.dataset.shareDest;
-      const text = `SpawnEngine mesh · XP ${state.xp} · SpEngine ${state.spawn} · ${
-        state.meshEvents
-      } events · mode v0.2 mock. #SpawnEngine`;
+      const text = `SpawnEngine mesh · XP ${state.xp} · SpEngine ${state.spawn} · ${state.meshEvents} events · mode v0.2 mock. #SpawnEngine`;
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).catch(() => {});
@@ -452,7 +465,7 @@ function openShareModal() {
   if (modal) modal.classList.add("open");
 }
 
-/* check-in modal */
+/* CHECK-IN MODAL */
 
 function initCheckinModal() {
   const modal = document.getElementById("checkin-modal");
@@ -460,6 +473,7 @@ function initCheckinModal() {
   const claimStakeBtn = document.getElementById("checkin-claim-stake");
   if (!modal || !claimBtn || !claimStakeBtn) return;
 
+  // auto-open vid start
   modal.classList.add("open");
 
   const addCheckinXp = (amount) => {
@@ -471,22 +485,22 @@ function initCheckinModal() {
   };
 
   claimBtn.addEventListener("click", () => addCheckinXp(10));
-  claimStakeBtn.addEventListener("click", () => addCheckinXp(13));
+  claimStakeBtn.addEventListener("click", () => addCheckinXp(13)); // 10 + ~3% mock
 
   modal.querySelectorAll("[data-close='checkin']").forEach((btn) =>
     btn.addEventListener("click", () => modal.classList.remove("open")),
   );
 }
 
-/* gas meter */
+/* GAS METER */
 
 function updateGasMeter() {
   const fill = document.getElementById("gas-meter-fill");
   const label = document.getElementById("status-gas");
   if (!fill || !label) return;
 
-  const level = state.gasLevel;
-  const width = 20 + level * 60;
+  const level = state.gasLevel; // 0–1
+  const width = 20 + level * 60; // 20–80%
   fill.style.width = `${width}%`;
 
   const gwei = (0.15 + level * 0.25).toFixed(2);
@@ -500,7 +514,7 @@ function startGasInterval() {
   }, 8000);
 }
 
-/* router */
+/* ROUTER */
 
 function renderActiveView() {
   const main = document.getElementById("main-content");
@@ -523,14 +537,17 @@ function renderActiveView() {
     case "pack-maps":
       html = renderPackMaps();
       break;
-    case "campaigns":
-      html = renderCampaigns();
+    case "quests":
+      html = renderQuests();
       break;
     case "stats":
       html = renderStats();
       break;
     case "pnl":
       html = renderPnl();
+      break;
+    case "tasks":
+      html = renderTasks();
       break;
     case "settings":
       html = renderSettings();
@@ -645,7 +662,7 @@ function renderProfile() {
   `;
 }
 
-/* OVERVIEW */
+/* OVERVIEW / HOME */
 
 function renderOverview() {
   const recentHtml = recentPullsMock
@@ -686,7 +703,7 @@ function renderOverview() {
         <div class="metric-card">
           <div class="metric-label">SpEngine balance</div>
           <div class="metric-value">${state.spawn}</div>
-          <div class="metric-foot">Mock SpEngine tokens from packs & quests.</div>
+          <div class="metric-foot">Mock SpEngine from packs & quests.</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Connected modules</div>
@@ -705,7 +722,7 @@ function renderOverview() {
   `;
 }
 
-/* TRADING / PULL LAB / MAPS / CAMPAIGNS / STATS / PNL / SETTINGS */
+/* TRADING */
 
 function renderTrading() {
   return `
@@ -774,96 +791,52 @@ function renderTrading() {
   `;
 }
 
+/* PULL LAB – bara info om rarity / ekonomi nu */
+
 function renderPullLab() {
   return `
     <section class="panel">
-      <div class="panel-title">Pull lab · rarity bands</div>
+      <div class="panel-title">Pull lab</div>
       <div class="panel-sub">
-        Fem band: Fragment (common), Shard (rare), Core (tidigare Epic),
-        Crown (tidigare Legendary) och Relic (tidigare Mythic). Alla siffror är mock,
-        v1 kopplar mot riktiga serier.
+        Rarity bands & EV för SpawnEngine-modellen – Fragments & Shards är “gambly”, Relics är rena premiums.
       </div>
-
       <div class="overview-grid" style="margin-top:9px;">
         <div class="metric-card">
-          <div class="metric-label">Standard pack cost</div>
+          <div class="metric-label">Standard pack</div>
           <div class="metric-value">100 000</div>
           <div class="metric-foot">Base cost per pack (mock).</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Fragment band</div>
-          <div class="metric-value">~70–85%</div>
-          <div class="metric-foot">“Fragment” = common scrap, nästan alltid minus.</div>
+          <div class="metric-value">9 500–10 000</div>
+          <div class="metric-foot">≈ 90% loss by design.</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Shard band</div>
-          <div class="metric-value">~10–20%</div>
-          <div class="metric-foot">“Shard” = rare band, ersätter gamla Rare.</div>
+          <div class="metric-value">~110 000</div>
+          <div class="metric-foot">≈ 1.1× pack baseline.</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Core band</div>
-          <div class="metric-value">~3–7%</div>
-          <div class="metric-foot">“Core” = gamla Epic – stora men inte max-spikar.</div>
+          <div class="metric-value">300k–400k</div>
+          <div class="metric-foot">≈ 3–4× value on hit.</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Crown / Relic band</div>
-          <div class="metric-value">≤ 1–3%</div>
-          <div class="metric-foot">“Crown” & “Relic” = top bands, ersätter Legendary/Mythic.</div>
+          <div class="metric-label">Crown band</div>
+          <div class="metric-value">4 000 000</div>
+          <div class="metric-foot">≈ 40×, ultra-rare but visible.</div>
         </div>
-      </div>
-
-      <div class="trading-panel" style="margin-top:9px;">
-        <div class="trading-card">
-          <div class="trading-card-head">
-            <div>
-              <div class="trading-card-title">Fragments · grind-layer</div>
-              <div class="trading-card-sub">
-                Common hits som mest bygger XP/SpEngine. Bra för dagliga loopar,
-                värdelösa för PNL – medvetet “scrap”.
-              </div>
-            </div>
-            <span class="chip chip-risk">FRAGMENT</span>
-          </div>
-          <div class="trading-card-foot">
-            I SpawnEngine UI: det här ersätter hela “Common” nivån.
-          </div>
-        </div>
-
-        <div class="trading-card">
-          <div class="trading-card-head">
-            <div>
-              <div class="trading-card-title">Shards & Cores · mid bands</div>
-              <div class="trading-card-sub">
-                Shard = rare, Core = gamla Epic. Det är här de flesta “wow, den där var bra”
-                träffarna hamnar utan att bli full Relic.
-              </div>
-            </div>
-            <span class="chip chip-mesh">SHARD / CORE</span>
-          </div>
-          <div class="trading-card-foot">
-            Perfekta band för kampanjer, quests och PNL-chart spikes utan att vara helt galna.
-          </div>
-        </div>
-
-        <div class="trading-card">
-          <div class="trading-card-head">
-            <div>
-              <div class="trading-card-title">Crowns & Relics · premium bands</div>
-              <div class="trading-card-sub">
-                Kron-lagret och Relic-lagret ersätter Legendary/Mythic.
-                Få, dyra, tydlig utility eller treasury-backing, inte bara lotter.
-              </div>
-            </div>
-            <span class="chip chip-planned">CROWN / RELIC</span>
-          </div>
-          <div class="trading-card-foot">
-            Här visar vi i v1 verkliga “1 på 2 000 pulls”-historier i statistiken.
-          </div>
+        <div class="metric-card">
+          <div class="metric-label">Relic band</div>
+          <div class="metric-value">10–20M</div>
+          <div class="metric-foot">≈ 100–200× – endgame relics.</div>
         </div>
       </div>
     </section>
   `;
 }
+
+/* PACK MAPS */
 
 function renderPackMaps() {
   return `
@@ -890,48 +863,98 @@ function renderPackMaps() {
   `;
 }
 
-function renderCampaigns() {
+/* CREATOR QUESTS / BOUNTIES */
+
+function renderQuests() {
+  const bountyTotal = state.bountyExp + state.bountySpawn;
+
   return `
     <section class="panel">
-      <div class="panel-title">Campaigns</div>
+      <div class="panel-title">Creator Quests</div>
       <div class="panel-sub">
-        Creator-defined reward lanes – e.g. “pull a Relic from this series → win extra packs or SpEngine”.
+        Creator-defined bounties – EXP & SpEngine som är låsta till quests, pre-funded från pack sales.
       </div>
 
-      <div class="trading-panel">
+      <div class="overview-grid">
+        <div class="metric-card">
+          <div class="metric-label">Bounty EXP pool</div>
+          <div class="metric-value">${state.bountyExp}</div>
+          <div class="metric-foot">
+            Earned from pack volume, bara användbar i quests.
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Bounty SpEngine</div>
+          <div class="metric-value">${state.bountySpawn}</div>
+          <div class="metric-foot">
+            Locked rewards – creators sätter potten, SpawnEngine delar ut automatiskt.
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Total bounty power</div>
+          <div class="metric-value">${bountyTotal}</div>
+          <div class="metric-foot">
+            Summan av EXP + SpEngine tillgänglig för aktiva lanes (mock).
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Active quests (mock)</div>
+          <div class="metric-value">3</div>
+          <div class="metric-foot">Later wired to real quest contracts.</div>
+        </div>
+      </div>
+
+      <div class="trading-panel" style="margin-top:10px;">
         <div class="trading-card">
           <div class="trading-card-head">
             <div>
-              <div class="trading-card-title">SpawnEngine launch lane</div>
+              <div class="trading-card-title">Relic Hunter Lane</div>
               <div class="trading-card-sub">
-                Win extra packs from the first onchain series. All rewards pre-funded by creators.
+                Pull 1 Relic from “Base Relics” in ≤ 30 packs → win 20 extra packs + bounty EXP.
               </div>
             </div>
             <span class="chip chip-mesh">LIVE MOCK</span>
           </div>
           <div class="trading-card-foot">
-            Example: pull any “Relic” from Series #1 → auto-credit 3 extra packs to your wallet.
+            All rewards är redan inbetalda i kontraktet; SpawnEngine kollar bara eventen och triggar payouts.
           </div>
         </div>
 
         <div class="trading-card">
           <div class="trading-card-head">
             <div>
-              <div class="trading-card-title">Community quests</div>
+              <div class="trading-card-title">Ladder Quest: Fragment → Relic</div>
               <div class="trading-card-sub">
-                Future: creators design their own missions – pulls, burns, or Zora buys – with custom pots.
+                Own Fragment, Shard, Core, Crown & Relic från samma series ID.
               </div>
             </div>
             <span class="chip chip-planned">PLANNED</span>
           </div>
           <div class="trading-card-foot">
-            The idea is “set it once in the contract, let SpawnEngine handle all payouts automatically.”
+            Later: Chain-indexing visar exakt vilka band du saknar innan du kan claima bounty potten.
+          </div>
+        </div>
+
+        <div class="trading-card">
+          <div class="trading-card-head">
+            <div>
+              <div class="trading-card-title">Creator XP lanes</div>
+              <div class="trading-card-sub">
+                Every pack sold laddar upp en del EXP/SpEngine till en personlig bounty-pool per creator.
+              </div>
+            </div>
+            <span class="chip chip-planned">DESIGN</span>
+          </div>
+          <div class="trading-card-foot">
+            Idén: du kan inte “dödfarma” – du måste faktiskt klara quest-reglerna för att låsa upp bounty-poolen.
           </div>
         </div>
       </div>
     </section>
   `;
 }
+
+/* STATS */
 
 function renderStats() {
   return `
@@ -966,7 +989,7 @@ function renderStats() {
   `;
 }
 
-/* PNL view */
+/* PNL */
 
 function renderPnl() {
   const pnlSummary = {
@@ -1031,12 +1054,28 @@ function renderPnl() {
   `;
 }
 
+/* DAILY TAB */
+
+function renderTasks() {
+  return `
+    <section class="panel">
+      <div class="panel-title">Daily mesh tasks</div>
+      <div class="panel-sub">
+        Simple layer-4 style tasks – senare kopplade till riktiga XP, SpEngine & ev. stake-yield per pack.
+      </div>
+      ${renderDailyTasksInner()}
+    </section>
+  `;
+}
+
+/* SETTINGS */
+
 function renderSettings() {
   return `
     <section class="panel">
       <div class="panel-title">Settings & modules</div>
       <div class="panel-sub">
-        Later this becomes the control room for connected wallets, creator modules and Zora/Farcaster hooks.
+        Control room for wallets, modules and how your SpawnEngine skin looks.
       </div>
       <div class="trading-panel" style="margin-top:9px;">
         <div class="trading-card">
@@ -1070,13 +1109,12 @@ function renderSettings() {
   `;
 }
 
-/* daily tasks shared block */
+/* DAILY TASKS SHARED BLOCK */
 
 function renderDailyTasksInner() {
   const remaining = remainingXP();
   const t = state.tasks;
   const connectDone = !!state.wallet && t.connect;
-
   const connectLabel = state.wallet ? (connectDone ? "Done" : "Disconnect") : "Connect";
 
   return `
@@ -1145,7 +1183,7 @@ function renderDailyTasksInner() {
   `;
 }
 
-/* task buttons */
+/* TASK BUTTONS */
 
 function wireTaskButtons() {
   const buttons = document.querySelectorAll(".task-cta");
