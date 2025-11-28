@@ -1,17 +1,18 @@
-// Simple mock state
+// SpawnEngine v0.3 — app.js (full file)
+
+// Global state (preview)
 const state = {
   wallet: null,
   xp: 1575,
-  spawn: 497, // kan döpas om till t.ex. SpEngine i UI om du vill
+  spn: 497, // SpEngine balance
   meshEvents: 9,
   activeTab: "overview",
-  gasLevel: 0.35,
+  gasLevel: 0.35, // 0–1
   tasks: {
     testPack: false,
     share: false,
   },
   theme: "dark",
-  customAccent: null,
 };
 
 const TABS = [
@@ -20,9 +21,11 @@ const TABS = [
   { id: "trading", label: "Trading" },
   { id: "pull-lab", label: "Pull Lab" },
   { id: "pack-maps", label: "Pack Maps" },
-  { id: "campaigns", label: "Creator Quests" },
+  { id: "campaigns", label: "Quests" },
+  { id: "leaderboard", label: "Leaders" },
   { id: "stats", label: "Stats" },
   { id: "pnl", label: "PNL" },
+  { id: "tasks", label: "Daily" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -39,8 +42,40 @@ const recentPullsMock = [
   { pack: "Shard Forge", band: "Relic", amount: 1, odds: "1 / 2 000" },
 ];
 
+// creator + leaderboard mock data
+const creators = [
+  {
+    handle: "@spawniz",
+    title: "SpawnEngine core",
+    verified: true,
+    meshScore: 96,
+    activeQuests: 3,
+  },
+  {
+    handle: "@basebuilder",
+    title: "Base pack artisan",
+    verified: true,
+    meshScore: 88,
+    activeQuests: 2,
+  },
+  {
+    handle: "@foilwizard",
+    title: "Foil realms curator",
+    verified: false,
+    meshScore: 74,
+    activeQuests: 1,
+  },
+];
+
+const leaderboardRows = [
+  { label: "Wallet", value: "0x094c…mesh", pnl: "+1.8 ETH", xp: 2100 },
+  { label: "Creator", value: "@spawniz", pnl: "+3.2 ETH", xp: 5400 },
+  { label: "Wallet", value: "0x7ae4…b52", pnl: "+0.7 ETH", xp: 900 },
+  { label: "Creator", value: "@basebuilder", pnl: "+1.1 ETH", xp: 3100 },
+];
+
 function remainingXP() {
-  let total = 150; // 50 + 100 (test + share)
+  let total = 150;
   if (state.tasks.testPack) total -= 50;
   if (state.tasks.share) total -= 100;
   return total;
@@ -72,20 +107,26 @@ function init() {
                 <span class="pill-dot"></span>
                 <span class="pill-label">Base · Mesh Layer</span>
               </div>
-              <button class="btn-wallet" id="btn-wallet">
-                <span id="wallet-status-icon">⦿</span><span id="wallet-label">Connect</span>
-              </button>
+              <div class="wallet-block">
+                <button class="btn-wallet" id="btn-wallet">
+                  <span id="wallet-status-icon">⦿</span>
+                  <span id="wallet-label">Connect</span>
+                </button>
+                <div class="wallet-address" id="wallet-address-display">
+                  No wallet connected
+                </div>
+              </div>
             </div>
           </div>
 
           <div class="mode-tag">
-            <span>MODE · Mesh Alpha</span><span>Unified activity layer</span>
+            <span>MODE · v0.3</span><span>SpawnEngine mesh preview</span>
           </div>
 
           <div class="status-row">
             <div class="status-pill">
               <span class="status-pill-label">Gas</span>
-              <span class="status-pill-value" id="status-gas">~0.25 gwei est.</span>
+              <span class="status-pill-value" id="status-gas">~0.25 gwei</span>
               <div class="gas-meter">
                 <div class="gas-meter-fill" id="gas-meter-fill"></div>
               </div>
@@ -103,16 +144,7 @@ function init() {
             </div>
             <div class="status-pill">
               <span class="status-pill-label">SpEngine</span>
-              <span class="status-pill-value" id="status-spawn">${state.spawn}</span>
-            </div>
-          </div>
-
-          <div class="status-row wallet-row">
-            <div class="status-pill wallet-pill">
-              <span class="status-pill-label">Connected wallet</span>
-              <span class="status-pill-value wallet-address" id="wallet-address-display">
-                No wallet connected
-              </span>
+              <span class="status-pill-value" id="status-spn">${state.spn}</span>
             </div>
           </div>
 
@@ -160,32 +192,34 @@ function init() {
               <div class="side-menu-avatar">SE</div>
               <div>
                 <div class="side-menu-title">@spawnengine</div>
-                <div class="side-menu-sub">Mesh layer controls · alpha</div>
+                <div class="side-menu-sub">Mesh layer controls</div>
               </div>
             </div>
 
             <div class="side-settings-group">
-              <div class="side-settings-title">App settings</div>
+              <div class="side-settings-title">App theme</div>
               <div class="side-theme-row">
                 <button class="side-theme-btn active" data-theme="dark">Dark</button>
                 <button class="side-theme-btn" data-theme="jurassic">Jurassic</button>
                 <button class="side-theme-btn" data-theme="hologram">Hologram</button>
-                <button class="side-theme-btn" data-theme="custom">Custom</button>
               </div>
+              <button class="side-menu-item" data-menu="custom-theme">
+                Create your own theme (soon)
+              </button>
               <button class="side-menu-item" data-menu="multiwallet">
-                Connect more wallets (mesh-ready)
+                Connect more wallets (mock)
               </button>
             </div>
 
             <ul class="side-menu-list">
               <li>
                 <button class="side-menu-item" data-menu="docs">
-                  Dev docs – GitHub / spawnengine.xyz/docs
+                  Dev docs – GitHub
                 </button>
               </li>
               <li>
                 <button class="side-menu-item" data-menu="reset">
-                  Reset local state
+                  Reset preview state
                 </button>
               </li>
             </ul>
@@ -198,7 +232,7 @@ function init() {
           <div class="modal-panel">
             <div class="modal-title">Share your mesh</div>
             <div class="modal-sub">
-              Pick where to shout your SpawnEngine stats. We’ll copy a short snippet for you.
+              Pick where to shout your SpawnEngine stats. We’ll copy a snippet for you.
             </div>
             <div class="modal-actions">
               <button class="modal-btn primary" data-share-dest="x">
@@ -221,9 +255,9 @@ function init() {
         <div class="modal" id="checkin-modal">
           <div class="modal-backdrop" data-close="checkin"></div>
           <div class="modal-panel">
-            <div class="modal-title">Daily check-in streak</div>
+            <div class="modal-title">Daily check-in</div>
             <div class="modal-sub">
-              Claim a small bonus to keep your streak warm. You can stake it for a tiny extra boost.
+              Claim a small bonus to keep the streak warm. You can also stake it for a tiny extra boost.
             </div>
             <div class="modal-actions">
               <button class="modal-btn primary" id="checkin-claim">
@@ -259,19 +293,9 @@ function init() {
 
 function applyTheme() {
   const body = document.body;
-  body.classList.remove("theme-jurassic", "theme-hologram");
-  const root = document.documentElement;
-
-  if (state.theme !== "custom") {
-    // återställ accent till CSS-default om vi lämnar custom
-    root.style.removeProperty("--accent");
-  }
-
-  if (state.theme === "jurassic") {
-    body.classList.add("theme-jurassic");
-  } else if (state.theme === "hologram") {
-    body.classList.add("theme-hologram");
-  }
+  body.classList.remove("theme-dark", "theme-jurassic", "theme-hologram");
+  const cls = `theme-${state.theme || "dark"}`;
+  body.classList.add(cls);
 }
 
 /* wallet */
@@ -384,11 +408,13 @@ function wireMenu() {
     item.addEventListener("click", () => {
       const action = item.dataset.menu;
       if (action === "reset") {
-        resetLocalState();
+        resetMockState();
       } else if (action === "docs") {
         window.open("https://github.com/gascheckking/SpawnEngine", "_blank");
       } else if (action === "multiwallet") {
-        alert("Multi-wallet mesh: later this becomes a full manager for wallet slots.");
+        alert("Multi-wallet mesh: later this opens a real manager.");
+      } else if (action === "custom-theme") {
+        alert("Custom themes are coming later – for now use Dark / Jurassic / Hologram.");
       }
       toggle(false);
     });
@@ -398,37 +424,22 @@ function wireMenu() {
   menu.querySelectorAll(".side-theme-btn").forEach((btnTheme) => {
     btnTheme.addEventListener("click", () => {
       const theme = btnTheme.dataset.theme;
-
+      state.theme = theme;
       menu
         .querySelectorAll(".side-theme-btn")
         .forEach((b) => b.classList.remove("active"));
       btnTheme.classList.add("active");
-
-      if (theme === "custom") {
-        const current = state.customAccent || "#22c55e";
-        const picked = window.prompt(
-          "Custom accent color (CSS value, e.g. #22c55e, rgb(…) or color name):",
-          current,
-        );
-        if (picked) {
-          state.customAccent = picked;
-          const root = document.documentElement;
-          root.style.setProperty("--accent", picked);
-        }
-      }
-
-      state.theme = theme;
       applyTheme();
     });
   });
 }
 
-function resetLocalState() {
+function resetMockState() {
   state.wallet = null;
   state.tasks = { testPack: false, share: false };
   state.meshEvents = 9;
   state.xp = 1575;
-  state.spawn = 497;
+  state.spn = 497;
   updateWalletUI();
   renderActiveView();
 }
@@ -447,7 +458,7 @@ function initShareModal() {
   modal.querySelectorAll("[data-share-dest]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const dest = btn.dataset.shareDest;
-      const text = `SpawnEngine mesh · XP ${state.xp} · SpEngine ${state.spawn} · ${state.meshEvents} events · Mesh alpha on Base. #SpawnEngine`;
+      const text = `SpawnEngine mesh · XP ${state.xp} · SpEngine ${state.spn} · ${state.meshEvents} events · mode v0.3 preview.`;
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).catch(() => {});
@@ -496,7 +507,7 @@ function initCheckinModal() {
   };
 
   claimBtn.addEventListener("click", () => addCheckinXp(10));
-  claimStakeBtn.addEventListener("click", () => addCheckinXp(13));
+  claimStakeBtn.addEventListener("click", () => addCheckinXp(13)); // 10 + ~3% boost
 
   modal.querySelectorAll("[data-close='checkin']").forEach((btn) =>
     btn.addEventListener("click", () => modal.classList.remove("open")),
@@ -515,7 +526,7 @@ function updateGasMeter() {
   fill.style.width = `${width}%`;
 
   const gwei = (0.15 + level * 0.25).toFixed(2);
-  label.textContent = `~${gwei} gwei est.`;
+  label.textContent = `~${gwei} gwei`;
 }
 
 function startGasInterval() {
@@ -551,11 +562,17 @@ function renderActiveView() {
     case "campaigns":
       html = renderCampaigns();
       break;
+    case "leaderboard":
+      html = renderLeaderboard();
+      break;
     case "stats":
       html = renderStats();
       break;
     case "pnl":
       html = renderPnl();
+      break;
+    case "tasks":
+      html = renderTasks();
       break;
     case "settings":
       html = renderSettings();
@@ -589,7 +606,7 @@ function renderProfile() {
             <div>
               <div class="trading-card-title">${handle}</div>
               <div class="trading-card-sub">
-                Mesh owner on ${chain} · Layer-4 style XP & packs
+                Mesh owner on ${chain} · packs, XP, quests & creator modules
               </div>
             </div>
           </div>
@@ -608,8 +625,8 @@ function renderProfile() {
         </div>
         <div class="metric-card">
           <div class="metric-label">SpEngine balance</div>
-          <div class="metric-value">${state.spawn}</div>
-          <div class="metric-foot">Rewards from packs & quests.</div>
+          <div class="metric-value">${state.spn}</div>
+          <div class="metric-foot">Rewards from packs & quests (preview).</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Today’s events</div>
@@ -625,7 +642,7 @@ function renderProfile() {
 
       <div class="trading-panel">
         <div>
-          <div class="trading-row-title">Linked apps</div>
+          <div class="trading-row-title">Linked wallet</div>
           <div class="trading-card">
             <div class="trading-card-head">
               <div>
@@ -634,14 +651,14 @@ function renderProfile() {
                   ${
                     state.wallet
                       ? state.wallet
-                      : "Connect wallet to lock in your mesh identity."
+                      : "Connect wallet in the header to lock in your mesh identity."
                   }
                 </div>
               </div>
               <span class="chip chip-mesh">REQUIRED</span>
             </div>
             <div class="trading-card-foot">
-              XP and SpEngine rewards will be tied to this wallet’s onchain activity.
+              In v1, XP and SpEngine rewards will be tied to this wallet’s onchain activity.
             </div>
           </div>
         </div>
@@ -653,13 +670,13 @@ function renderProfile() {
               <div>
                 <div class="trading-card-title">Farcaster & Zora</div>
                 <div class="trading-card-sub">
-                  Casts, mints & creator coins can stream straight into the mesh.
+                  Hooks for casts, mints & creator coins streaming into the mesh.
                 </div>
               </div>
-              <span class="chip chip-planned">PLANNED</span>
+              <span class="chip chip-planned">COMING</span>
             </div>
             <div class="trading-card-foot">
-              Your social actions become first-class events in the activity layer.
+              Your casts and creator actions become first-class events in the activity layer.
             </div>
           </div>
         </div>
@@ -691,8 +708,7 @@ function renderOverview() {
     <section class="panel">
       <div class="panel-title">Mesh overview</div>
       <div class="panel-sub">
-        One engine for TokenSeries, NFTSeries, Zora packs & XP modules –
-        all streaming into the same onchain mesh.
+        One engine for TokenSeries, NFTSeries, Zora packs & XP modules – all streaming into the same mesh.
       </div>
 
       <div class="overview-grid">
@@ -708,8 +724,8 @@ function renderOverview() {
         </div>
         <div class="metric-card">
           <div class="metric-label">SpEngine balance</div>
-          <div class="metric-value">${state.spawn}</div>
-          <div class="metric-foot">Tokens earned from packs & quests.</div>
+          <div class="metric-value">${state.spn}</div>
+          <div class="metric-foot">Earned from packs, quests & streaks.</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Connected modules</div>
@@ -728,14 +744,14 @@ function renderOverview() {
   `;
 }
 
-/* TRADING / PULL LAB / MAPS / CAMPAIGNS / STATS / PNL / SETTINGS */
+/* TRADING / PULL LAB / MAPS / CAMPAIGNS / LEADERBOARD / STATS / PNL / TASKS / SETTINGS */
 
 function renderTrading() {
   return `
     <section class="panel">
       <div class="panel-title">Trading hub</div>
       <div class="panel-sub">
-        Swap packs, fragments, shards, relics & creator tokens in one mesh-driven orderbook.
+        Future view: swap packs, fragments, shards, relics & creator tokens in one mesh-driven orderbook.
       </div>
 
       <div class="trading-panel">
@@ -746,7 +762,7 @@ function renderTrading() {
               <div>
                 <div class="trading-card-title">Unified orderbook</div>
                 <div class="trading-card-sub">
-                  TokenSeries · NFTSeries · Zora packs · Mesh-linked liquidity.
+                  TokenSeries · NFTSeries · Zora packs · mesh-linked liquidity.
                 </div>
               </div>
               <span class="chip chip-planned">PLANNED</span>
@@ -785,10 +801,10 @@ function renderTrading() {
                   Orders, pulls & burns all show up in the unified activity layer.
                 </div>
               </div>
-              <span class="chip chip-mesh">MESH-DRIVEN</span>
+              <span class="chip chip-mesh">MESH</span>
             </div>
             <div class="trading-card-foot">
-              One mesh instead of many separate dapps.
+              One mesh instead of 10 separate dapps.
             </div>
           </div>
         </div>
@@ -802,7 +818,7 @@ function renderPullLab() {
     <section class="panel">
       <div class="panel-title">Pull lab</div>
       <div class="panel-sub">
-        Rarity bands, EV and pull behavior for the SpawnEngine model.
+        Rarity bands for the SpawnEngine model – only Fragments & Shards will be gambled, Relics stay pure premiums.
       </div>
       <div class="overview-grid" style="margin-top:9px;">
         <div class="metric-card">
@@ -811,42 +827,29 @@ function renderPullLab() {
           <div class="metric-foot">Base cost per pack.</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Fragment EV</div>
+          <div class="metric-label">Fragment</div>
           <div class="metric-value">9 500–10 000</div>
           <div class="metric-foot">≈ 90% loss by design.</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Relic band</div>
-          <div class="metric-value">100–200×</div>
-          <div class="metric-foot">High-end relics, no gamble loops.</div>
+          <div class="metric-label">Shard</div>
+          <div class="metric-value">110 000</div>
+          <div class="metric-foot">≈ 1.1× pack.</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">SpEngine kickback</div>
-          <div class="metric-value">5–10%</div>
-          <div class="metric-foot">XP/SpEngine returned per pack open.</div>
+          <div class="metric-label">Core</div>
+          <div class="metric-value">300k–400k</div>
+          <div class="metric-foot">≈ 3–4× band.</div>
         </div>
-      </div>
-
-      <div class="rarity-list">
-        <div class="rarity-row">
-          <div class="rarity-name">Fragment</div>
-          <div class="rarity-desc">Low band · ~90% of pulls · ≈ 9.5–10k tokens</div>
+        <div class="metric-card">
+          <div class="metric-label">Artifact</div>
+          <div class="metric-value">≈ 4M</div>
+          <div class="metric-foot">≈ 40× band.</div>
         </div>
-        <div class="rarity-row">
-          <div class="rarity-name">Shard</div>
-          <div class="rarity-desc">Mid band · light win · ≈ 1.1× pack value</div>
-        </div>
-        <div class="rarity-row">
-          <div class="rarity-name">Core</div>
-          <div class="rarity-desc">Solid hit · ≈ 3–4× pack value</div>
-        </div>
-        <div class="rarity-row">
-          <div class="rarity-name">Artifact</div>
-          <div class="rarity-desc">Premium tier · ≈ 40× band</div>
-        </div>
-        <div class="rarity-row">
-          <div class="rarity-name">Relic</div>
-          <div class="rarity-desc">Top band · ≈ 100–200× · no gamble burns allowed</div>
+        <div class="metric-card">
+          <div class="metric-label">Relic</div>
+          <div class="metric-value">10–20M</div>
+          <div class="metric-foot">≈ 100–200×, no gamble.</div>
         </div>
       </div>
     </section>
@@ -854,68 +857,144 @@ function renderPullLab() {
 }
 
 function renderPackMaps() {
+  // bubble-style preview
+  const bubbles = [
+    { label: "Series #1 · Token packs", size: 72, cls: "bubble-core" },
+    { label: "@spawniz · creator node", size: 60, cls: "bubble-creator" },
+    { label: "NFTSeries · Artifacts", size: 50, cls: "bubble-artifact" },
+    { label: "Zora packs lane", size: 44, cls: "bubble-zora" },
+    { label: "XP-only quests", size: 36, cls: "bubble-xp" },
+  ];
+
+  const bubblesHtml = bubbles
+    .map(
+      (b) => `
+      <div class="mesh-bubble ${b.cls}" style="--r:${b.size}px;">
+        <span>${b.label}</span>
+      </div>
+    `,
+    )
+    .join("");
+
   return `
     <section class="panel">
       <div class="panel-title">Pack maps</div>
       <div class="panel-sub">
-        Visual mesh of series, creators & risk-zones across Base (UI-first version).
+        Visual mesh of series, creators & risk-zones across Base – this preview keeps it UI-only.
       </div>
-      <div class="trading-card" style="margin-top:9px;">
-        <div class="trading-card-head">
-          <div>
-            <div class="trading-card-title">Mesh nodes</div>
-            <div class="trading-card-sub">
-              Each deployed series becomes a node: TokenSeries, NFTSeries, Zora packs, XP modules.
-            </div>
-          </div>
-          <span class="chip chip-planned">MAP VIEW</span>
-        </div>
-        <div class="trading-card-foot">
-          This version is UI-only – later wired to real onchain topology.
-        </div>
+      <div class="mesh-bubble-wrap">
+        ${bubblesHtml}
+      </div>
+      <div class="mesh-note">
+        Later: each bubble becomes clickable, wired to real TokenSeries / NFTSeries / Zora-series addresses.
       </div>
     </section>
   `;
 }
 
 function renderCampaigns() {
+  const creatorsHtml = creators
+    .map(
+      (c) => `
+      <div class="creator-row">
+        <div class="creator-main">
+          <div class="creator-handle">
+            ${c.handle} ${c.verified ? '<span class="creator-badge">VERIFIED</span>' : ""}
+          </div>
+          <div class="creator-sub">${c.title}</div>
+        </div>
+        <div class="creator-meta">
+          <div class="creator-score">Mesh ${c.meshScore}</div>
+          <div class="creator-quests">${c.activeQuests} quests</div>
+        </div>
+      </div>
+    `,
+    )
+    .join("");
+
   return `
     <section class="panel">
-      <div class="panel-title">Creator quests & bounties</div>
+      <div class="panel-title">Creator quests</div>
       <div class="panel-sub">
-        Creator-defined reward lanes – “pull X from my series → receive extra packs or SpEngine”.
+        Creator-defined reward lanes – “pull the right thing, get extra packs or SpEngine” with rewards pre-funded in contracts.
       </div>
 
       <div class="trading-panel">
         <div class="trading-card">
           <div class="trading-card-head">
             <div>
-              <div class="trading-card-title">Launch lane example</div>
+              <div class="trading-card-title">SpawnEngine launch lane</div>
               <div class="trading-card-sub">
-                Pull a Relic from Series #1 and auto-credit bonus packs. All rewards pre-funded onchain.
+                Example: pull any Relic from Series #1 → auto-credit 3 extra packs to your wallet.
               </div>
             </div>
-            <span class="chip chip-mesh">EXAMPLE</span>
+            <span class="chip chip-mesh">LIVE PREVIEW</span>
           </div>
           <div class="trading-card-foot">
-            The idea: set quests once in the contract – SpawnEngine enforces all payouts automatically.
+            Once wired onchain, creators lock rewards once; SpawnEngine handles the payouts automatically.
           </div>
         </div>
 
         <div class="trading-card">
           <div class="trading-card-head">
             <div>
-              <div class="trading-card-title">Quest directory</div>
+              <div class="trading-card-title">Try miniapps & lanes</div>
               <div class="trading-card-sub">
-                Later: list active quests per creator, including “try my miniapp”, “complete this series”, etc.
+                Quests like “try my miniapp”, “mint 3 packs”, or “collect 5 Cores” unlock extra SpEngine or packs.
               </div>
             </div>
-            <span class="chip chip-planned">PLANNED</span>
+            <span class="chip chip-planned">DESIGN SPACE</span>
           </div>
           <div class="trading-card-foot">
-            Filter by creator, rarity band, or reward pool – all from a single mesh view.
+            The idea: one quest system that works across Zora, Farcaster miniapps and Base-native contracts.
           </div>
         </div>
+      </div>
+
+      <div class="creator-list-block">
+        <div class="creator-list-header">Active creators (preview)</div>
+        ${creatorsHtml}
+      </div>
+
+      <div class="creator-actions-row">
+        <button class="task-cta" onclick="openShareModal()">
+          Share quest idea on X / Farcaster
+        </button>
+        <button class="task-cta" onclick="window.open('https://warpcast.com/~/compose','_blank')">
+          DM a creator on Farcaster
+        </button>
+      </div>
+    </section>
+  `;
+}
+
+function renderLeaderboard() {
+  const rowsHtml = leaderboardRows
+    .map(
+      (r) => `
+      <div class="leader-row">
+        <div class="leader-main">
+          <div class="leader-label">${r.label}</div>
+          <div class="leader-value">${r.value}</div>
+        </div>
+        <div class="leader-meta">
+          <div class="leader-pnl">${r.pnl}</div>
+          <div class="leader-xp">${r.xp} XP</div>
+        </div>
+      </div>
+    `,
+    )
+    .join("");
+
+  return `
+    <section class="panel">
+      <div class="panel-title">Leaders</div>
+      <div class="panel-sub">
+        Snapshot-style leaderboard across wallets & creators – later wired to real mesh data and SpEngine rewards.
+      </div>
+
+      <div class="leader-list">
+        ${rowsHtml}
       </div>
     </section>
   `;
@@ -926,18 +1005,18 @@ function renderStats() {
     <section class="panel">
       <div class="panel-title">Stats & luck engine</div>
       <div class="panel-sub">
-        High-level mesh stats – later wired to live TokenPackSeries events.
+        Once onchain events are wired, this view becomes the analytics layer for the whole mesh.
       </div>
       <div class="overview-grid" style="margin-top:9px;">
         <div class="metric-card">
           <div class="metric-label">Total packs</div>
           <div class="metric-value">12 543</div>
-          <div class="metric-foot">Combined across all series.</div>
+          <div class="metric-foot">Combined across all series (preview).</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Relic hit rate</div>
           <div class="metric-value">3.2%</div>
-          <div class="metric-foot">Hit rate for the top band.</div>
+          <div class="metric-foot">Will be computed from real pulls.</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Unique holders</div>
@@ -983,7 +1062,7 @@ function renderPnl() {
     <section class="panel">
       <div class="panel-title">PNL view</div>
       <div class="panel-sub">
-        Mesh-wide PNL layer for everything the engine sees – pulls, swaps & Zora buys.
+        PNL layer for everything the mesh has seen – later wired to real pulls, swaps & Zora buys.
       </div>
 
       <div class="pnl-summary-grid">
@@ -1010,11 +1089,23 @@ function renderPnl() {
       </div>
 
       <div style="margin-top:10px;font-size:10px;color:#9ca3af;">
-        Last 7 mesh days (ETH-denominated, example data):
+        Last 7 mesh days (ETH-denominated):
       </div>
       <div class="pnl-chart">
         ${barsHtml}
       </div>
+    </section>
+  `;
+}
+
+function renderTasks() {
+  return `
+    <section class="panel">
+      <div class="panel-title">Daily mesh tasks</div>
+      <div class="panel-sub">
+        Same loop as on the overview tab – kept here as a focused view for streak hunters.
+      </div>
+      ${renderDailyTasksInner()}
     </section>
   `;
 }
@@ -1024,7 +1115,7 @@ function renderSettings() {
     <section class="panel">
       <div class="panel-title">Settings & modules</div>
       <div class="panel-sub">
-        Control room for wallets, creator modules and external hooks.
+        Control room for wallets, modules and future integration knobs.
       </div>
       <div class="trading-panel" style="margin-top:9px;">
         <div class="trading-card">
@@ -1032,12 +1123,12 @@ function renderSettings() {
             <div>
               <div class="trading-card-title">Wallets</div>
               <div class="trading-card-sub">
-                Multi-wallet mesh planned – track PNL per wallet and per series.
+                Multi-wallet mesh planned – track PNL per wallet and per pack-series.
               </div>
             </div>
           </div>
           <div class="trading-card-foot">
-            Current build keeps a single wallet; the mesh layer is ready for more.
+            Current preview keeps a single wallet toggle in the header.
           </div>
         </div>
         <div class="trading-card">
@@ -1050,7 +1141,7 @@ function renderSettings() {
             </div>
           </div>
           <div class="trading-card-foot">
-            The app is the visual layer – contracts stay modular under the hood.
+            This app is the mesh layer UI – contracts stay modular under the hood.
           </div>
         </div>
       </div>
@@ -1058,7 +1149,7 @@ function renderSettings() {
   `;
 }
 
-/* daily tasks shared block – bara Overview */
+/* daily tasks shared block */
 
 function renderDailyTasksInner() {
   const remaining = remainingXP();
@@ -1076,7 +1167,7 @@ function renderDailyTasksInner() {
             <div class="task-dot ${t.testPack ? "done" : ""}"></div>
             <div>
               <div class="task-label-main">Open a test pack</div>
-              <div class="task-label-sub">Trigger one pack_open event (simulated)</div>
+              <div class="task-label-sub">Trigger one mock pack_open event</div>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:6px;">
@@ -1128,10 +1219,11 @@ function wireTaskButtons() {
           const meshEl = document.getElementById("status-mesh");
           if (meshEl) meshEl.textContent = `${state.meshEvents} events`;
         }
-        renderActiveView();
       } else if (task === "share") {
         openShareModal();
+        return;
       }
+      renderActiveView();
     });
   });
 }
