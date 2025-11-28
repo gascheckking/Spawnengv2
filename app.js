@@ -13,11 +13,13 @@ const state = {
   },
   theme: "dark",
   bountyExp: 1200,      // låst EXP för bounties (mock)
-  bountySpawn: 340,     // låst Spawn/SpEngine för bounties (mock)
+  bountySpawn: 340,     // låst SpEngine för bounties (mock)
+  questFilter: "all",
+  questActiveOnly: true,
 };
 
 const TABS = [
-  { id: "overview", label: "Overview" },
+  { id: "overview", label: "Home" },      // första landningssidan
   { id: "profile", label: "Profile" },
   { id: "trading", label: "Trading" },
   { id: "pull-lab", label: "Pull Lab" },
@@ -25,7 +27,6 @@ const TABS = [
   { id: "quests", label: "Creator Quests" },
   { id: "stats", label: "Stats" },
   { id: "pnl", label: "PNL" },
-  { id: "tasks", label: "Daily" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -40,6 +41,60 @@ const recentPullsMock = [
   { pack: "Neon Fragments", band: "Shard", amount: 10, odds: "1 / 420" },
   { pack: "Base Relics", band: "Relic", amount: 3, odds: "1 / 1 200" },
   { pack: "Shard Forge", band: "Relic", amount: 1, odds: "1 / 2 000" },
+];
+
+// Quest-listan (mock)
+const QUESTS = [
+  {
+    id: "q1",
+    creator: "SpawnEngine Labs",
+    creatorHandle: "@spawnengine",
+    type: "pull", // pull | collection | miniapp
+    title: "Relic Hunter Lane",
+    requirement: "Pull 1 Relic from “Base Relics” in ≤ 30 packs.",
+    reward: "20 extra packs + 300 Bounty EXP",
+    status: "active", // active | soon | completed
+  },
+  {
+    id: "q2",
+    creator: "Mesh Wizards",
+    creatorHandle: "@meshwiz",
+    type: "collection",
+    title: "Ladder Quest: Full Band Set",
+    requirement: "Own Fragment, Shard, Core, Crown & Relic from the same Series ID.",
+    reward: "800 Bounty EXP + 80 Bounty SpEngine",
+    status: "active",
+  },
+  {
+    id: "q3",
+    creator: "Creator Inc.",
+    creatorHandle: "@creator_inc",
+    type: "miniapp",
+    title: "Try my miniapp",
+    requirement: "Open the creator’s miniapp once and complete its in-app tutorial.",
+    reward: "150 Bounty EXP + special badge “EARLY MINIAPP USER”.",
+    status: "soon",
+  },
+  {
+    id: "q4",
+    creator: "Base Archive",
+    creatorHandle: "@basearchive",
+    type: "pull",
+    title: "Shard Storm",
+    requirement: "Hit 3 Shards in any Neon Fragments series within 24 mesh-hours.",
+    reward: "5 bonus packs + 100 Bounty SpEngine.",
+    status: "active",
+  },
+  {
+    id: "q5",
+    creator: "Tiny Legends Crew",
+    creatorHandle: "@tinylegends",
+    type: "miniapp",
+    title: "Onboard a friend",
+    requirement: "Share a referral link from the miniapp & see 1 successful first pull.",
+    reward: "200 Bounty EXP + cosmetic frame upgrade.",
+    status: "completed",
+  },
 ];
 
 function remainingXP() {
@@ -267,7 +322,6 @@ function applyTheme() {
     body.classList.add("theme-hologram");
   }
 
-  // uppdatera aktiva knappar i sidomenyn om den finns
   const menu = document.getElementById("side-menu");
   if (menu) {
     menu
@@ -417,6 +471,8 @@ function resetMockState() {
   state.spawn = 497;
   state.bountyExp = 1200;
   state.bountySpawn = 340;
+  state.questFilter = "all";
+  state.questActiveOnly = true;
   updateWalletUI();
   renderActiveView();
 }
@@ -473,7 +529,6 @@ function initCheckinModal() {
   const claimStakeBtn = document.getElementById("checkin-claim-stake");
   if (!modal || !claimBtn || !claimStakeBtn) return;
 
-  // auto-open vid start
   modal.classList.add("open");
 
   const addCheckinXp = (amount) => {
@@ -485,7 +540,7 @@ function initCheckinModal() {
   };
 
   claimBtn.addEventListener("click", () => addCheckinXp(10));
-  claimStakeBtn.addEventListener("click", () => addCheckinXp(13)); // 10 + ~3% mock
+  claimStakeBtn.addEventListener("click", () => addCheckinXp(13));
 
   modal.querySelectorAll("[data-close='checkin']").forEach((btn) =>
     btn.addEventListener("click", () => modal.classList.remove("open")),
@@ -499,8 +554,8 @@ function updateGasMeter() {
   const label = document.getElementById("status-gas");
   if (!fill || !label) return;
 
-  const level = state.gasLevel; // 0–1
-  const width = 20 + level * 60; // 20–80%
+  const level = state.gasLevel;
+  const width = 20 + level * 60;
   fill.style.width = `${width}%`;
 
   const gwei = (0.15 + level * 0.25).toFixed(2);
@@ -546,9 +601,6 @@ function renderActiveView() {
     case "pnl":
       html = renderPnl();
       break;
-    case "tasks":
-      html = renderTasks();
-      break;
     case "settings":
       html = renderSettings();
       break;
@@ -558,6 +610,7 @@ function renderActiveView() {
 
   main.innerHTML = html;
   wireTaskButtons();
+  wireQuestFilters();
 }
 
 /* PROFILE */
@@ -791,7 +844,7 @@ function renderTrading() {
   `;
 }
 
-/* PULL LAB – bara info om rarity / ekonomi nu */
+/* PULL LAB – rarity info */
 
 function renderPullLab() {
   return `
@@ -868,11 +921,69 @@ function renderPackMaps() {
 function renderQuests() {
   const bountyTotal = state.bountyExp + state.bountySpawn;
 
+  const filtered = QUESTS.filter((q) => {
+    if (state.questFilter !== "all" && q.type !== state.questFilter) return false;
+    if (state.questActiveOnly && q.status !== "active") return false;
+    return true;
+  });
+
+  const questCards =
+    filtered.length === 0
+      ? `<div class="empty-state">No quests match this filter yet (mock).</div>`
+      : filtered
+          .map((q) => {
+            const typeLabel =
+              q.type === "pull"
+                ? "Pull-based"
+                : q.type === "collection"
+                ? "Collection"
+                : "Miniapp";
+            const statusClass =
+              q.status === "active"
+                ? "chip-quest-active"
+                : q.status === "soon"
+                ? "chip-quest-soon"
+                : "chip-quest-completed";
+            const statusLabel =
+              q.status === "active"
+                ? "ACTIVE"
+                : q.status === "soon"
+                ? "SOON"
+                : "COMPLETED";
+
+            return `
+          <div class="trading-card quest-card">
+            <div class="trading-card-head">
+              <div>
+                <div class="trading-card-title">${q.title}</div>
+                <div class="trading-card-sub">
+                  <span class="quest-creator">${q.creator} <span class="quest-handle">${q.creatorHandle}</span></span>
+                  · <span class="quest-type">${typeLabel}</span>
+                </div>
+              </div>
+              <span class="chip ${statusClass}">${statusLabel}</span>
+            </div>
+            <div class="trading-card-foot">
+              <div class="quest-row">
+                <span class="quest-label">Requirement</span>
+                <span class="quest-text">${q.requirement}</span>
+              </div>
+              <div class="quest-row">
+                <span class="quest-label">Reward</span>
+                <span class="quest-text">${q.reward}</span>
+              </div>
+            </div>
+          </div>
+        `;
+          })
+          .join("");
+
   return `
     <section class="panel">
       <div class="panel-title">Creator Quests</div>
       <div class="panel-sub">
-        Creator-defined bounties – EXP & SpEngine som är låsta till quests, pre-funded från pack sales.
+        Creator-defined bounties – EXP & SpEngine som är låsta till quests, pre-funded från pack sales
+        och ofta knutna till pulls, samlingar eller “try my miniapp”-flows.
       </div>
 
       <div class="overview-grid">
@@ -899,56 +1010,38 @@ function renderQuests() {
         </div>
         <div class="metric-card">
           <div class="metric-label">Active quests (mock)</div>
-          <div class="metric-value">3</div>
+          <div class="metric-value">${
+            QUESTS.filter((q) => q.status === "active").length
+          }</div>
           <div class="metric-foot">Later wired to real quest contracts.</div>
         </div>
       </div>
 
-      <div class="trading-panel" style="margin-top:10px;">
-        <div class="trading-card">
-          <div class="trading-card-head">
-            <div>
-              <div class="trading-card-title">Relic Hunter Lane</div>
-              <div class="trading-card-sub">
-                Pull 1 Relic from “Base Relics” in ≤ 30 packs → win 20 extra packs + bounty EXP.
-              </div>
-            </div>
-            <span class="chip chip-mesh">LIVE MOCK</span>
-          </div>
-          <div class="trading-card-foot">
-            All rewards är redan inbetalda i kontraktet; SpawnEngine kollar bara eventen och triggar payouts.
-          </div>
+      <div class="quest-filter-bar">
+        <div class="quest-filter-buttons">
+          <button class="quest-filter-btn${
+            state.questFilter === "all" ? " active" : ""
+          }" data-filter="all">All</button>
+          <button class="quest-filter-btn${
+            state.questFilter === "pull" ? " active" : ""
+          }" data-filter="pull">Pull</button>
+          <button class="quest-filter-btn${
+            state.questFilter === "collection" ? " active" : ""
+          }" data-filter="collection">Collection</button>
+          <button class="quest-filter-btn${
+            state.questFilter === "miniapp" ? " active" : ""
+          }" data-filter="miniapp">Miniapp</button>
         </div>
+        <label class="quest-toggle">
+          <input type="checkbox" id="quest-toggle-active" ${
+            state.questActiveOnly ? "checked" : ""
+          } />
+          <span>Show only active</span>
+        </label>
+      </div>
 
-        <div class="trading-card">
-          <div class="trading-card-head">
-            <div>
-              <div class="trading-card-title">Ladder Quest: Fragment → Relic</div>
-              <div class="trading-card-sub">
-                Own Fragment, Shard, Core, Crown & Relic från samma series ID.
-              </div>
-            </div>
-            <span class="chip chip-planned">PLANNED</span>
-          </div>
-          <div class="trading-card-foot">
-            Later: Chain-indexing visar exakt vilka band du saknar innan du kan claima bounty potten.
-          </div>
-        </div>
-
-        <div class="trading-card">
-          <div class="trading-card-head">
-            <div>
-              <div class="trading-card-title">Creator XP lanes</div>
-              <div class="trading-card-sub">
-                Every pack sold laddar upp en del EXP/SpEngine till en personlig bounty-pool per creator.
-              </div>
-            </div>
-            <span class="chip chip-planned">DESIGN</span>
-          </div>
-          <div class="trading-card-foot">
-            Idén: du kan inte “dödfarma” – du måste faktiskt klara quest-reglerna för att låsa upp bounty-poolen.
-          </div>
-        </div>
+      <div class="trading-panel quest-list-panel">
+        ${questCards}
       </div>
     </section>
   `;
@@ -1054,20 +1147,6 @@ function renderPnl() {
   `;
 }
 
-/* DAILY TAB */
-
-function renderTasks() {
-  return `
-    <section class="panel">
-      <div class="panel-title">Daily mesh tasks</div>
-      <div class="panel-sub">
-        Simple layer-4 style tasks – senare kopplade till riktiga XP, SpEngine & ev. stake-yield per pack.
-      </div>
-      ${renderDailyTasksInner()}
-    </section>
-  `;
-}
-
 /* SETTINGS */
 
 function renderSettings() {
@@ -1109,7 +1188,7 @@ function renderSettings() {
   `;
 }
 
-/* DAILY TASKS SHARED BLOCK */
+/* DAILY TASKS SHARED BLOCK – används av Home + Profile */
 
 function renderDailyTasksInner() {
   const remaining = remainingXP();
@@ -1209,6 +1288,30 @@ function wireTaskButtons() {
       renderActiveView();
     });
   });
+}
+
+/* QUEST FILTERS */
+
+function wireQuestFilters() {
+  const filterButtons = document.querySelectorAll(".quest-filter-btn");
+  const toggleActive = document.getElementById("quest-toggle-active");
+
+  if (filterButtons.length) {
+    filterButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const filter = btn.dataset.filter || "all";
+        state.questFilter = filter;
+        renderActiveView();
+      });
+    });
+  }
+
+  if (toggleActive) {
+    toggleActive.addEventListener("change", (e) => {
+      state.questActiveOnly = e.target.checked;
+      renderActiveView();
+    });
+  }
 }
 
 init();
