@@ -2,29 +2,25 @@
 const state = {
   wallet: null,
   xp: 1575,
-  spawn: 497,           // din token, visas som "SpEngine"
+  spawn: 497, // kan döpas om till t.ex. SpEngine i UI om du vill
   meshEvents: 9,
   activeTab: "overview",
   gasLevel: 0.35,
   tasks: {
     testPack: false,
-    connect: false,
     share: false,
   },
   theme: "dark",
-  bountyExp: 1200,      // låst EXP för bounties (mock)
-  bountySpawn: 340,     // låst SpEngine för bounties (mock)
-  questFilter: "all",
-  questActiveOnly: true,
+  customAccent: null,
 };
 
 const TABS = [
-  { id: "overview", label: "Home" },      // första landningssidan
+  { id: "overview", label: "Overview" },
   { id: "profile", label: "Profile" },
   { id: "trading", label: "Trading" },
   { id: "pull-lab", label: "Pull Lab" },
   { id: "pack-maps", label: "Pack Maps" },
-  { id: "quests", label: "Creator Quests" },
+  { id: "campaigns", label: "Creator Quests" },
   { id: "stats", label: "Stats" },
   { id: "pnl", label: "PNL" },
   { id: "settings", label: "Settings" },
@@ -43,64 +39,9 @@ const recentPullsMock = [
   { pack: "Shard Forge", band: "Relic", amount: 1, odds: "1 / 2 000" },
 ];
 
-// Quest-listan (mock)
-const QUESTS = [
-  {
-    id: "q1",
-    creator: "SpawnEngine Labs",
-    creatorHandle: "@spawnengine",
-    type: "pull", // pull | collection | miniapp
-    title: "Relic Hunter Lane",
-    requirement: "Pull 1 Relic from “Base Relics” in ≤ 30 packs.",
-    reward: "20 extra packs + 300 Bounty EXP",
-    status: "active", // active | soon | completed
-  },
-  {
-    id: "q2",
-    creator: "Mesh Wizards",
-    creatorHandle: "@meshwiz",
-    type: "collection",
-    title: "Ladder Quest: Full Band Set",
-    requirement: "Own Fragment, Shard, Core, Crown & Relic from the same Series ID.",
-    reward: "800 Bounty EXP + 80 Bounty SpEngine",
-    status: "active",
-  },
-  {
-    id: "q3",
-    creator: "Creator Inc.",
-    creatorHandle: "@creator_inc",
-    type: "miniapp",
-    title: "Try my miniapp",
-    requirement: "Open the creator’s miniapp once and complete its in-app tutorial.",
-    reward: "150 Bounty EXP + special badge “EARLY MINIAPP USER”.",
-    status: "soon",
-  },
-  {
-    id: "q4",
-    creator: "Base Archive",
-    creatorHandle: "@basearchive",
-    type: "pull",
-    title: "Shard Storm",
-    requirement: "Hit 3 Shards in any Neon Fragments series within 24 mesh-hours.",
-    reward: "5 bonus packs + 100 Bounty SpEngine.",
-    status: "active",
-  },
-  {
-    id: "q5",
-    creator: "Tiny Legends Crew",
-    creatorHandle: "@tinylegends",
-    type: "miniapp",
-    title: "Onboard a friend",
-    requirement: "Share a referral link from the miniapp & see 1 successful first pull.",
-    reward: "200 Bounty EXP + cosmetic frame upgrade.",
-    status: "completed",
-  },
-];
-
 function remainingXP() {
-  let total = 250;
+  let total = 150; // 50 + 100 (test + share)
   if (state.tasks.testPack) total -= 50;
-  if (state.tasks.connect) total -= 100;
   if (state.tasks.share) total -= 100;
   return total;
 }
@@ -131,20 +72,14 @@ function init() {
                 <span class="pill-dot"></span>
                 <span class="pill-label">Base · Mesh Layer</span>
               </div>
-              <div class="wallet-block">
-                <button class="btn-wallet" id="btn-wallet">
-                  <span id="wallet-status-icon">⦿</span>
-                  <span id="wallet-label">Connect</span>
-                </button>
-                <div class="wallet-address" id="wallet-address-display">
-                  No wallet connected
-                </div>
-              </div>
+              <button class="btn-wallet" id="btn-wallet">
+                <span id="wallet-status-icon">⦿</span><span id="wallet-label">Connect</span>
+              </button>
             </div>
           </div>
 
           <div class="mode-tag">
-            <span>MODE · v0.2</span><span>Mock mesh data only</span>
+            <span>MODE · Mesh Alpha</span><span>Unified activity layer</span>
           </div>
 
           <div class="status-row">
@@ -169,6 +104,15 @@ function init() {
             <div class="status-pill">
               <span class="status-pill-label">SpEngine</span>
               <span class="status-pill-value" id="status-spawn">${state.spawn}</span>
+            </div>
+          </div>
+
+          <div class="status-row wallet-row">
+            <div class="status-pill wallet-pill">
+              <span class="status-pill-label">Connected wallet</span>
+              <span class="status-pill-value wallet-address" id="wallet-address-display">
+                No wallet connected
+              </span>
             </div>
           </div>
 
@@ -208,7 +152,7 @@ function init() {
           </div>
         </footer>
 
-        <!-- Side menu -->
+        <!-- Side menu (vänster) -->
         <div class="side-menu" id="side-menu">
           <div class="side-menu-backdrop" id="side-menu-backdrop"></div>
           <div class="side-menu-panel">
@@ -216,7 +160,7 @@ function init() {
               <div class="side-menu-avatar">SE</div>
               <div>
                 <div class="side-menu-title">@spawnengine</div>
-                <div class="side-menu-sub">Mesh layer controls · mock v0.2</div>
+                <div class="side-menu-sub">Mesh layer controls · alpha</div>
               </div>
             </div>
 
@@ -226,21 +170,22 @@ function init() {
                 <button class="side-theme-btn active" data-theme="dark">Dark</button>
                 <button class="side-theme-btn" data-theme="jurassic">Jurassic</button>
                 <button class="side-theme-btn" data-theme="hologram">Hologram</button>
+                <button class="side-theme-btn" data-theme="custom">Custom</button>
               </div>
               <button class="side-menu-item" data-menu="multiwallet">
-                Connect more wallets (mock)
+                Connect more wallets (mesh-ready)
               </button>
             </div>
 
             <ul class="side-menu-list">
               <li>
                 <button class="side-menu-item" data-menu="docs">
-                  Dev docs – GitHub (later spawnengine.xyz/docs)
+                  Dev docs – GitHub / spawnengine.xyz/docs
                 </button>
               </li>
               <li>
                 <button class="side-menu-item" data-menu="reset">
-                  Reset mock state
+                  Reset local state
                 </button>
               </li>
             </ul>
@@ -253,7 +198,7 @@ function init() {
           <div class="modal-panel">
             <div class="modal-title">Share your mesh</div>
             <div class="modal-sub">
-              Pick where to shout your SpawnEngine stats. We’ll copy a snippet for you.
+              Pick where to shout your SpawnEngine stats. We’ll copy a short snippet for you.
             </div>
             <div class="modal-actions">
               <button class="modal-btn primary" data-share-dest="x">
@@ -276,16 +221,16 @@ function init() {
         <div class="modal" id="checkin-modal">
           <div class="modal-backdrop" data-close="checkin"></div>
           <div class="modal-panel">
-            <div class="modal-title">Daily check-in streak?</div>
+            <div class="modal-title">Daily check-in streak</div>
             <div class="modal-sub">
-              Claim a small mock bonus to keep the streak warm. You can also stake it for a tiny extra boost.
+              Claim a small bonus to keep your streak warm. You can stake it for a tiny extra boost.
             </div>
             <div class="modal-actions">
               <button class="modal-btn primary" id="checkin-claim">
                 Claim +10 XP
               </button>
               <button class="modal-btn" id="checkin-claim-stake">
-                Claim +10 XP & stake (+3% mock boost)
+                Claim +10 XP & stake (+3% boost)
               </button>
             </div>
             <div class="modal-footer-row">
@@ -310,29 +255,26 @@ function init() {
   startGasInterval();
 }
 
-/* THEME */
+/* theme */
 
 function applyTheme() {
   const body = document.body;
   body.classList.remove("theme-jurassic", "theme-hologram");
+  const root = document.documentElement;
+
+  if (state.theme !== "custom") {
+    // återställ accent till CSS-default om vi lämnar custom
+    root.style.removeProperty("--accent");
+  }
 
   if (state.theme === "jurassic") {
     body.classList.add("theme-jurassic");
   } else if (state.theme === "hologram") {
     body.classList.add("theme-hologram");
   }
-
-  const menu = document.getElementById("side-menu");
-  if (menu) {
-    menu
-      .querySelectorAll(".side-theme-btn")
-      .forEach((b) => b.classList.remove("active"));
-    const activeBtn = menu.querySelector(`.side-theme-btn[data-theme="${state.theme}"]`);
-    if (activeBtn) activeBtn.classList.add("active");
-  }
 }
 
-/* WALLET */
+/* wallet */
 
 function wireWallet() {
   const btn = document.getElementById("btn-wallet");
@@ -342,10 +284,8 @@ function wireWallet() {
     if (!state.wallet) {
       const rand = Math.random().toString(16).slice(2, 8);
       state.wallet = `0x094c…${rand}`;
-      state.tasks.connect = true;
     } else {
       state.wallet = null;
-      state.tasks.connect = false;
     }
     updateWalletUI();
     renderActiveView();
@@ -374,7 +314,7 @@ function updateWalletUI() {
   }
 }
 
-/* TABS */
+/* tabs */
 
 function renderTabs() {
   const nav = document.getElementById("nav-tabs");
@@ -398,7 +338,7 @@ function renderTabs() {
   });
 }
 
-/* TICKER */
+/* ticker */
 
 function renderTicker() {
   const inner = document.getElementById("ticker-inner");
@@ -424,7 +364,7 @@ function renderTicker() {
   inner.innerHTML = pills + pills;
 }
 
-/* SIDE MENU */
+/* side menu */
 
 function wireMenu() {
   const btn = document.getElementById("menu-btn");
@@ -444,40 +384,56 @@ function wireMenu() {
     item.addEventListener("click", () => {
       const action = item.dataset.menu;
       if (action === "reset") {
-        resetMockState();
+        resetLocalState();
       } else if (action === "docs") {
         window.open("https://github.com/gascheckking/SpawnEngine", "_blank");
       } else if (action === "multiwallet") {
-        alert("Multi-wallet mesh: mock only for now. Later this opens a real manager.");
+        alert("Multi-wallet mesh: later this becomes a full manager for wallet slots.");
       }
       toggle(false);
     });
   });
 
+  // theme buttons
   menu.querySelectorAll(".side-theme-btn").forEach((btnTheme) => {
     btnTheme.addEventListener("click", () => {
       const theme = btnTheme.dataset.theme;
+
+      menu
+        .querySelectorAll(".side-theme-btn")
+        .forEach((b) => b.classList.remove("active"));
+      btnTheme.classList.add("active");
+
+      if (theme === "custom") {
+        const current = state.customAccent || "#22c55e";
+        const picked = window.prompt(
+          "Custom accent color (CSS value, e.g. #22c55e, rgb(…) or color name):",
+          current,
+        );
+        if (picked) {
+          state.customAccent = picked;
+          const root = document.documentElement;
+          root.style.setProperty("--accent", picked);
+        }
+      }
+
       state.theme = theme;
       applyTheme();
     });
   });
 }
 
-function resetMockState() {
+function resetLocalState() {
   state.wallet = null;
-  state.tasks = { testPack: false, connect: false, share: false };
+  state.tasks = { testPack: false, share: false };
   state.meshEvents = 9;
   state.xp = 1575;
   state.spawn = 497;
-  state.bountyExp = 1200;
-  state.bountySpawn = 340;
-  state.questFilter = "all";
-  state.questActiveOnly = true;
   updateWalletUI();
   renderActiveView();
 }
 
-/* SHARE MODAL */
+/* share modal */
 
 function initShareModal() {
   const modal = document.getElementById("share-modal");
@@ -491,7 +447,7 @@ function initShareModal() {
   modal.querySelectorAll("[data-share-dest]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const dest = btn.dataset.shareDest;
-      const text = `SpawnEngine mesh · XP ${state.xp} · SpEngine ${state.spawn} · ${state.meshEvents} events · mode v0.2 mock. #SpawnEngine`;
+      const text = `SpawnEngine mesh · XP ${state.xp} · SpEngine ${state.spawn} · ${state.meshEvents} events · Mesh alpha on Base. #SpawnEngine`;
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).catch(() => {});
@@ -521,7 +477,7 @@ function openShareModal() {
   if (modal) modal.classList.add("open");
 }
 
-/* CHECK-IN MODAL */
+/* check-in modal */
 
 function initCheckinModal() {
   const modal = document.getElementById("checkin-modal");
@@ -547,15 +503,15 @@ function initCheckinModal() {
   );
 }
 
-/* GAS METER */
+/* gas meter */
 
 function updateGasMeter() {
   const fill = document.getElementById("gas-meter-fill");
   const label = document.getElementById("status-gas");
   if (!fill || !label) return;
 
-  const level = state.gasLevel;
-  const width = 20 + level * 60;
+  const level = state.gasLevel; // 0–1
+  const width = 20 + level * 60; // 20–80%
   fill.style.width = `${width}%`;
 
   const gwei = (0.15 + level * 0.25).toFixed(2);
@@ -569,7 +525,7 @@ function startGasInterval() {
   }, 8000);
 }
 
-/* ROUTER */
+/* router */
 
 function renderActiveView() {
   const main = document.getElementById("main-content");
@@ -592,8 +548,8 @@ function renderActiveView() {
     case "pack-maps":
       html = renderPackMaps();
       break;
-    case "quests":
-      html = renderQuests();
+    case "campaigns":
+      html = renderCampaigns();
       break;
     case "stats":
       html = renderStats();
@@ -610,7 +566,6 @@ function renderActiveView() {
 
   main.innerHTML = html;
   wireTaskButtons();
-  wireQuestFilters();
 }
 
 /* PROFILE */
@@ -641,7 +596,7 @@ function renderProfile() {
           <span class="chip chip-online">ONLINE</span>
         </div>
         <div class="trading-card-foot">
-          Connected modules: ${modules.join(" · ")} (mock v0.2)
+          Connected modules: ${modules.join(" · ")}
         </div>
       </div>
 
@@ -654,7 +609,7 @@ function renderProfile() {
         <div class="metric-card">
           <div class="metric-label">SpEngine balance</div>
           <div class="metric-value">${state.spawn}</div>
-          <div class="metric-foot">Test rewards from packs & quests (mock).</div>
+          <div class="metric-foot">Rewards from packs & quests.</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Today’s events</div>
@@ -686,7 +641,7 @@ function renderProfile() {
               <span class="chip chip-mesh">REQUIRED</span>
             </div>
             <div class="trading-card-foot">
-              In v1, XP and SpEngine rewards will be tied to this wallet’s onchain activity.
+              XP and SpEngine rewards will be tied to this wallet’s onchain activity.
             </div>
           </div>
         </div>
@@ -698,24 +653,22 @@ function renderProfile() {
               <div>
                 <div class="trading-card-title">Farcaster & Zora</div>
                 <div class="trading-card-sub">
-                  Future hooks: casts, mints & creator coins streamed into the mesh.
+                  Casts, mints & creator coins can stream straight into the mesh.
                 </div>
               </div>
               <span class="chip chip-planned">PLANNED</span>
             </div>
             <div class="trading-card-foot">
-              Your casts and creator actions will become first-class events in the activity layer.
+              Your social actions become first-class events in the activity layer.
             </div>
           </div>
         </div>
       </div>
-
-      ${renderDailyTasksInner()}
     </section>
   `;
 }
 
-/* OVERVIEW / HOME */
+/* OVERVIEW */
 
 function renderOverview() {
   const recentHtml = recentPullsMock
@@ -756,7 +709,7 @@ function renderOverview() {
         <div class="metric-card">
           <div class="metric-label">SpEngine balance</div>
           <div class="metric-value">${state.spawn}</div>
-          <div class="metric-foot">Mock SpEngine from packs & quests.</div>
+          <div class="metric-foot">Tokens earned from packs & quests.</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Connected modules</div>
@@ -768,21 +721,21 @@ function renderOverview() {
       ${renderDailyTasksInner()}
 
       <div class="recent-pulls">
-        <div class="recent-pulls-header">Recent pulls (mock)</div>
+        <div class="recent-pulls-header">Recent pulls</div>
         ${recentHtml}
       </div>
     </section>
   `;
 }
 
-/* TRADING */
+/* TRADING / PULL LAB / MAPS / CAMPAIGNS / STATS / PNL / SETTINGS */
 
 function renderTrading() {
   return `
     <section class="panel">
       <div class="panel-title">Trading hub</div>
       <div class="panel-sub">
-        Future view: swap packs, fragments, shards, relics & creator tokens in one mesh-driven orderbook.
+        Swap packs, fragments, shards, relics & creator tokens in one mesh-driven orderbook.
       </div>
 
       <div class="trading-panel">
@@ -811,7 +764,7 @@ function renderTrading() {
               <div>
                 <div class="trading-card-title">Fragment & shard markets</div>
                 <div class="trading-card-sub">
-                  ReserveGuard protected pools with anti-rug & treasury checks.
+                  ReserveGuard protected pools with treasury checks.
                 </div>
               </div>
               <span class="chip chip-risk">RISK-AWARE</span>
@@ -835,7 +788,7 @@ function renderTrading() {
               <span class="chip chip-mesh">MESH-DRIVEN</span>
             </div>
             <div class="trading-card-foot">
-              One mesh instead of 10 separate dapps.
+              One mesh instead of many separate dapps.
             </div>
           </div>
         </div>
@@ -844,59 +797,68 @@ function renderTrading() {
   `;
 }
 
-/* PULL LAB – rarity info */
-
 function renderPullLab() {
   return `
     <section class="panel">
       <div class="panel-title">Pull lab</div>
       <div class="panel-sub">
-        Rarity bands & EV för SpawnEngine-modellen – Fragments & Shards är “gambly”, Relics är rena premiums.
+        Rarity bands, EV and pull behavior for the SpawnEngine model.
       </div>
       <div class="overview-grid" style="margin-top:9px;">
         <div class="metric-card">
           <div class="metric-label">Standard pack</div>
           <div class="metric-value">100 000</div>
-          <div class="metric-foot">Base cost per pack (mock).</div>
+          <div class="metric-foot">Base cost per pack.</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Fragment band</div>
+          <div class="metric-label">Fragment EV</div>
           <div class="metric-value">9 500–10 000</div>
           <div class="metric-foot">≈ 90% loss by design.</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Shard band</div>
-          <div class="metric-value">~110 000</div>
-          <div class="metric-foot">≈ 1.1× pack baseline.</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Core band</div>
-          <div class="metric-value">300k–400k</div>
-          <div class="metric-foot">≈ 3–4× value on hit.</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Crown band</div>
-          <div class="metric-value">4 000 000</div>
-          <div class="metric-foot">≈ 40×, ultra-rare but visible.</div>
-        </div>
-        <div class="metric-card">
           <div class="metric-label">Relic band</div>
-          <div class="metric-value">10–20M</div>
-          <div class="metric-foot">≈ 100–200× – endgame relics.</div>
+          <div class="metric-value">100–200×</div>
+          <div class="metric-foot">High-end relics, no gamble loops.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">SpEngine kickback</div>
+          <div class="metric-value">5–10%</div>
+          <div class="metric-foot">XP/SpEngine returned per pack open.</div>
+        </div>
+      </div>
+
+      <div class="rarity-list">
+        <div class="rarity-row">
+          <div class="rarity-name">Fragment</div>
+          <div class="rarity-desc">Low band · ~90% of pulls · ≈ 9.5–10k tokens</div>
+        </div>
+        <div class="rarity-row">
+          <div class="rarity-name">Shard</div>
+          <div class="rarity-desc">Mid band · light win · ≈ 1.1× pack value</div>
+        </div>
+        <div class="rarity-row">
+          <div class="rarity-name">Core</div>
+          <div class="rarity-desc">Solid hit · ≈ 3–4× pack value</div>
+        </div>
+        <div class="rarity-row">
+          <div class="rarity-name">Artifact</div>
+          <div class="rarity-desc">Premium tier · ≈ 40× band</div>
+        </div>
+        <div class="rarity-row">
+          <div class="rarity-name">Relic</div>
+          <div class="rarity-desc">Top band · ≈ 100–200× · no gamble burns allowed</div>
         </div>
       </div>
     </section>
   `;
 }
 
-/* PACK MAPS */
-
 function renderPackMaps() {
   return `
     <section class="panel">
       <div class="panel-title">Pack maps</div>
       <div class="panel-sub">
-        Future: visual mesh of series, creators & risk-zones across Base.
+        Visual mesh of series, creators & risk-zones across Base (UI-first version).
       </div>
       <div class="trading-card" style="margin-top:9px;">
         <div class="trading-card-head">
@@ -909,163 +871,73 @@ function renderPackMaps() {
           <span class="chip chip-planned">MAP VIEW</span>
         </div>
         <div class="trading-card-foot">
-          This version keeps it UI-only – later we wire real onchain topology.
+          This version is UI-only – later wired to real onchain topology.
         </div>
       </div>
     </section>
   `;
 }
 
-/* CREATOR QUESTS / BOUNTIES */
-
-function renderQuests() {
-  const bountyTotal = state.bountyExp + state.bountySpawn;
-
-  const filtered = QUESTS.filter((q) => {
-    if (state.questFilter !== "all" && q.type !== state.questFilter) return false;
-    if (state.questActiveOnly && q.status !== "active") return false;
-    return true;
-  });
-
-  const questCards =
-    filtered.length === 0
-      ? `<div class="empty-state">No quests match this filter yet (mock).</div>`
-      : filtered
-          .map((q) => {
-            const typeLabel =
-              q.type === "pull"
-                ? "Pull-based"
-                : q.type === "collection"
-                ? "Collection"
-                : "Miniapp";
-            const statusClass =
-              q.status === "active"
-                ? "chip-quest-active"
-                : q.status === "soon"
-                ? "chip-quest-soon"
-                : "chip-quest-completed";
-            const statusLabel =
-              q.status === "active"
-                ? "ACTIVE"
-                : q.status === "soon"
-                ? "SOON"
-                : "COMPLETED";
-
-            return `
-          <div class="trading-card quest-card">
-            <div class="trading-card-head">
-              <div>
-                <div class="trading-card-title">${q.title}</div>
-                <div class="trading-card-sub">
-                  <span class="quest-creator">${q.creator} <span class="quest-handle">${q.creatorHandle}</span></span>
-                  · <span class="quest-type">${typeLabel}</span>
-                </div>
-              </div>
-              <span class="chip ${statusClass}">${statusLabel}</span>
-            </div>
-            <div class="trading-card-foot">
-              <div class="quest-row">
-                <span class="quest-label">Requirement</span>
-                <span class="quest-text">${q.requirement}</span>
-              </div>
-              <div class="quest-row">
-                <span class="quest-label">Reward</span>
-                <span class="quest-text">${q.reward}</span>
-              </div>
-            </div>
-          </div>
-        `;
-          })
-          .join("");
-
+function renderCampaigns() {
   return `
     <section class="panel">
-      <div class="panel-title">Creator Quests</div>
+      <div class="panel-title">Creator quests & bounties</div>
       <div class="panel-sub">
-        Creator-defined bounties – EXP & SpEngine som är låsta till quests, pre-funded från pack sales
-        och ofta knutna till pulls, samlingar eller “try my miniapp”-flows.
+        Creator-defined reward lanes – “pull X from my series → receive extra packs or SpEngine”.
       </div>
 
-      <div class="overview-grid">
-        <div class="metric-card">
-          <div class="metric-label">Bounty EXP pool</div>
-          <div class="metric-value">${state.bountyExp}</div>
-          <div class="metric-foot">
-            Earned from pack volume, bara användbar i quests.
+      <div class="trading-panel">
+        <div class="trading-card">
+          <div class="trading-card-head">
+            <div>
+              <div class="trading-card-title">Launch lane example</div>
+              <div class="trading-card-sub">
+                Pull a Relic from Series #1 and auto-credit bonus packs. All rewards pre-funded onchain.
+              </div>
+            </div>
+            <span class="chip chip-mesh">EXAMPLE</span>
+          </div>
+          <div class="trading-card-foot">
+            The idea: set quests once in the contract – SpawnEngine enforces all payouts automatically.
           </div>
         </div>
-        <div class="metric-card">
-          <div class="metric-label">Bounty SpEngine</div>
-          <div class="metric-value">${state.bountySpawn}</div>
-          <div class="metric-foot">
-            Locked rewards – creators sätter potten, SpawnEngine delar ut automatiskt.
-          </div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Total bounty power</div>
-          <div class="metric-value">${bountyTotal}</div>
-          <div class="metric-foot">
-            Summan av EXP + SpEngine tillgänglig för aktiva lanes (mock).
-          </div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Active quests (mock)</div>
-          <div class="metric-value">${
-            QUESTS.filter((q) => q.status === "active").length
-          }</div>
-          <div class="metric-foot">Later wired to real quest contracts.</div>
-        </div>
-      </div>
 
-      <div class="quest-filter-bar">
-        <div class="quest-filter-buttons">
-          <button class="quest-filter-btn${
-            state.questFilter === "all" ? " active" : ""
-          }" data-filter="all">All</button>
-          <button class="quest-filter-btn${
-            state.questFilter === "pull" ? " active" : ""
-          }" data-filter="pull">Pull</button>
-          <button class="quest-filter-btn${
-            state.questFilter === "collection" ? " active" : ""
-          }" data-filter="collection">Collection</button>
-          <button class="quest-filter-btn${
-            state.questFilter === "miniapp" ? " active" : ""
-          }" data-filter="miniapp">Miniapp</button>
+        <div class="trading-card">
+          <div class="trading-card-head">
+            <div>
+              <div class="trading-card-title">Quest directory</div>
+              <div class="trading-card-sub">
+                Later: list active quests per creator, including “try my miniapp”, “complete this series”, etc.
+              </div>
+            </div>
+            <span class="chip chip-planned">PLANNED</span>
+          </div>
+          <div class="trading-card-foot">
+            Filter by creator, rarity band, or reward pool – all from a single mesh view.
+          </div>
         </div>
-        <label class="quest-toggle">
-          <input type="checkbox" id="quest-toggle-active" ${
-            state.questActiveOnly ? "checked" : ""
-          } />
-          <span>Show only active</span>
-        </label>
-      </div>
-
-      <div class="trading-panel quest-list-panel">
-        ${questCards}
       </div>
     </section>
   `;
 }
-
-/* STATS */
 
 function renderStats() {
   return `
     <section class="panel">
       <div class="panel-title">Stats & luck engine</div>
       <div class="panel-sub">
-        v0.2 shows the placeholders – v1 will plug real data from TokenPackSeries events.
+        High-level mesh stats – later wired to live TokenPackSeries events.
       </div>
       <div class="overview-grid" style="margin-top:9px;">
         <div class="metric-card">
-          <div class="metric-label">Total packs (mock)</div>
+          <div class="metric-label">Total packs</div>
           <div class="metric-value">12 543</div>
           <div class="metric-foot">Combined across all series.</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Relic hit rate</div>
           <div class="metric-value">3.2%</div>
-          <div class="metric-foot">Will be computed from real pulls.</div>
+          <div class="metric-foot">Hit rate for the top band.</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Unique holders</div>
@@ -1082,7 +954,7 @@ function renderStats() {
   `;
 }
 
-/* PNL */
+/* PNL view */
 
 function renderPnl() {
   const pnlSummary = {
@@ -1092,12 +964,12 @@ function renderPnl() {
     winRate: "63%",
   };
 
-  const pnlSeries = [+0.8, -0.4, +1.2, +0.3, -0.1, +0.9, +1.5];
+  const pnlSeries = [+0.8, -0.4, +1.2, +0.3, -0.1, +0.9, +1.5]; // mock ETH per day
 
   const barsHtml = pnlSeries
     .map((v) => {
       const isNeg = v < 0;
-      const mag = Math.min(Math.abs(v) / 1.5, 1);
+      const mag = Math.min(Math.abs(v) / 1.5, 1); // scale
       const height = Math.max(10, Math.round(mag * 100));
       return `
         <div class="pnl-bar ${isNeg ? "pnl-bar-negative" : ""}">
@@ -1111,7 +983,7 @@ function renderPnl() {
     <section class="panel">
       <div class="panel-title">PNL view</div>
       <div class="panel-sub">
-        Mock PNL layer for everything the mesh has seen – later wired to real pulls, swaps & Zora buys.
+        Mesh-wide PNL layer for everything the engine sees – pulls, swaps & Zora buys.
       </div>
 
       <div class="pnl-summary-grid">
@@ -1138,7 +1010,7 @@ function renderPnl() {
       </div>
 
       <div style="margin-top:10px;font-size:10px;color:#9ca3af;">
-        Last 7 mesh days (ETH-denominated, mock):
+        Last 7 mesh days (ETH-denominated, example data):
       </div>
       <div class="pnl-chart">
         ${barsHtml}
@@ -1147,14 +1019,12 @@ function renderPnl() {
   `;
 }
 
-/* SETTINGS */
-
 function renderSettings() {
   return `
     <section class="panel">
       <div class="panel-title">Settings & modules</div>
       <div class="panel-sub">
-        Control room for wallets, modules and how your SpawnEngine skin looks.
+        Control room for wallets, creator modules and external hooks.
       </div>
       <div class="trading-panel" style="margin-top:9px;">
         <div class="trading-card">
@@ -1162,12 +1032,12 @@ function renderSettings() {
             <div>
               <div class="trading-card-title">Wallets</div>
               <div class="trading-card-sub">
-                Multi-wallet mesh planned – track PNL per wallet and per pack-series.
+                Multi-wallet mesh planned – track PNL per wallet and per series.
               </div>
             </div>
           </div>
           <div class="trading-card-foot">
-            v0.2 keeps a single wallet mock; we will expand this once onchain reads are live.
+            Current build keeps a single wallet; the mesh layer is ready for more.
           </div>
         </div>
         <div class="trading-card">
@@ -1180,7 +1050,7 @@ function renderSettings() {
             </div>
           </div>
           <div class="trading-card-foot">
-            This app is the mesh layer UI – contracts stay modular under the hood.
+            The app is the visual layer – contracts stay modular under the hood.
           </div>
         </div>
       </div>
@@ -1188,13 +1058,11 @@ function renderSettings() {
   `;
 }
 
-/* DAILY TASKS SHARED BLOCK – används av Home + Profile */
+/* daily tasks shared block – bara Overview */
 
 function renderDailyTasksInner() {
   const remaining = remainingXP();
   const t = state.tasks;
-  const connectDone = !!state.wallet && t.connect;
-  const connectLabel = state.wallet ? (connectDone ? "Done" : "Disconnect") : "Connect";
 
   return `
     <div class="task-list">
@@ -1208,7 +1076,7 @@ function renderDailyTasksInner() {
             <div class="task-dot ${t.testPack ? "done" : ""}"></div>
             <div>
               <div class="task-label-main">Open a test pack</div>
-              <div class="task-label-sub">Trigger one mock pack_open event</div>
+              <div class="task-label-sub">Trigger one pack_open event (simulated)</div>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:6px;">
@@ -1218,24 +1086,6 @@ function renderDailyTasksInner() {
               data-task="test-pack"
             >
               ${t.testPack ? "Done" : "Simulate"}
-            </button>
-          </div>
-        </div>
-        <div class="task-item">
-          <div class="task-left">
-            <div class="task-dot ${connectDone ? "done" : ""}"></div>
-            <div>
-              <div class="task-label-main">Connect wallet</div>
-              <div class="task-label-sub">Any Base wallet counts</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <div class="task-xp">+100 XP</div>
-            <button
-              class="task-cta ${connectDone ? "done" : ""}"
-              data-task="connect"
-            >
-              ${connectLabel}
             </button>
           </div>
         </div>
@@ -1262,7 +1112,7 @@ function renderDailyTasksInner() {
   `;
 }
 
-/* TASK BUTTONS */
+/* task buttons */
 
 function wireTaskButtons() {
   const buttons = document.querySelectorAll(".task-cta");
@@ -1278,40 +1128,12 @@ function wireTaskButtons() {
           const meshEl = document.getElementById("status-mesh");
           if (meshEl) meshEl.textContent = `${state.meshEvents} events`;
         }
-      } else if (task === "connect") {
-        const walletBtn = document.getElementById("btn-wallet");
-        if (walletBtn) walletBtn.click();
+        renderActiveView();
       } else if (task === "share") {
         openShareModal();
-        return;
       }
-      renderActiveView();
     });
   });
-}
-
-/* QUEST FILTERS */
-
-function wireQuestFilters() {
-  const filterButtons = document.querySelectorAll(".quest-filter-btn");
-  const toggleActive = document.getElementById("quest-toggle-active");
-
-  if (filterButtons.length) {
-    filterButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const filter = btn.dataset.filter || "all";
-        state.questFilter = filter;
-        renderActiveView();
-      });
-    });
-  }
-
-  if (toggleActive) {
-    toggleActive.addEventListener("change", (e) => {
-      state.questActiveOnly = e.target.checked;
-      renderActiveView();
-    });
-  }
 }
 
 init();
