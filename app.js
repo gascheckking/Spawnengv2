@@ -14,7 +14,7 @@ const state = {
 };
 
 const TABS = [
-  { id: "overview", label: "Overview" },
+  { id: "overview", label: "Home" },
   { id: "profile", label: "Profile" },
   { id: "trading", label: "Trading" },
   { id: "pull-lab", label: "Pull Lab" },
@@ -22,7 +22,6 @@ const TABS = [
   { id: "campaigns", label: "Campaigns" },
   { id: "stats", label: "Stats" },
   { id: "pnl", label: "PNL" },
-  { id: "tasks", label: "Daily" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -73,12 +72,12 @@ function init() {
                 <span class="pill-dot"></span>
                 <span class="pill-label">Base · Mesh Layer</span>
               </div>
-              <div class="wallet-block">
+              <div class="wallet-stack">
                 <button class="btn-wallet" id="btn-wallet">
                   <span id="wallet-status-icon">⦿</span>
                   <span id="wallet-label">Connect</span>
                 </button>
-                <div class="wallet-address" id="wallet-address-display">
+                <div class="wallet-sub" id="wallet-address-display">
                   No wallet connected
                 </div>
               </div>
@@ -109,7 +108,7 @@ function init() {
               <span class="status-pill-value" id="status-xp">${state.xp}</span>
             </div>
             <div class="status-pill">
-              <span class="status-pill-label">Spawn</span>
+              <span class="status-pill-label">SpEngine</span>
               <span class="status-pill-value" id="status-spawn">${state.spawn}</span>
             </div>
           </div>
@@ -121,9 +120,7 @@ function init() {
 
         <div class="ticker">
           <span class="ticker-label">Live pulls</span>
-          <div class="ticker-stream">
-            <div class="ticker-inner" id="ticker-inner"></div>
-          </div>
+          <div class="ticker-stream"><div class="ticker-inner" id="ticker-inner"></div></div>
         </div>
 
         <main class="main-content" id="main-content"></main>
@@ -150,7 +147,7 @@ function init() {
           </div>
         </footer>
 
-        <!-- Side menu (vänster) -->
+        <!-- Side menu -->
         <div class="side-menu" id="side-menu">
           <div class="side-menu-backdrop" id="side-menu-backdrop"></div>
           <div class="side-menu-panel">
@@ -386,7 +383,6 @@ function wireMenu() {
     });
   });
 
-  // theme buttons
   menu.querySelectorAll(".side-theme-btn").forEach((btnTheme) => {
     btnTheme.addEventListener("click", () => {
       const theme = btnTheme.dataset.theme;
@@ -424,7 +420,7 @@ function initShareModal() {
   modal.querySelectorAll("[data-share-dest]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const dest = btn.dataset.shareDest;
-      const text = `SpawnEngine mesh · XP ${state.xp} · Spawn ${state.spawn} · ${
+      const text = `SpawnEngine mesh · XP ${state.xp} · SpEngine ${state.spawn} · ${
         state.meshEvents
       } events · mode v0.2 mock. #SpawnEngine`;
 
@@ -475,7 +471,7 @@ function initCheckinModal() {
   };
 
   claimBtn.addEventListener("click", () => addCheckinXp(10));
-  claimStakeBtn.addEventListener("click", () => addCheckinXp(13)); // 10 + ~3% mock
+  claimStakeBtn.addEventListener("click", () => addCheckinXp(13));
 
   modal.querySelectorAll("[data-close='checkin']").forEach((btn) =>
     btn.addEventListener("click", () => modal.classList.remove("open")),
@@ -489,8 +485,8 @@ function updateGasMeter() {
   const label = document.getElementById("status-gas");
   if (!fill || !label) return;
 
-  const level = state.gasLevel; // 0–1
-  const width = 20 + level * 60; // 20–80%
+  const level = state.gasLevel;
+  const width = 20 + level * 60;
   fill.style.width = `${width}%`;
 
   const gwei = (0.15 + level * 0.25).toFixed(2);
@@ -535,9 +531,6 @@ function renderActiveView() {
       break;
     case "pnl":
       html = renderPnl();
-      break;
-    case "tasks":
-      html = renderTasks();
       break;
     case "settings":
       html = renderSettings();
@@ -589,7 +582,7 @@ function renderProfile() {
           <div class="metric-foot">Grows as you complete daily mesh tasks.</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Spawn balance</div>
+          <div class="metric-label">SpEngine balance</div>
           <div class="metric-value">${state.spawn}</div>
           <div class="metric-foot">Test rewards from packs & quests (mock).</div>
         </div>
@@ -623,7 +616,7 @@ function renderProfile() {
               <span class="chip chip-mesh">REQUIRED</span>
             </div>
             <div class="trading-card-foot">
-              In v1, XP and Spawn rewards will be tied to this wallet’s onchain activity.
+              In v1, XP and SpEngine rewards will be tied to this wallet’s onchain activity.
             </div>
           </div>
         </div>
@@ -691,9 +684,9 @@ function renderOverview() {
           <div class="metric-foot">Keep claiming daily tasks to extend the streak.</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Spawn balance</div>
+          <div class="metric-label">SpEngine balance</div>
           <div class="metric-value">${state.spawn}</div>
-          <div class="metric-foot">Mock Spawn tokens from packs & quests.</div>
+          <div class="metric-foot">Mock SpEngine tokens from packs & quests.</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Connected modules</div>
@@ -712,7 +705,7 @@ function renderOverview() {
   `;
 }
 
-/* TRADING / PULL LAB / MAPS / CAMPAIGNS / STATS / PNL / TASKS / SETTINGS */
+/* TRADING / PULL LAB / MAPS / CAMPAIGNS / STATS / PNL / SETTINGS */
 
 function renderTrading() {
   return `
@@ -784,33 +777,90 @@ function renderTrading() {
 function renderPullLab() {
   return `
     <section class="panel">
-      <div class="panel-title">Pull lab</div>
+      <div class="panel-title">Pull lab · rarity bands</div>
       <div class="panel-sub">
-        Simulated pulls per rarity layer – in v1 bara Fragments & Shards är “gambly”; Relics är rena premiums.
+        Fem band: Fragment (common), Shard (rare), Core (tidigare Epic),
+        Crown (tidigare Legendary) och Relic (tidigare Mythic). Alla siffror är mock,
+        v1 kopplar mot riktiga serier.
       </div>
+
       <div class="overview-grid" style="margin-top:9px;">
         <div class="metric-card">
-          <div class="metric-label">Standard pack</div>
+          <div class="metric-label">Standard pack cost</div>
           <div class="metric-value">100 000</div>
           <div class="metric-foot">Base cost per pack (mock).</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Fragment EV</div>
-          <div class="metric-value">9 500–10 000</div>
-          <div class="metric-foot">≈ 90% loss by design.</div>
+          <div class="metric-label">Fragment band</div>
+          <div class="metric-value">~70–85%</div>
+          <div class="metric-foot">“Fragment” = common scrap, nästan alltid minus.</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Relic band</div>
-          <div class="metric-value">100–200×</div>
-          <div class="metric-foot">High-end relics, inga gamble-lotter.</div>
+          <div class="metric-label">Shard band</div>
+          <div class="metric-value">~10–20%</div>
+          <div class="metric-foot">“Shard” = rare band, ersätter gamla Rare.</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Spawn kickback</div>
-          <div class="metric-value">5–10%</div>
-          <div class="metric-foot">XP/Spawn returned per pack open.</div>
+          <div class="metric-label">Core band</div>
+          <div class="metric-value">~3–7%</div>
+          <div class="metric-foot">“Core” = gamla Epic – stora men inte max-spikar.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Crown / Relic band</div>
+          <div class="metric-value">≤ 1–3%</div>
+          <div class="metric-foot">“Crown” & “Relic” = top bands, ersätter Legendary/Mythic.</div>
         </div>
       </div>
-      ${renderDailyTasksInner()}
+
+      <div class="trading-panel" style="margin-top:9px;">
+        <div class="trading-card">
+          <div class="trading-card-head">
+            <div>
+              <div class="trading-card-title">Fragments · grind-layer</div>
+              <div class="trading-card-sub">
+                Common hits som mest bygger XP/SpEngine. Bra för dagliga loopar,
+                värdelösa för PNL – medvetet “scrap”.
+              </div>
+            </div>
+            <span class="chip chip-risk">FRAGMENT</span>
+          </div>
+          <div class="trading-card-foot">
+            I SpawnEngine UI: det här ersätter hela “Common” nivån.
+          </div>
+        </div>
+
+        <div class="trading-card">
+          <div class="trading-card-head">
+            <div>
+              <div class="trading-card-title">Shards & Cores · mid bands</div>
+              <div class="trading-card-sub">
+                Shard = rare, Core = gamla Epic. Det är här de flesta “wow, den där var bra”
+                träffarna hamnar utan att bli full Relic.
+              </div>
+            </div>
+            <span class="chip chip-mesh">SHARD / CORE</span>
+          </div>
+          <div class="trading-card-foot">
+            Perfekta band för kampanjer, quests och PNL-chart spikes utan att vara helt galna.
+          </div>
+        </div>
+
+        <div class="trading-card">
+          <div class="trading-card-head">
+            <div>
+              <div class="trading-card-title">Crowns & Relics · premium bands</div>
+              <div class="trading-card-sub">
+                Kron-lagret och Relic-lagret ersätter Legendary/Mythic.
+                Få, dyra, tydlig utility eller treasury-backing, inte bara lotter.
+              </div>
+            </div>
+            <span class="chip chip-planned">CROWN / RELIC</span>
+          </div>
+          <div class="trading-card-foot">
+            Här visar vi i v1 verkliga “1 på 2 000 pulls”-historier i statistiken.
+          </div>
+        </div>
+      </div>
     </section>
   `;
 }
@@ -840,84 +890,42 @@ function renderPackMaps() {
   `;
 }
 
-function renderPullLab() {
+function renderCampaigns() {
   return `
     <section class="panel">
-      <div class="panel-title">Pull lab · rarity bands</div>
+      <div class="panel-title">Campaigns</div>
       <div class="panel-sub">
-        Simulated pulls per band. Fragments = common floor, Shards = rare spikes,
-        Relics = top mythic band. In v1 kan de här siffrorna kopplas till riktiga serier.
+        Creator-defined reward lanes – e.g. “pull a Relic from this series → win extra packs or SpEngine”.
       </div>
 
-      <div class="overview-grid" style="margin-top:9px;">
-        <div class="metric-card">
-          <div class="metric-label">Standard pack cost</div>
-          <div class="metric-value">100 000</div>
-          <div class="metric-foot">Base cost per pack (mock).</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Fragment band</div>
-          <div class="metric-value">~75–85%</div>
-          <div class="metric-foot">Common “Fragment” hits, nästan alltid förlust.</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Shard band</div>
-          <div class="metric-value">~10–20%</div>
-          <div class="metric-foot">“Shard” = rare band, ersätter klassisk Rare/Epic.</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Relic band</div>
-          <div class="metric-value">≤ 1–3%</div>
-          <div class="metric-foot">“Relic” = toppbandet, ersätter Legendary/Mythic.</div>
-        </div>
-      </div>
-
-      <div class="trading-panel" style="margin-top:9px;">
+      <div class="trading-panel">
         <div class="trading-card">
           <div class="trading-card-head">
             <div>
-              <div class="trading-card-title">Fragments · Common floor</div>
+              <div class="trading-card-title">SpawnEngine launch lane</div>
               <div class="trading-card-sub">
-                Billiga volym-hits. Bygger XP/Spawn, men EV är medvetet låg – typisk
-                70–90% förlustzon som känns mer som “scrap”.
+                Win extra packs from the first onchain series. All rewards pre-funded by creators.
               </div>
             </div>
-            <span class="chip chip-risk">FRAGMENT</span>
+            <span class="chip chip-mesh">LIVE MOCK</span>
           </div>
           <div class="trading-card-foot">
-            I UI kan Fragments ersätta “Common” helt. Bra för grind, dålig för PNL.
+            Example: pull any “Relic” from Series #1 → auto-credit 3 extra packs to your wallet.
           </div>
         </div>
 
         <div class="trading-card">
           <div class="trading-card-head">
             <div>
-              <div class="trading-card-title">Shards · Mid-band</div>
+              <div class="trading-card-title">Community quests</div>
               <div class="trading-card-sub">
-                Det som i andra spel motsvarar Rare/Epic. Ska kännas “woah, nice hit”
-                men inte livsförändrande. Bra band för kampanjer & quests.
+                Future: creators design their own missions – pulls, burns, or Zora buys – with custom pots.
               </div>
             </div>
-            <span class="chip chip-mesh">SHARD</span>
+            <span class="chip chip-planned">PLANNED</span>
           </div>
           <div class="trading-card-foot">
-            Kan få egna bonusar i SpawnEngine – t.ex. extra XP, små fee-rebates osv.
-          </div>
-        </div>
-
-        <div class="trading-card">
-          <div class="trading-card-head">
-            <div>
-              <div class="trading-card-title">Relics · Premium band</div>
-              <div class="trading-card-sub">
-                Ersätter hela Epic/Legendary/Mythic-trädet. Få, dyra, tydligt värde.
-                Inga “lotter” – mer som premium-objekt med utility eller treasury-backing.
-              </div>
-            </div>
-            <span class="chip chip-planned">RELIC</span>
-          </div>
-          <div class="trading-card-foot">
-            Bra ställe att visa verkliga PNL-spikar i framtiden när onchain-data är inkopplad.
+            The idea is “set it once in the contract, let SpawnEngine handle all payouts automatically.”
           </div>
         </div>
       </div>
@@ -968,12 +976,12 @@ function renderPnl() {
     winRate: "63%",
   };
 
-  const pnlSeries = [+0.8, -0.4, +1.2, +0.3, -0.1, +0.9, +1.5]; // mock ETH per day
+  const pnlSeries = [+0.8, -0.4, +1.2, +0.3, -0.1, +0.9, +1.5];
 
   const barsHtml = pnlSeries
     .map((v) => {
       const isNeg = v < 0;
-      const mag = Math.min(Math.abs(v) / 1.5, 1); // scale
+      const mag = Math.min(Math.abs(v) / 1.5, 1);
       const height = Math.max(10, Math.round(mag * 100));
       return `
         <div class="pnl-bar ${isNeg ? "pnl-bar-negative" : ""}">
@@ -1019,18 +1027,6 @@ function renderPnl() {
       <div class="pnl-chart">
         ${barsHtml}
       </div>
-    </section>
-  `;
-}
-
-function renderTasks() {
-  return `
-    <section class="panel">
-      <div class="panel-title">Daily mesh tasks</div>
-      <div class="panel-sub">
-        Simple layer-4 style tasks – later wired to real XP, Spawn & maybe stake-yield per pack.
-      </div>
-      ${renderDailyTasksInner()}
     </section>
   `;
 }
