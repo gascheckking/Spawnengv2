@@ -13,6 +13,7 @@ const state = {
     share: false,
   },
   theme: "dark",
+  extraWallets: [], // multiwallet preview
 };
 
 const TABS = [
@@ -207,7 +208,7 @@ function init() {
                 Create your own theme (soon)
               </button>
               <button class="side-menu-item" data-menu="multiwallet">
-                Connect more wallets (mock)
+                Connect more wallets
               </button>
             </div>
 
@@ -273,6 +274,26 @@ function init() {
           </div>
         </div>
 
+        <!-- Multiwallet modal -->
+        <div class="modal" id="multiwallet-modal">
+          <div class="modal-backdrop" data-close="multiwallet"></div>
+          <div class="modal-panel">
+            <div class="modal-title">Connect more wallets</div>
+            <div class="modal-sub">
+              Pick extra wallets to track in the mesh (preview only, no real RPC calls yet).
+            </div>
+            <div class="multiwallet-list" id="multiwallet-list"></div>
+            <div class="modal-actions">
+              <button class="modal-btn primary" id="multiwallet-save">
+                Save wallets
+              </button>
+            </div>
+            <div class="modal-footer-row">
+              <button data-close="multiwallet">Close</button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   `;
@@ -284,6 +305,7 @@ function init() {
   wireMenu();
   initShareModal();
   initCheckinModal();
+  initMultiwalletModal();
   renderActiveView();
   updateGasMeter();
   startGasInterval();
@@ -412,7 +434,7 @@ function wireMenu() {
       } else if (action === "docs") {
         window.open("https://github.com/gascheckking/SpawnEngine", "_blank");
       } else if (action === "multiwallet") {
-        alert("Multi-wallet mesh: later this opens a real manager.");
+        openMultiwalletModal();
       } else if (action === "custom-theme") {
         alert("Custom themes are coming later – for now use Dark / Jurassic / Hologram.");
       }
@@ -440,6 +462,7 @@ function resetMockState() {
   state.meshEvents = 9;
   state.xp = 1575;
   state.spn = 497;
+  state.extraWallets = [];
   updateWalletUI();
   renderActiveView();
 }
@@ -512,6 +535,46 @@ function initCheckinModal() {
   modal.querySelectorAll("[data-close='checkin']").forEach((btn) =>
     btn.addEventListener("click", () => modal.classList.remove("open")),
   );
+}
+
+/* multiwallet modal */
+
+function initMultiwalletModal() {
+  const modal = document.getElementById("multiwallet-modal");
+  const listEl = document.getElementById("multiwallet-list");
+  const saveBtn = document.getElementById("multiwallet-save");
+  if (!modal || !listEl || !saveBtn) return;
+
+  const mockWallets = ["0x1111…mesh", "0x2222…mesh", "0x3333…mesh"];
+
+  listEl.innerHTML = mockWallets
+    .map(
+      (addr) => `
+      <label class="multiwallet-row">
+        <input type="checkbox" data-addr="${addr}" />
+        <span>${addr}</span>
+      </label>
+    `,
+    )
+    .join("");
+
+  saveBtn.addEventListener("click", () => {
+    const checked = Array.from(
+      listEl.querySelectorAll("input[type='checkbox']:checked"),
+    ).map((input) => input.dataset.addr);
+    state.extraWallets = checked;
+    modal.classList.remove("open");
+    renderActiveView();
+  });
+
+  modal.querySelectorAll("[data-close='multiwallet']").forEach((btn) =>
+    btn.addEventListener("click", () => modal.classList.remove("open")),
+  );
+}
+
+function openMultiwalletModal() {
+  const modal = document.getElementById("multiwallet-modal");
+  if (modal) modal.classList.add("open");
 }
 
 /* gas meter */
@@ -857,7 +920,6 @@ function renderPullLab() {
 }
 
 function renderPackMaps() {
-  // bubble-style preview
   const bubbles = [
     { label: "Series #1 · Token packs", size: 72, cls: "bubble-core" },
     { label: "@spawniz · creator node", size: 60, cls: "bubble-creator" },
@@ -938,15 +1000,15 @@ function renderCampaigns() {
         <div class="trading-card">
           <div class="trading-card-head">
             <div>
-              <div class="trading-card-title">Try miniapps & lanes</div>
+              <div class="trading-card-title">Onboard & alpha invites</div>
               <div class="trading-card-sub">
-                Quests like “try my miniapp”, “mint 3 packs”, or “collect 5 Cores” unlock extra SpEngine or packs.
+                Quests like “try my miniapp”, “mint 3 packs”, or “join my alpha room” unlock extra SpEngine or packs.
               </div>
             </div>
             <span class="chip chip-planned">DESIGN SPACE</span>
           </div>
           <div class="trading-card-foot">
-            The idea: one quest system that works across Zora, Farcaster miniapps and Base-native contracts.
+            One quest system that works across Zora, Farcaster miniapps and Base-native contracts – similar energy to invite-only alpha lists.
           </div>
         </div>
       </div>
@@ -1043,12 +1105,12 @@ function renderPnl() {
     winRate: "63%",
   };
 
-  const pnlSeries = [+0.8, -0.4, +1.2, +0.3, -0.1, +0.9, +1.5]; // mock ETH per day
+  const pnlSeries = [+0.8, -0.4, +1.2, +0.3, -0.1, +0.9, +1.5];
 
   const barsHtml = pnlSeries
     .map((v) => {
       const isNeg = v < 0;
-      const mag = Math.min(Math.abs(v) / 1.5, 1); // scale
+      const mag = Math.min(Math.abs(v) / 1.5, 1);
       const height = Math.max(10, Math.round(mag * 100));
       return `
         <div class="pnl-bar ${isNeg ? "pnl-bar-negative" : ""}">
@@ -1123,12 +1185,12 @@ function renderSettings() {
             <div>
               <div class="trading-card-title">Wallets</div>
               <div class="trading-card-sub">
-                Multi-wallet mesh planned – track PNL per wallet and per pack-series.
+                Primary wallet in the header + ${state.extraWallets.length} extra tracked wallets.
               </div>
             </div>
           </div>
           <div class="trading-card-foot">
-            Current preview keeps a single wallet toggle in the header.
+            Current preview keeps everything local – later this will connect to real onchain data.
           </div>
         </div>
         <div class="trading-card">
