@@ -554,7 +554,6 @@ function initCheckinModal() {
   const claimStakeBtn = document.getElementById("checkin-claim-stake");
   if (!modal || !claimBtn || !claimStakeBtn) return;
 
-  // öppna-funktion (sparad om vi vill använda senare)
   const open = () => {
     modal.classList.add("open");
   };
@@ -562,7 +561,7 @@ function initCheckinModal() {
     modal.classList.remove("open");
   };
 
-  // gör tillgänglig globalt om vi vill trigga senare från en knapp
+  // Spara globalt om vi vill trigga den senare
   window.SpawnEngineOpenCheckin = open;
 
   const addCheckinXp = (amount) => {
@@ -577,11 +576,10 @@ function initCheckinModal() {
   claimStakeBtn.addEventListener("click", () => addCheckinXp(13));
 
   modal.querySelectorAll("[data-close='checkin']").forEach((btn) =>
-    btn.addEventListener("click", close)
+    btn.addEventListener("click", close),
   );
 
-  // 🔥 Viktigt: INTE auto-open här längre.
-  // dvs ingen modal.classList.add("open");
+  // ⚠️ Ingen auto-open här längre, så rutan buggar inte vid load.
 }
 
 /* gas meter */
