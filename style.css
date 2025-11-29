@@ -1030,92 +1030,90 @@ body.theme-retrobase {
 
 /* share + checkin modals reuse style */
 
+/* modal – full overlay, centrerad */
+
 .modal {
   position: fixed;
   inset: 0;
-  pointer-events: none;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 50; /* över app-frame */
+  font-family: inherit;
 }
 
 .modal.open {
-  pointer-events: auto;
+  display: flex;
 }
 
 .modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.75);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.modal.open .modal-backdrop {
-  opacity: 1;
+  background: radial-gradient(circle at top, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
+  backdrop-filter: blur(10px);
 }
 
 .modal-panel {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 320px;
-  max-width: calc(100% - 40px);
-  transform: translate(-50%, -50%) scale(0.96);
-  background: #020617;
+  position: relative;
+  width: 88%;
+  max-width: 380px;
+  margin: 0 auto;
+  padding: 16px 18px 12px;
   border-radius: 18px;
-  border: 1px solid rgba(51, 65, 85, 0.9);
-  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.9);
-  padding: 12px 12px 10px;
-  transition: transform 0.2s ease;
-}
-
-.modal.open .modal-panel {
-  transform: translate(-50%, -50%) scale(1);
+  background: radial-gradient(circle at top, #020617, #020617 40%, #020617);
+  box-shadow:
+    0 0 0 1px rgba(148, 163, 184, 0.5),
+    0 18px 40px rgba(0, 0, 0, 0.8);
 }
 
 .modal-title {
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
 }
 
 .modal-sub {
-  margin-top: 4px;
   font-size: 11px;
-  color: var(--text-sub);
+  color: #9ca3af;
+  line-height: 1.5;
+  margin-bottom: 14px;
 }
 
 .modal-actions {
-  margin-top: 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 .modal-btn {
-  border-radius: 12px;
-  padding: 7px 10px;
-  border: 1px solid rgba(51, 65, 85, 0.95);
-  background: rgba(15, 23, 42, 0.98);
-  color: #e5e7eb;
-  font-size: 11px;
-  cursor: pointer;
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: linear-gradient(90deg, rgba(15,23,42,0.9), rgba(15,23,42,1));
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .modal-btn.primary {
-  border-color: var(--accent-strong);
-  background: radial-gradient(circle at 0 0, var(--accent-soft), transparent 65%),
-    #020617;
+  border-color: #22c55e;
+  box-shadow: 0 0 16px rgba(34, 197, 94, 0.45);
 }
 
 .modal-footer-row {
-  margin-top: 8px;
-  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  font-size: 11px;
+  color: #9ca3af;
 }
 
 .modal-footer-row button {
-  border-radius: 999px;
+  background: none;
   border: none;
-  background: transparent;
-  color: var(--text-soft);
-  font-size: 11px;
-  cursor: pointer;
+  color: #9ca3af;
+  padding: 0;
 }
 
 /* bottom padding for iOS home bar */
