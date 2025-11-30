@@ -15,9 +15,9 @@ const state = {
 
 const TABS = [
   { id: "overview", label: "Home" },
+  { id: "pull-lab", label: "Pull lab" },
   { id: "profile", label: "Mesh profile" },
   { id: "trading", label: "Trading" },
-  { id: "pull-lab", label: "Pull lab" },
   { id: "pack-maps", label: "Pack maps" },
   { id: "campaigns", label: "Creator quests" },
   { id: "stats", label: "Stats" },
@@ -84,7 +84,7 @@ function init() {
           </div>
 
           <div class="mode-row">
-            <span>Mode · v0.2</span>
+            <span>Mode · v0.3</span>
             <span>Mesh preview · single player</span>
           </div>
 
@@ -239,14 +239,14 @@ function init() {
           <div class="modal-panel">
             <div class="modal-title">Wallet mesh</div>
             <div class="modal-sub">
-              Preview of multi-wallet mode – pick which address drives the mesh.
+              Multi-wallet mode – pick which address drives the mesh.
             </div>
             <div class="wallet-list" id="wallet-list">
               <!-- filled in JS -->
             </div>
             <div class="modal-actions">
               <button class="modal-btn primary" id="wallet-mesh-add">
-                Add mock wallet
+                Add wallet (demo)
               </button>
             </div>
             <div class="modal-footer-row">
@@ -257,7 +257,7 @@ function init() {
 
       </div>
     </div>
-  `;
+  ";
 
   applyTheme();
   wireWallet();
@@ -396,7 +396,7 @@ function wireMenu() {
     item.addEventListener("click", () => {
       const action = item.dataset.menu;
       if (action === "reset") {
-        resetMockState();
+        resetMeshState();
       } else if (action === "docs") {
         window.open("https://github.com/gascheckking/SpawnEngine", "_blank");
       } else if (action === "multiwallet") {
@@ -431,7 +431,7 @@ function wireMenu() {
   });
 }
 
-function resetMockState() {
+function resetMeshState() {
   state.wallet = null;
   state.wallets = [];
   state.tasks = { testPack: false, share: false };
@@ -456,7 +456,7 @@ function initShareModal() {
   modal.querySelectorAll("[data-share-dest]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const dest = btn.dataset.shareDest;
-      const text = `SpawnEngine mesh · XP ${state.xp} · SPN ${state.spn} · ${state.meshEvents} mesh events · v0.2. #SpawnEngine`;
+      const text = `SpawnEngine mesh · XP ${state.xp} · SPN ${state.spn} · ${state.meshEvents} mesh events · v0.3 · #SpawnEngine`;
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).catch(() => {});
@@ -555,7 +555,7 @@ function renderWalletList() {
 
   if (!all.length) {
     list.innerHTML =
-      '<div class="wallet-row" style="justify-content:flex-start;">No wallets yet – first connect will appear here.</div>';
+      '<div class="wallet-row" style="justify-content:flex-start;">No wallets added yet.</div>';
     return;
   }
 
@@ -778,7 +778,7 @@ function renderOverview() {
     <section class="panel">
       <div class="panel-title">Mesh home</div>
       <div class="panel-sub">
-        One view for packs, XP and pulls – the quick “Base app” style overview.
+        One view for packs, XP and pulls – your quick overview.
       </div>
 
       <div class="overview-grid">
@@ -821,7 +821,7 @@ function renderTrading() {
     <section class="panel">
       <div class="panel-title">Trading hub</div>
       <div class="panel-sub">
-        Swap packs, fragments, shards, relics & creator tokens in one mesh-driven orderbook (design preview).
+        Swap packs, fragments, shards, relics & creator tokens in one mesh-driven orderbook.
       </div>
 
       <div class="trading-panel">
@@ -832,7 +832,7 @@ function renderTrading() {
               <div>
                 <div class="trading-card-title">Unified orderbook</div>
                 <div class="trading-card-sub">
-                  TokenSeries · NFTSeries · Zora packs · Mesh-linked liquidity.
+                  TokenSeries · NFTSeries · Zora packs · mesh-linked liquidity.
                 </div>
               </div>
               <span class="chip chip-planned">ORDERBOOK</span>
@@ -856,7 +856,7 @@ function renderTrading() {
               <span class="chip chip-risk">RISK-AWARE</span>
             </div>
             <div class="trading-card-foot">
-              Guard enforces “two-relic” safety before any new series can go live.
+              Guard enforces safety before any new series can go live.
             </div>
           </div>
         </div>
@@ -936,7 +936,7 @@ function renderPackMaps() {
     <section class="panel">
       <div class="panel-title">Pack maps</div>
       <div class="panel-sub">
-        Visual mesh of series, creators & risk-zones across Base (map view later).
+        Visual mesh of series, creators & risk-zones across Base.
       </div>
       <div class="trading-card" style="margin-top:9px;">
         <div class="trading-card-head">
@@ -949,7 +949,7 @@ function renderPackMaps() {
           <span class="chip chip-planned">MAP VIEW</span>
         </div>
         <div class="trading-card-foot">
-          This version keeps it UI-only – later we wire real onchain topology.
+          UI today, full onchain topology when BoosterBox & SpawnEngine are wired.
         </div>
       </div>
     </section>
@@ -978,7 +978,7 @@ function renderCampaigns() {
             <span class="chip chip-mesh">LIVE SOON</span>
           </div>
           <div class="trading-card-foot">
-            SpawnEngine keeps track of odds, payouts and creator budgets automatically.
+            SpawnEngine tracks odds, payouts and creator budgets automatically.
           </div>
         </div>
 
@@ -993,7 +993,7 @@ function renderCampaigns() {
             <span class="chip chip-planned">IDEA</span>
           </div>
           <div class="trading-card-foot">
-            Long term: verified creators fund quests using a shared SPN / ETH pool tracked in the mesh.
+            Verified creators fund quests with SPN / ETH locked per campaign.
           </div>
         </div>
       </div>
@@ -1012,7 +1012,7 @@ function renderStats() {
       </div>
       <div class="overview-grid" style="margin-top:9px;">
         <div class="metric-card">
-          <div class="metric-label">Total packs (sample)</div>
+          <div class="metric-label">Total packs</div>
           <div class="metric-value">12 543</div>
           <div class="metric-foot">Combined across all series.</div>
         </div>
@@ -1092,7 +1092,7 @@ function renderPnl() {
       </div>
 
       <div style="margin-top:10px;font-size:10px;color:#9ca3af;">
-        Last 7 mesh days (ETH-denominated, sample):
+        Last 7 mesh days (ETH-denominated):
       </div>
       <div class="pnl-chart">
         ${barsHtml}
@@ -1131,7 +1131,7 @@ function renderLeaderboard() {
     <section class="panel">
       <div class="panel-title">Creator leaderboard</div>
       <div class="panel-sub">
-        Preview of how SpawnEngine ranks creators by activity, pulls and quest payouts.
+        How SpawnEngine ranks creators by activity, pulls and quest payouts.
       </div>
       <div class="leaderboard-list">
         ${htmlRows}
@@ -1160,7 +1160,7 @@ function renderSettings() {
             </div>
           </div>
           <div class="trading-card-foot">
-            v0.2 keeps everything local – onchain reads come next.
+            v0.3 keeps everything local – onchain reads come next.
           </div>
         </div>
         <div class="trading-card">
