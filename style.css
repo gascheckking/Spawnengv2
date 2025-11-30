@@ -12,14 +12,16 @@
   --success: #22c55e;
   --radius-big: 24px;
   --radius-pill: 999px;
-  --shadow-soft: 0 0 30px rgba(15, 23, 42, 0.9);
+  --shadow-soft: 0 0 40px rgba(15, 23, 42, 0.95);
 }
 
 body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
     sans-serif;
-  background: radial-gradient(circle at top, #020617 0, #000 50%, #020617 100%);
+  background:
+    radial-gradient(circle at top, #0b1120 0, #020617 35%, #000 75%),
+    radial-gradient(circle at bottom, #020617 0, #000 60%);
   color: var(--text-main);
 }
 
@@ -33,9 +35,12 @@ body {
 .app-frame {
   width: 100%;
   max-width: 500px;
-  background: radial-gradient(circle at top left, #020617 0, #000 70%);
+  background:
+    radial-gradient(circle at top left, #0f172a 0, #020617 40%, #000 100%);
   border-radius: 28px;
-  box-shadow: var(--shadow-soft);
+  box-shadow:
+    0 0 50px rgba(15, 23, 42, 0.95),
+    0 0 40px rgba(37, 99, 235, 0.35);
   border: 1px solid rgba(148, 163, 184, 0.4);
   overflow: hidden;
   position: relative;
@@ -44,24 +49,25 @@ body {
 /* THEMES */
 
 body.theme-jurassic {
-  --bg-main: #030712;
-  --bg-panel: #050816;
+  --bg-main: #050816;
+  --bg-panel: #030712;
   --accent: #f97316;
-  --accent-soft: rgba(249, 115, 22, 0.2);
+  --accent-soft: rgba(249, 115, 22, 0.22);
 }
 
 body.theme-hologram {
   --bg-main: #020617;
   --bg-panel: #020617;
   --accent: #a855f7;
-  --accent-soft: rgba(168, 85, 247, 0.25);
+  --accent-soft: rgba(168, 85, 247, 0.28);
 }
 
 /* HEADER */
 
 .app-header {
   padding: 14px 16px 10px;
-  background: radial-gradient(circle at top, #020617 0, #000 70%);
+  background:
+    radial-gradient(circle at top, #0b1120 0, #020617 50%, #000 100%);
 }
 
 .brand-row {
@@ -102,13 +108,15 @@ body.theme-hologram {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: radial-gradient(circle at top, #0ea5e9, #0369a1);
+  background:
+    radial-gradient(circle at top, #38bdf8, #0ea5e9 40%, #0369a1 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 600;
   color: white;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.75);
 }
 
 .brand-copy-title {
@@ -136,7 +144,8 @@ body.theme-hologram {
   border-radius: 999px;
   padding: 5px 10px;
   font-size: 10px;
-  background: radial-gradient(circle at top, #020617, #020617);
+  background:
+    radial-gradient(circle at top, #020617, #020617);
   border: 1px solid rgba(148, 163, 184, 0.5);
 }
 
@@ -164,7 +173,8 @@ body.theme-hologram {
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  background: radial-gradient(circle at top, #0ea5e9, #0369a1);
+  background:
+    radial-gradient(circle at top, #0ea5e9, #0369a1);
   color: white;
   box-shadow: 0 0 16px rgba(56, 189, 248, 0.7);
 }
@@ -174,7 +184,8 @@ body.theme-hologram {
 }
 
 .btn-wallet.wallet-connected {
-  background: radial-gradient(circle at top, #22c55e, #15803d);
+  background:
+    radial-gradient(circle at top, #22c55e, #15803d);
   box-shadow: 0 0 16px rgba(34, 197, 94, 0.8);
 }
 
@@ -212,7 +223,8 @@ body.theme-hologram {
   border-radius: 16px;
   padding: 9px 11px 10px;
   border: 1px solid rgba(148, 163, 184, 0.5);
-  background: radial-gradient(circle at top, #020617, #020617);
+  background:
+    radial-gradient(circle at top, #020617 0, #020617 60%, #000 100%);
 }
 
 .status-pill-label {
@@ -267,7 +279,8 @@ body.theme-hologram {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  background: radial-gradient(circle at top, #020617, #020617);
+  background:
+    radial-gradient(circle at top, #020617, #020617);
   border: 1px solid rgba(148, 163, 184, 0.35);
   opacity: 0.9;
   color: var(--text-sub);
@@ -356,7 +369,8 @@ body.theme-hologram {
 .panel {
   border-radius: var(--radius-big);
   padding: 12px 12px 14px;
-  background: radial-gradient(circle at top left, #020617 0, #020617 55%, #000 100%);
+  background:
+    radial-gradient(circle at top left, #020617 0, #020617 55%, #000 100%);
   border: 1px solid rgba(148, 163, 184, 0.5);
 }
 
@@ -385,7 +399,8 @@ body.theme-hologram {
   border-radius: 16px;
   padding: 8px 9px 9px;
   border: 1px solid rgba(148, 163, 184, 0.45);
-  background: radial-gradient(circle at top, #020617, #020617);
+  background:
+    radial-gradient(circle at top, #020617, #020617);
 }
 
 .metric-label {
@@ -419,7 +434,8 @@ body.theme-hologram {
   border-radius: 18px;
   padding: 9px 10px 10px;
   border: 1px solid rgba(148, 163, 184, 0.45);
-  background: radial-gradient(circle at top, #020617, #020617);
+  background:
+    radial-gradient(circle at top, #020617, #020617);
 }
 
 .trading-card-head {
@@ -471,7 +487,8 @@ body.theme-hologram {
   border-radius: 18px;
   padding: 9px 10px 10px;
   border: 1px dashed rgba(148, 163, 184, 0.55);
-  background: radial-gradient(circle at top, #020617, #020617);
+  background:
+    radial-gradient(circle at top, #020617, #020617);
 }
 
 .task-header {
@@ -582,7 +599,8 @@ body.theme-hologram {
   margin-top: 6px;
   border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.5);
-  background: radial-gradient(circle at top, #020617, #020617);
+  background:
+    radial-gradient(circle at top, #020617, #020617);
   padding: 8px 10px 10px;
   display: flex;
   align-items: flex-end;
@@ -686,12 +704,15 @@ body.theme-hologram {
   width: 30px;
   height: 30px;
   border-radius: 999px;
-  background: radial-gradient(circle at top, #0ea5e9, #0369a1);
+  background:
+    radial-gradient(circle at top, #38bdf8, #0ea5e9 40%, #0369a1 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 600;
+  color: white;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.75);
 }
 
 .side-menu-title {
@@ -752,7 +773,7 @@ body.theme-hologram {
   margin-bottom: 6px;
 }
 
-/* MODALS (share, checkin, wallet-mesh) */
+/* MODALS */
 
 .modal {
   position: fixed;
@@ -783,7 +804,8 @@ body.theme-hologram {
   max-width: 360px;
   border-radius: 22px;
   border: 1px solid rgba(148, 163, 184, 0.6);
-  background: radial-gradient(circle at top, #020617, #000 70%);
+  background:
+    radial-gradient(circle at top, #020617, #000 70%);
   padding: 14px 14px 12px;
   box-shadow: var(--shadow-soft);
 }
@@ -827,7 +849,7 @@ body.theme-hologram {
   color: var(--text-sub);
 }
 
-/* Wallet mesh list inside modal */
+/* Wallet mesh list */
 
 .wallet-mesh-list {
   margin-top: 8px;
