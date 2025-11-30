@@ -32,7 +32,7 @@ const livePulls = [
   { pack: "Mesh Trials", tier: "fragment", band: "Fragment", text: "streak ×10" },
 ];
 
-const recentPullsMock = [
+const recentPullsData = [
   { pack: "Neon Fragments", band: "Shard", amount: 10, odds: "1 / 420" },
   { pack: "Base Relics", band: "Relic", amount: 3, odds: "1 / 1 200" },
   { pack: "Shard Forge", band: "Relic", amount: 1, odds: "1 / 2 000" },
@@ -168,7 +168,7 @@ function init() {
               </li>
               <li>
                 <button class="side-menu-item" data-menu="reset">
-                  Reset mock state
+                  Reset session
                 </button>
               </li>
             </ul>
@@ -205,7 +205,7 @@ function init() {
             <div class="modal-actions">
               <button class="modal-btn primary" id="checkin-claim">Claim +10 XP</button>
               <button class="modal-btn" id="checkin-claim-stake">
-                Claim +10 XP & stake (+3% mock)
+                Claim +10 XP & stake (+3% boost)
               </button>
             </div>
             <div class="modal-footer-row">
@@ -226,7 +226,7 @@ function init() {
               <div>No wallets yet – the first connect will appear here.</div>
             </div>
             <div class="modal-actions">
-              <button class="modal-btn primary" id="add-mock-wallet">Add mock wallet</button>
+              <button class="modal-btn primary" id="add-mock-wallet">Add wallet preview</button>
               <button class="modal-btn" data-close="wallet-mesh">Close</button>
             </div>
           </div>
@@ -374,7 +374,7 @@ function wireMenu() {
     item.addEventListener("click", () => {
       const action = item.dataset.menu;
       if (action === "reset") {
-        resetMockState();
+        resetSessionState();
       } else if (action === "docs") {
         window.open("https://github.com/gascheckking/SpawnEngine", "_blank");
       } else if (action === "wallet-mesh") {
@@ -397,7 +397,7 @@ function wireMenu() {
   });
 }
 
-function resetMockState() {
+function resetSessionState() {
   state.wallet = null;
   state.wallets = [];
   state.tasks = { testPack: false, share: false };
@@ -658,7 +658,7 @@ function renderProfile() {
 /* OVERVIEW (HOME) */
 
 function renderOverview() {
-  const recentHtml = recentPullsMock
+  const recentHtml = recentPullsData
     .map(
       (r) => `
       <div class="recent-pull-item">
@@ -707,7 +707,7 @@ function renderOverview() {
       ${renderDailyTasksInner()}
 
       <div class="recent-pulls">
-        <div class="recent-pulls-header">Recent pulls (mock)</div>
+        <div class="recent-pulls-header">Recent pulls</div>
         ${recentHtml}
       </div>
     </section>
@@ -837,7 +837,7 @@ function renderCampaigns() {
             <div>
               <div class="trading-card-title">Active quest lane</div>
               <div class="trading-card-sub">
-                Mock preview: list of creators running live quests, with pack type, band and reward pot.
+                Preview list of creators running live quests, with pack type, band and reward pot.
               </div>
             </div>
             <span class="chip chip-mesh">FEED</span>
@@ -871,11 +871,11 @@ function renderStats() {
     <section class="panel">
       <div class="panel-title">Stats & luck engine</div>
       <div class="panel-sub">
-        Preview: mesh-level stats – later wired to real pulls, swaps & Zora buys.
+        Preview of mesh-level stats – later wired to real pulls, swaps & Zora buys.
       </div>
       <div class="overview-grid" style="margin-top:9px;">
         <div class="metric-card">
-          <div class="metric-label">Total packs (mock)</div>
+          <div class="metric-label">Total packs</div>
           <div class="metric-value">12 543</div>
           <div class="metric-foot">Combined across all series.</div>
         </div>
@@ -925,7 +925,7 @@ function renderPnl() {
     <section class="panel">
       <div class="panel-title">PNL view</div>
       <div class="panel-sub">
-        Mesh-wide mock PNL – later wired to real packs, relics and swap history.
+        Mesh-wide preview PNL – later wired to real packs, relics and swap history.
       </div>
 
       <div class="pnl-summary-grid">
@@ -952,7 +952,7 @@ function renderPnl() {
       </div>
 
       <div style="margin-top:10px;font-size:10px;color:#9ca3af;">
-        Last 7 mesh days (ETH-denominated, mock):
+        Last 7 mesh days (ETH-denominated, preview data):
       </div>
       <div class="pnl-chart">
         ${barsHtml}
@@ -980,7 +980,7 @@ function renderSettings() {
             </div>
           </div>
           <div class="trading-card-foot">
-            v0.2 keeps it mock-only; open the side menu to preview wallet mesh.
+            v0.2 uses preview data only; open the side menu to view wallet mesh.
           </div>
         </div>
 
@@ -1020,7 +1020,7 @@ function renderDailyTasksInner() {
             <div class="task-dot ${t.testPack ? "done" : ""}"></div>
             <div>
               <div class="task-label-main">Open a test pack</div>
-              <div class="task-label-sub">Trigger one mock pack_open event</div>
+              <div class="task-label-sub">Trigger one pack_open event</div>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:6px;">
