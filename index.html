@@ -65,7 +65,8 @@
       <button class="tab" data-tab="packs">Packs</button>
       <button class="tab" data-tab="lab">Pull Lab</button>
       <button class="tab" data-tab="wallets">Wallets</button>
-      <button class="tab" data-tab="quests">Quests</button>
+      <!-- VIKTIGT: data-tab = "settings" så JS fattar, texten kan vara Quests -->
+      <button class="tab" data-tab="settings">Quests</button>
     </nav>
 
     <!-- Main content -->
@@ -224,7 +225,7 @@
             <div class="lab-column">
               <h3 class="lab-title">Luck meter</h3>
               <p class="lab-copy">
-                Very simple mock of “luck energy”. Later this will sample real
+                Simple mock of “luck energy”. Later this will sample real
                 entropy (VRF / onchain randomness) and pack odds.
               </p>
               <div class="lab-meter">
@@ -239,16 +240,16 @@
             </div>
 
             <div class="lab-column">
-              <h3 class="lab-title">Automation recipes</h3>
+              <h3 class="lab-title">Automation sketches</h3>
               <ul class="lab-list">
                 <li>Auto-quest: burn 3 commons → trigger bounty.</li>
                 <li>Combo: open 5 packs in 24h → bonus XP streak.</li>
                 <li>Creator mode: route a % of pulls to a treasury.</li>
-                <li>Base app link: mirror pulls into onchain activity feed.</li>
+                <li>Base app: mirror pulls into onchain activity feed.</li>
               </ul>
               <p class="lab-copy small">
-                These are just copy-level placeholders so devs instantly see
-                where automation hooks and contract calls will live.
+                Copy only – shows devs where contract calls, schedulers and
+                automation hooks will live.
               </p>
             </div>
           </div>
@@ -274,8 +275,8 @@
         </article>
       </section>
 
-      <!-- QUESTS -->
-      <section class="view" data-view="quests">
+      <!-- SETTINGS (UI-text = Quests / bounties) -->
+      <section class="view" data-view="settings">
         <article class="card">
           <header class="card-header">
             <h2>Creator quests / bounties</h2>
@@ -349,7 +350,7 @@
           <li><button data-tab-link="packs">My packs</button></li>
           <li><button data-tab-link="lab">Pull Lab</button></li>
           <li><button data-tab-link="wallets">Wallet mesh</button></li>
-          <li><button data-tab-link="quests">Quests</button></li>
+          <li><button data-tab-link="settings">Quests / bounties</button></li>
         </ul>
       </section>
     </div>
