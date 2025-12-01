@@ -1,521 +1,376 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const app = document.getElementById("app");
+// Small helpers
+const qs = (sel) => document.querySelector(sel);
+const qsa = (sel) => Array.from(document.querySelectorAll(sel));
 
-  // ---------- RENDER MARKUP ----------
+// Simple state persisted in localStorage
+const STORAGE_KEY = "spawn-mesh-hud";
 
-  app.innerHTML = `
-    <div class="app-shell">
-      <div class="app-status-bar"></div>
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return {
+        xp: 1575,
+        spawn: 497,
+        streakDays: 1,
+        lastCheckIn: null,
+        wallets: [
+          { addr: "0xspawn...mesh", label: "Main mesh wallet" },
+        ],
+      };
+    }
+    return JSON.parse(raw);
+  } catch {
+    return {
+      xp: 1575,
+      spawn: 497,
+      streakDays: 1,
+      lastCheckIn: null,
+      wallets: [
+        { addr: "0xspawn...mesh", label: "Main mesh wallet" },
+      ],
+    };
+  }
+}
 
-      <div class="app-top-nav">
-        <div class="app-top-title">SpawnEngine · Mesh HUD v0.2</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="theme-dot-row">
-            <button class="theme-dot default active" data-theme="default" aria-label="Default theme"></button>
-            <button class="theme-dot blue" data-theme="blue" aria-label="Blue theme"></button>
-            <button class="theme-dot emerald" data-theme="emerald" aria-label="Emerald theme"></button>
-            <button class="theme-dot magenta" data-theme="magenta" aria-label="Magenta theme"></button>
-          </div>
-          <button class="app-icon-button" id="menu-toggle" aria-label="Open menu">
-            <span>≡</span>
-          </button>
-        </div>
-      </div>
+function saveState(state) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // ignore
+  }
+}
 
-      <div class="mesh-header-card">
-        <div class="mesh-header-main">
-          <div class="mesh-logo">
-            <span>SE</span>
-          </div>
-          <div class="mesh-title-block">
-            <h1>SpawnEngine – Mesh HUD</h1>
-            <p>Modular mesh for packs, XP, bounties & creator modules.</p>
-          </div>
-          <div class="mesh-header-right">
-            <div class="mesh-chip-row">
-              <div class="mesh-chip">Base · Pack ecosystems</div>
-              <div class="mesh-chip mesh-chip--green">Farcaster ready</div>
-            </div>
-            <button class="btn-connect" id="wallet-btn">Connect</button>
-          </div>
-        </div>
+let state = loadState();
 
-        <div class="mesh-header-meta">
-          <div class="mesh-meta-pill">
-            <span class="mesh-pill-label">Gas</span>
-            <span class="mesh-pill-value" id="gas-value">~0.24 gwei est.</span>
-          </div>
-          <div class="mesh-meta-pill">
-            <span class="mesh-pill-label">Mode</span>
-            <span class="mesh-pill-value" id="mode-value">Single mesh</span>
-          </div>
-          <div class="mesh-meta-pill">
-            <span class="mesh-pill-label">Sync</span>
-            <span class="mesh-pill-value" id="sync-value">Local mock</span>
-          </div>
-          <div class="mesh-meta-pill">
-            <span class="mesh-pill-label">Wallet</span>
-            <span class="mesh-pill-value mesh-pill-value--wallet" id="wallet-label">No wallet connected</span>
-          </div>
-        </div>
-      </div>
+/* TABS */
 
-      <div class="main-tabs" id="main-tabs">
-        <button class="tab-pill active" data-tab="overview">Overview</button>
-        <button class="tab-pill" data-tab="mesh">Mesh</button>
-        <button class="tab-pill" data-tab="packs">Packs</button>
-        <button class="tab-pill" data-tab="pulllab">Pull Lab</button>
-        <button class="tab-pill" data-tab="wallets">Wallets</button>
-        <button class="tab-pill" data-tab="quests">Quests</button>
-      </div>
+function setupTabs() {
+  const tabs = qsa(".tab");
+  const views = qsa(".view");
 
-      <div id="tab-overview">
-        <div class="card">
-          <div class="card-header-row">
-            <div>
-              <div class="card-title">Mesh snapshot</div>
-              <div class="card-subtitle">Today</div>
-            </div>
-            <div class="badge-soft">Single player mesh</div>
-          </div>
-
-          <div class="snapshot-grid">
-            <div class="snapshot-stat">
-              <div class="snapshot-label">XP balance</div>
-              <div class="snapshot-value" id="xp-balance">1 575 XP</div>
-            </div>
-            <div class="snapshot-stat">
-              <div class="snapshot-label">Spawn token</div>
-              <div class="snapshot-value" id="spawn-balance">497 SPN</div>
-            </div>
-          </div>
-
-          <div class="streak-label-row">
-            <span>Daily streak</span>
-            <span><strong id="streak-days">1 day</strong></span>
-          </div>
-          <div class="streak-bar">
-            <div class="streak-bar-fill" id="streak-fill"></div>
-          </div>
-          <div class="streak-caption" id="streak-caption">
-            Keep the streak for 6 more days for a full weekly run.
-          </div>
-          <button class="btn-streak" id="streak-btn">Check-in</button>
-        </div>
-
-        <div class="card">
-          <div class="card-header-row">
-            <div>
-              <div class="card-title">Mesh load</div>
-              <div class="card-subtitle">How busy SpawnEngine feels right now.</div>
-            </div>
-            <button class="badge-soft" id="mesh-refresh-btn">Refresh pulse</button>
-          </div>
-
-          <div class="mesh-load-meter">
-            <div class="mesh-load-mask"></div>
-            <div class="mesh-load-indicator" id="mesh-indicator"></div>
-          </div>
-          <div class="mesh-load-scale">
-            <span>Quiet</span>
-            <span>Active</span>
-            <span>Wild</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header-row">
-            <div>
-              <div class="card-title">Online collectors</div>
-              <div class="card-subtitle">Local preview of wallets “near” your mesh.</div>
-            </div>
-            <div class="badge-soft">Wallet bubbles</div>
-          </div>
-
-          <div class="collectors-list" id="collector-list"></div>
-        </div>
-
-        <div class="card">
-          <div class="card-header-row">
-            <div>
-              <div class="card-title">Today’s mesh events</div>
-              <div class="card-subtitle">Pack opens, burns, swaps & Zora buys.</div>
-            </div>
-            <div class="badge-soft">Activity feed</div>
-          </div>
-
-          <div class="events-list" id="events-list"></div>
-        </div>
-      </div>
-
-      <div id="tab-mesh" style="display:none;">
-        <div class="card">
-          <div class="card-header-row">
-            <div>
-              <div class="card-title">Mesh overview</div>
-              <div class="card-subtitle">Rough sketch of how the onchain mesh will look.</div>
-            </div>
-          </div>
-          <p class="tab-placeholder">
-            Mesh view will show Bubble maps, creator clusters and where packs & XP
-            are moving in real time. Current version is a static preview.
-          </p>
-        </div>
-      </div>
-
-      <div id="tab-packs" style="display:none;">
-        <div class="card">
-          <div class="card-header-row">
-            <div>
-              <div class="card-title">Packs / inventory</div>
-              <div class="card-subtitle">Opened hits, sealed packs & grails in one list.</div>
-            </div>
-          </div>
-          <p class="tab-placeholder">
-            This section will plug into SpawnEngine pack contracts and show
-            real pulls per wallet. For now it’s a visual shell ready for wiring.
-          </p>
-        </div>
-      </div>
-
-      <div id="tab-pulllab" style="display:none;">
-        <div class="card">
-          <div class="card-header-row">
-            <div>
-              <div class="card-title">Pull Lab · Luck engine</div>
-              <div class="card-subtitle">Simulation layer for streaks, entropy & bounties.</div>
-            </div>
-          </div>
-          <p class="tab-placeholder">
-            Pull Lab will host experiments: luck meters, entropy tests,
-            “open N packs” quests and creator bounties hooked to real contracts.
-          </p>
-        </div>
-      </div>
-
-      <div id="tab-wallets" style="display:none;">
-        <div class="card">
-          <div class="card-header-row">
-            <div>
-              <div class="card-title">Wallet mesh</div>
-              <div class="card-subtitle">Preview of multi-wallet mode.</div>
-            </div>
-          </div>
-          <p class="tab-placeholder">
-            Multi-wallet mesh lets you drive the HUD from different addresses:
-            sniping wallet, main vault, creator treasury, etc. UX shell is ready;
-            next step is real connections.
-          </p>
-        </div>
-      </div>
-
-      <div id="tab-quests" style="display:none;">
-        <div class="card">
-          <div class="card-header-row">
-            <div>
-              <div class="card-title">Creator quests / bounties</div>
-              <div class="card-subtitle">High-signal tasks from verified creators.</div>
-            </div>
-          </div>
-          <p class="tab-placeholder">
-            Quest layer will surface pack-based bounties (pull X, burn Y, try
-            this mini-app, follow a creator mesh). This view is the UX frame the
-            onchain module will plug into.
-          </p>
-        </div>
-      </div>
-
-      <div class="app-footer">
-        Built with <strong>SpawnEngine</strong> · Mesh HUD v0.2 ·
-        <a href="https://spawn-engine.vercel.app" target="_blank" rel="noreferrer">Legacy preview v1</a> ·
-        <a href="https://warpcast.com/spawniz" target="_blank" rel="noreferrer">Farcaster</a>
-      </div>
-    </div>
-
-    <div class="side-menu-backdrop" id="side-menu-backdrop"></div>
-    <div class="side-menu" id="side-menu">
-      <div class="side-menu-header">
-        <span>Mesh settings</span>
-        <button class="side-menu-close" id="menu-close">×</button>
-      </div>
-
-      <div>
-        <div class="side-menu-section-title">Themes</div>
-        <div class="side-menu-list">
-          <div class="side-menu-item">Default · deep navy</div>
-          <div class="side-menu-item">Blue glow · Rodeo-ish</div>
-          <div class="side-menu-item">Emerald mesh · XP jungle</div>
-          <div class="side-menu-item">Magenta aura · late-night mode</div>
-        </div>
-      </div>
-
-      <div>
-        <div class="side-menu-section-title">Creator tools</div>
-        <div class="side-menu-list">
-          <div class="side-menu-item">Open SpawnEngine docs (soon)</div>
-          <div class="side-menu-item">Spawn pack factory (soon)</div>
-          <div class="side-menu-item">Creator bounties dashboard (soon)</div>
-        </div>
-      </div>
-
-      <div>
-        <div class="side-menu-section-title">About this HUD</div>
-        <div class="side-menu-list">
-          <div class="side-menu-item">
-            Mesh HUD is a standalone prototype for The Base App / Farcaster style
-            onchain activity dashboard – ready for real contracts & APIs.
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="streak-burst" id="streak-burst">
-      <div class="streak-burst-inner">
-        <div class="streak-orb"></div>
-        <span>Daily streak up! XP orbs fly across the mesh.</span>
-      </div>
-    </div>
-  `;
-
-  // ---------- STATE ----------
-
-  const state = {
-    connected: false,
-    walletAddress: null,
-    streakDays: 1,
-    meshLoad: 0.35,
-    collectors: [
-      { addr: "0xA9c9…91f3", status: "Hot pulls" },
-      { addr: "rainbow.vibe", status: "Swap spree" },
-      { addr: "0x7BE…c101", status: "Burning commons" },
-      { addr: "spawniz.eth", status: "Watching grails" },
-      { addr: "0xF3D…88aa", status: "Idle" }
-    ],
-    events: [
-      {
-        kind: "pack_open",
-        desc: "0xA93…e1c2 → Neon Fragments (Rare)",
-        time: "10s ago"
-      },
-      {
-        kind: "burn",
-        desc: "0x4B1…aa32 → Void Keys (Common)",
-        time: "25s ago"
-      },
-      {
-        kind: "swap",
-        desc: "0xD29…b81d → Shard Forge (Legendary)",
-        time: "1m ago"
-      },
-      {
-        kind: "zora_buy",
-        desc: "0x91F…ccd0 → Base Relics (Epic)",
-        time: "2m ago"
-      }
-    ]
+  const activate = (target) => {
+    tabs.forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.tab === target);
+    });
+    views.forEach((view) => {
+      view.classList.toggle("active", view.dataset.view === target);
+    });
   };
 
-  // load streak from localStorage if present
-  const savedStreak = Number.parseInt(localStorage.getItem("spawnMeshStreak") || "1", 10);
-  if (!Number.isNaN(savedStreak) && savedStreak > 0) {
-    state.streakDays = savedStreak;
-  }
-
-  // ---------- ELEMENT HOOKS ----------
-
-  const walletBtn = document.getElementById("wallet-btn");
-  const walletLabel = document.getElementById("wallet-label");
-
-  const tabsRoot = document.getElementById("main-tabs");
-  const tabButtons = tabsRoot.querySelectorAll(".tab-pill");
-
-  const streakBtn = document.getElementById("streak-btn");
-  const streakDaysEl = document.getElementById("streak-days");
-  const streakFillEl = document.getElementById("streak-fill");
-  const streakCaptionEl = document.getElementById("streak-caption");
-  const streakBurstEl = document.getElementById("streak-burst");
-
-  const meshIndicator = document.getElementById("mesh-indicator");
-  const meshRefreshBtn = document.getElementById("mesh-refresh-btn");
-
-  const collectorsListEl = document.getElementById("collector-list");
-  const eventsListEl = document.getElementById("events-list");
-
-  const themeDots = document.querySelectorAll(".theme-dot");
-
-  const menuToggle = document.getElementById("menu-toggle");
-  const menuClose = document.getElementById("menu-close");
-  const menuBackdrop = document.getElementById("side-menu-backdrop");
-  const sideMenu = document.getElementById("side-menu");
-
-  // ---------- RENDER HELPERS ----------
-
-  function formatStreak() {
-    if (state.streakDays === 1) return "1 day";
-    return `${state.streakDays} days`;
-  }
-
-  function streakProgress() {
-    const maxDays = 7;
-    const ratio = Math.min(state.streakDays / maxDays, 1);
-    return 15 + ratio * 75; // between 15% and 90%
-  }
-
-  function updateStreakUI() {
-    streakDaysEl.textContent = formatStreak();
-    streakFillEl.style.width = `${streakProgress()}%`;
-    const daysLeft = Math.max(0, 7 - state.streakDays);
-    streakCaptionEl.textContent =
-      daysLeft > 0
-        ? `Keep the streak for ${daysLeft} more day${daysLeft === 1 ? "" : "s"} for a full weekly run.`
-        : "Full weekly run completed – mesh is fully charged.";
-  }
-
-  function updateMeshLoadUI() {
-    const position = 5 + state.meshLoad * 90; // 5–95%
-    meshIndicator.style.transform = `translateX(${position}%)`;
-  }
-
-  function renderCollectors() {
-    collectorsListEl.innerHTML = "";
-    state.collectors.forEach((c) => {
-      const row = document.createElement("div");
-      row.className = "collector-pill";
-      row.innerHTML = `
-        <div class="collector-left">
-          <div class="collector-dot"></div>
-          <div class="collector-address">${c.addr}</div>
-        </div>
-        <div class="collector-status">${c.status}</div>
-      `;
-      collectorsListEl.appendChild(row);
-    });
-  }
-
-  function renderEvents() {
-    eventsListEl.innerHTML = "";
-    state.events.forEach((e) => {
-      const row = document.createElement("div");
-      row.className = "event-row";
-      row.innerHTML = `
-        <div class="event-kind">${e.kind}</div>
-        <div class="event-body">
-          <div class="event-left">${e.desc}</div>
-          <div class="event-right">${e.time}</div>
-        </div>
-      `;
-      eventsListEl.appendChild(row);
-    });
-  }
-
-  function setTheme(themeKey) {
-    const body = document.body;
-    body.classList.remove("theme-default", "theme-blue", "theme-emerald", "theme-magenta");
-    switch (themeKey) {
-      case "blue":
-        body.classList.add("theme-blue");
-        break;
-      case "emerald":
-        body.classList.add("theme-emerald");
-        break;
-      case "magenta":
-        body.classList.add("theme-magenta");
-        break;
-      default:
-        body.classList.add("theme-default");
-    }
-    themeDots.forEach((dot) => {
-      dot.classList.toggle("active", dot.dataset.theme === themeKey);
-    });
-    localStorage.setItem("spawnMeshTheme", themeKey);
-  }
-
-  // ---------- INITIAL RENDER ----------
-
-  updateStreakUI();
-  updateMeshLoadUI();
-  renderCollectors();
-  renderEvents();
-
-  const savedTheme = localStorage.getItem("spawnMeshTheme");
-  if (savedTheme) {
-    setTheme(savedTheme);
-  }
-
-  // ---------- EVENTS ----------
-
-  // wallet connect (mock)
-  walletBtn.addEventListener("click", () => {
-    state.connected = !state.connected;
-
-    if (state.connected) {
-      // mock address
-      state.walletAddress = "0xSpawn…mesh";
-      walletLabel.textContent = state.walletAddress;
-      walletBtn.textContent = "Disconnect";
-    } else {
-      state.walletAddress = null;
-      walletLabel.textContent = "No wallet connected";
-      walletBtn.textContent = "Connect";
-    }
+  tabs.forEach((btn) => {
+    btn.addEventListener("click", () => activate(btn.dataset.tab));
   });
 
-  // tabs
-  tabButtons.forEach((btn) => {
+  // side-menu shortcuts
+  qsa("[data-tab-link]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const tab = btn.dataset.tab;
-      tabButtons.forEach((b) => b.classList.toggle("active", b === btn));
-
-      const ids = ["overview", "mesh", "packs", "pulllab", "wallets", "quests"];
-      ids.forEach((id) => {
-        const el = document.getElementById(`tab-${id}`);
-        if (el) {
-          el.style.display = id === tab ? "block" : "none";
-        }
-      });
+      activate(btn.dataset.tabLink);
+      closeMenu();
     });
   });
+}
 
-  // streak check-in
-  streakBtn.addEventListener("click", () => {
-    state.streakDays += 1;
-    localStorage.setItem("spawnMeshStreak", String(state.streakDays));
+/* MENU */
+
+function openMenu() {
+  const shell = qs(".side-menu");
+  shell.classList.add("open");
+}
+
+function closeMenu() {
+  const shell = qs(".side-menu");
+  shell.classList.remove("open");
+}
+
+function setupMenu() {
+  const side = qs(".side-menu");
+  const btnMenu = qs("#btn-menu");
+  const btnClose = qs("#btn-close-menu");
+
+  btnMenu.addEventListener("click", openMenu);
+  btnClose.addEventListener("click", closeMenu);
+
+  side.addEventListener("click", (e) => {
+    if (e.target === side) closeMenu();
+  });
+
+  // theme chips
+  qsa(".theme-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const theme = chip.dataset.theme;
+      document.documentElement.setAttribute("data-theme", theme);
+      qsa(".theme-chip").forEach((c) => c.classList.remove("active"));
+      chip.classList.add("active");
+    });
+  });
+}
+
+/* WALLET MOCK + CONNECT */
+
+function setupWallets() {
+  renderWallets();
+  updateWalletChip();
+
+  const addBtn = qs("#btn-add-mock-wallet");
+  if (addBtn) {
+    addBtn.addEventListener("click", () => {
+      const n = state.wallets.length + 1;
+      const addr = "0x" + Math.random().toString(16).slice(2, 6) + "...mesh";
+      state.wallets.push({ addr, label: `Extra wallet #${n}` });
+      saveState(state);
+      renderWallets();
+      updateWalletChip();
+    });
+  }
+
+  const connectBtn = qs("#btn-connect");
+  connectBtn.addEventListener("click", () => {
+    if (connectBtn.dataset.connected === "yes") {
+      connectBtn.dataset.connected = "no";
+      qs("#connect-label").textContent = "Connect wallet";
+      qs("#menu-wallet-label").textContent = "No wallet connected.";
+      qs("#chip-mode").textContent = "Single mesh";
+    } else {
+      connectBtn.dataset.connected = "yes";
+      qs("#connect-label").textContent = "Wallet connected";
+      qs("#menu-wallet-label").textContent =
+        state.wallets[0]?.addr ?? "0xspawn...mesh";
+      qs("#chip-mode").textContent = "Mesh + wallet";
+    }
+  });
+}
+
+function renderWallets() {
+  const list = qs("#wallet-list");
+  if (!list) return;
+  list.innerHTML = "";
+  state.wallets.forEach((w) => {
+    const div = document.createElement("div");
+    div.className = "wallet-pill";
+    div.innerHTML = `<span>${w.addr}</span><span>${w.label}</span>`;
+    list.appendChild(div);
+  });
+}
+
+function updateWalletChip() {
+  qs("#chip-active").textContent = String(state.wallets.length);
+}
+
+/* BUBBLES + EVENTS */
+
+function setupOverviewMock() {
+  // gas mock
+  qs("#chip-gas").textContent = "~0.24 gwei est.";
+
+  // bubble map
+  const bubbles = [
+    { addr: "0xA9c...91f3", tag: "Hot pulls" },
+    { addr: "rainbow.vibe", tag: "Swap spree" },
+    { addr: "0x7BE...c101", tag: "Burning commons" },
+    { addr: "spawniz.eth", tag: "Watching grails" },
+    { addr: "0xF3d...88aa", tag: "Idle" },
+  ];
+  const row = qs("#bubble-row");
+  row.innerHTML = "";
+  bubbles.forEach((b) => {
+    const el = document.createElement("div");
+    el.className = "bubble";
+    el.innerHTML = `
+      <span class="bubble-dot"></span>
+      <span>${b.addr}</span>
+      <span class="bubble-tag">· ${b.tag}</span>
+    `;
+    row.appendChild(el);
+  });
+
+  // events
+  const events = [
+    {
+      type: "pack_open",
+      main: "0xA93...e1c2 → Neon Fragments (Rare)",
+      meta: "10s ago",
+    },
+    {
+      type: "burn",
+      main: "0x4B1...aa32 → Void Keys (Common)",
+      meta: "25s ago",
+    },
+    {
+      type: "swap",
+      main: "0xD29...b81d → Shard Forge (Legendary)",
+      meta: "1m ago",
+    },
+    {
+      type: "zora_buy",
+      main: "0x91F...ccd0 → Base Relics (Epic)",
+      meta: "2m ago",
+    },
+  ];
+  const list = qs("#overview-events");
+  list.innerHTML = "";
+  events.forEach((ev) => {
+    const li = document.createElement("li");
+    li.className = "event-item";
+    li.innerHTML = `
+      <span class="event-type">${ev.type}</span>
+      <span class="event-main">${ev.main}</span>
+      <span class="event-meta">${ev.meta}</span>
+    `;
+    list.appendChild(li);
+  });
+
+  // packs mock list
+  const packs = [
+    "Neon Fragment · Rare · opened",
+    "Void Shard · Common · opened",
+    "Shard Forge · Legendary · unopened",
+    "Prime Relic · Epic · opened",
+    "Spawn Core · Mythic · unopened",
+  ];
+  const packList = qs("#pack-list");
+  packList.innerHTML = "";
+  packs.forEach((p) => {
+    const li = document.createElement("li");
+    li.className = "event-item";
+    li.innerHTML = `<span class="event-main">${p}</span>`;
+    packList.appendChild(li);
+  });
+}
+
+/* MESH LOAD + LAB LUCK */
+
+function randomBetween(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function updateMeshLoad() {
+  const value = randomBetween(5, 100);
+  const fill = qs("#activity-fill");
+  const text = qs("#activity-text");
+
+  fill.style.width = `${value}%`;
+
+  let label;
+  if (value < 30) label = "Quiet – grails are resting.";
+  else if (value < 70) label = "Active – packs are flying.";
+  else label = "Wild – XP orbs everywhere.";
+
+  text.textContent = label;
+}
+
+function setupMeshLoad() {
+  updateMeshLoad();
+  qs("#btn-refresh-activity").addEventListener("click", updateMeshLoad);
+}
+
+function rollLuck() {
+  const value = randomBetween(1, 100);
+  const fill = qs("#lab-fill");
+  const text = qs("#lab-text");
+  fill.style.width = `${value}%`;
+
+  if (value < 25) {
+    text.textContent = "Cold pockets – maybe wait for a better pulse.";
+  } else if (value < 60) {
+    text.textContent = "Decent odds – time for a few warm-up packs.";
+  } else if (value < 85) {
+    text.textContent = "Hot lane – streak XP wants to be claimed.";
+  } else {
+    text.textContent = "Mythic window – this is where grails spawn.";
+  }
+}
+
+function setupLab() {
+  qs("#btn-roll-luck").addEventListener("click", rollLuck);
+}
+
+/* STREAK + MODAL */
+
+function sameDay(tsA, tsB) {
+  if (!tsA || !tsB) return false;
+  const a = new Date(tsA);
+  const b = new Date(tsB);
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+function updateStreakUI() {
+  const counter = qs("#streak-counter");
+  const copy = qs("#streak-copy");
+  const bar = qs("#streak-fill");
+  const modalBar = qs("#streak-modal-fill");
+  const modalText = qs("#streak-modal-text");
+
+  const days = state.streakDays || 0;
+  counter.textContent = `${days} day${days === 1 ? "" : "s"}`;
+
+  const pct = Math.min(100, (days / 7) * 100);
+  bar.style.width = `${pct}%`;
+  modalBar.style.width = `${pct}%`;
+
+  const remaining = Math.max(0, 7 - days);
+  copy.textContent =
+    remaining > 0
+      ? `Keep the streak for ${remaining} more day${
+          remaining === 1 ? "" : "s"
+        } for a full weekly run.`
+      : "Weekly streak complete – keep it rolling for bonus XP.";
+
+  modalText.textContent =
+    "Ping the mesh once per day to build your streak. Missing a day will reset the bar.";
+}
+
+function openStreakModal() {
+  qs("#streak-modal").classList.remove("hidden");
+}
+
+function closeStreakModal() {
+  qs("#streak-modal").classList.add("hidden");
+}
+
+function setupStreak() {
+  // ensure UI matches loaded state
+  updateStreakUI();
+
+  qs("#btn-open-streak").addEventListener("click", openStreakModal);
+  qs("#btn-close-streak").addEventListener("click", closeStreakModal);
+  qs("#btn-skip-streak").addEventListener("click", closeStreakModal);
+
+  qs("#btn-claim-streak").addEventListener("click", () => {
+    const now = Date.now();
+    if (sameDay(now, state.lastCheckIn)) {
+      // already checked in today, just close
+      closeStreakModal();
+      return;
+    }
+    state.streakDays = (state.streakDays || 0) + 1;
+    state.lastCheckIn = now;
+    state.xp += 25;
+    state.spawn += 1;
+    saveState(state);
+    qs("#metric-xp").textContent = `${state.xp} XP`;
+    qs("#metric-spawn").textContent = `${state.spawn} SPN`;
     updateStreakUI();
-
-    // simple burst animation
-    streakBurstEl.classList.add("active");
-    setTimeout(() => {
-      streakBurstEl.classList.remove("active");
-    }, 800);
+    closeStreakModal();
   });
+}
 
-  // mesh refresh
-  meshRefreshBtn.addEventListener("click", () => {
-    // random between 0–1, but bias a bit toward middle
-    const r = Math.random();
-    state.meshLoad = 0.15 + r * 0.75;
-    updateMeshLoadUI();
-  });
+/* INIT */
 
-  // theme switches
-  themeDots.forEach((dot) => {
-    dot.addEventListener("click", () => {
-      const key = dot.dataset.theme || "default";
-      setTheme(key);
-    });
-  });
+document.addEventListener("DOMContentLoaded", () => {
+  // metrics from state
+  qs("#metric-xp").textContent = `${state.xp} XP`;
+  qs("#metric-spawn").textContent = `${state.spawn} SPN`;
 
-  // side menu
-  function openMenu() {
-    sideMenu.classList.add("open");
-    menuBackdrop.classList.add("open");
-  }
-  function closeMenu() {
-    sideMenu.classList.remove("open");
-    menuBackdrop.classList.remove("open");
-  }
-
-  menuToggle.addEventListener("click", openMenu);
-  menuClose.addEventListener("click", closeMenu);
-  menuBackdrop.addEventListener("click", closeMenu);
+  setupTabs();
+  setupMenu();
+  setupWallets();
+  setupOverviewMock();
+  setupMeshLoad();
+  setupLab();
+  setupStreak();
 });
