@@ -1,40 +1,42 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
+  <title>SpawnEngine — Pack & Trade Hub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SpawnEngine2 — Pack Factory & Vibe Tracker</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="icon" type="image/x-icon" href="favicon.ico" />
 </head>
 <body>
-  <!-- HEADER -->
-  <header class="header">
-    <div class="row header-row">
-      <div class="logo">
-        <div class="logo-badge">SE</div>
-        <div class="logo-copy">
-          <div class="logo-title">SpawnEngine</div>
-          <div class="logo-sub muted">Pack Factory • Vibe Tracker • Base</div>
+  <div class="app-root">
+    <!-- HEADER -->
+    <header class="header">
+      <div class="row header-row">
+        <div class="logo">
+          <div class="logo-badge">SE</div>
+          <div>
+            <div class="logo-title">SpawnEngine</div>
+            <div class="muted" style="font-size: 12px;">Pack &amp; Trade Hub · Base</div>
+          </div>
+          <div class="pill" id="network-pill">Chain: Base</div>
         </div>
-        <div class="pill" id="network-pill">Base · Dev</div>
-      </div>
-      <div class="row header-controls">
-        <div class="pill" id="wallet-pill">Not connected</div>
-        <button class="btn" id="connect-btn">Connect</button>
-        <button class="btn ghost" id="theme-toggle-btn">Dark</button>
-      </div>
-    </div>
 
-    <!-- Ticker -->
-    <div class="wrapper">
-      <div class="ticker-wrap">
-        <div id="ticker" class="ticker">
-          <!-- Fylls via JS -->
+        <div class="row header-actions">
+          <div class="pill" id="wallet-pill">Not connected</div>
+          <button class="btn" id="btn-connect">Connect</button>
+          <button class="btn ghost" id="btn-theme-toggle">Dark</button>
         </div>
       </div>
 
-      <!-- Tabs -->
+      <!-- TICKER -->
+      <div class="wrapper">
+        <div class="ticker-wrap">
+          <div class="ticker" id="ticker-strip">
+            <!-- Fylls i av app.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TABS -->
       <nav class="tabbar">
         <button class="tab active" data-tab="trading">Trading</button>
         <button class="tab" data-tab="for-trade">For Trade</button>
@@ -42,228 +44,147 @@
         <button class="tab" data-tab="profile">Profile</button>
         <button class="tab" data-tab="settings">Settings</button>
       </nav>
-    </div>
-  </header>
+    </header>
 
-  <!-- MAIN -->
-  <main class="wrapper">
-    <div class="grid">
-      <!-- LEFT COLUMN -->
-      <div class="main-column">
-        <!-- TRADING TAB -->
-        <section class="panel tab-panel" data-tab="trading">
-          <div class="panel-head">
-            <div class="panel-title">Marketplace</div>
-            <div class="row filters-row">
-              <input
-                id="search-input"
-                class="input"
-                placeholder="Search packs, collections, creators…"
-              />
-              <select id="rarity-select" class="select">
-                <option value="ALL">All</option>
-                <option value="COMMON">Common</option>
-                <option value="RARE">Rare</option>
-                <option value="EPIC">Epic</option>
-                <option value="LEGENDARY">Legendary</option>
-              </select>
-              <label class="row checkbox-label">
-                <input type="checkbox" id="verified-only" />
-                <span class="muted">Verified only</span>
-              </label>
-            </div>
-          </div>
-          <div id="packs-grid" class="cards">
-            <!-- Packs renderas här via JS -->
-          </div>
-        </section>
-
-        <!-- FOR TRADE TAB -->
-        <section class="panel tab-panel" data-tab="for-trade" style="display: none;">
-          <div class="panel-head">
-            <div class="panel-title">For Trade (local)</div>
-            <div class="muted" id="for-trade-wallet-label">Connect wallet</div>
-          </div>
-
-          <div class="for-trade-form">
-            <input
-              id="ft-name"
-              class="input"
-              placeholder="Name / Card"
-            />
-            <select id="ft-rarity" class="select">
-              <option value="COMMON">COMMON</option>
-              <option value="RARE">RARE</option>
-              <option value="EPIC">EPIC</option>
-              <option value="LEGENDARY">LEGENDARY</option>
-            </select>
-            <input
-              id="ft-contract"
-              class="input"
-              placeholder="Contract (0x…)"
-            />
-            <input
-              id="ft-tokenid"
-              class="input"
-              placeholder="Token ID"
-            />
-            <button id="ft-add-btn" class="btn">Add</button>
-          </div>
-
-          <div id="for-trade-list" class="cards for-trade-cards">
-            <!-- Items renderas via JS -->
-          </div>
-        </section>
-
-        <!-- ACTIVITY TAB -->
-        <section class="panel tab-panel" data-tab="activity" style="display: none;">
-          <div class="panel-head">
-            <div class="panel-title">Recent Pulls</div>
-            <button class="btn ghost" id="refresh-activity-btn">Refresh</button>
-          </div>
-          <div id="activity-cards" class="cards activity-cards">
-            <!-- Pulls via JS -->
-          </div>
-
-          <!-- Gas mini-widget -->
-          <div class="panel gas-panel">
+    <!-- MAIN GRID -->
+    <main class="wrapper">
+      <div class="grid">
+        <!-- LEFT COLUMN -->
+        <div class="main-col">
+          <!-- TRADING TAB -->
+          <section class="panel tab-page active" data-tab="trading">
             <div class="panel-head">
-              <div class="panel-title">GasCheck Mini</div>
+              <div class="panel-title">Marketplace</div>
+              <div class="row">
+                <input
+                  id="search-input"
+                  class="input"
+                  placeholder="Search packs / creators…"
+                />
+                <select id="rarity-select" class="select">
+                  <option value="ALL">All</option>
+                  <option value="COMMON">Common</option>
+                  <option value="RARE">Rare</option>
+                  <option value="EPIC">Epic</option>
+                  <option value="LEGENDARY">Legendary</option>
+                </select>
+                <label class="row" style="font-size: 12px;">
+                  <input type="checkbox" id="verified-only" />
+                  <span class="muted">Verified only</span>
+                </label>
+              </div>
             </div>
-            <div class="gas-grid">
-              <div class="gas-row">
-                <span class="muted">Ethereum</span>
-                <span id="gas-ethereum" class="gas-value ethereum">-- gwei</span>
-              </div>
-              <div class="gas-row">
-                <span class="muted">Base</span>
-                <span id="gas-base" class="gas-value base">-- gwei</span>
-              </div>
-              <div class="gas-row">
-                <span class="muted">Optimism</span>
-                <span id="gas-optimism" class="gas-value optimism">-- gwei</span>
-              </div>
-              <div class="gas-updated muted" id="gas-updated">Updated: --</div>
+            <div id="market-grid" class="cards">
+              <!-- Fylls i av app.js -->
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- PROFILE TAB -->
-        <section class="panel tab-panel" data-tab="profile" style="display: none;">
-          <div class="panel-head">
-            <div class="panel-title">Profile</div>
-          </div>
-          <div class="profile-panel">
-            <div class="profile-row">
-              <span class="muted">Wallet</span>
-              <span id="profile-wallet" class="profile-value">Not connected</span>
+          <!-- FOR-TRADE TAB -->
+          <section class="panel tab-page" data-tab="for-trade">
+            <div class="panel-head">
+              <div class="panel-title">For Trade (local)</div>
+              <div class="muted" id="for-trade-wallet-label">Connect wallet</div>
             </div>
-            <div class="profile-row">
-              <span class="muted">XP</span>
-              <span id="profile-xp" class="profile-value">0 XP</span>
-            </div>
-            <div class="profile-row">
-              <span class="muted">Streak</span>
-              <span id="profile-streak" class="profile-value">0 days</span>
-            </div>
-            <div class="profile-row">
-              <span class="muted">Opened packs</span>
-              <span id="profile-opened" class="profile-value">0</span>
-            </div>
-            <div class="profile-row">
-              <span class="muted">For Trade items</span>
-              <span id="profile-fortrade-count" class="profile-value">0</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- SETTINGS TAB -->
-        <section class="panel tab-panel" data-tab="settings" style="display: none;">
-          <div class="panel-head">
-            <div class="panel-title">Settings</div>
-          </div>
-          <div class="cards settings-cards">
-            <div class="card row">
-              <div class="grow">
-                <div class="title">Theme</div>
-                <div class="muted" id="settings-theme-label">Current: dark</div>
+            <div class="card" style="padding: 12px;">
+              <div class="row" style="flex-wrap: wrap; gap: 8px;">
+                <input id="ft-name" class="input" placeholder="Name / Card" />
+                <select id="ft-rarity" class="select">
+                  <option>COMMON</option>
+                  <option>RARE</option>
+                  <option>EPIC</option>
+                  <option>LEGENDARY</option>
+                </select>
+                <input id="ft-contract" class="input" placeholder="Contract (0x…)" />
+                <input id="ft-token-id" class="input" placeholder="Token ID" />
+                <button id="ft-add" class="btn">Add</button>
               </div>
-              <button class="btn" id="settings-theme-toggle">Toggle</button>
             </div>
-            <div class="card row">
-              <div class="grow">
+            <div id="for-trade-list" class="cards" style="grid-template-columns: repeat(auto-fill,minmax(220px,1fr));">
+              <!-- Fylls i av app.js -->
+            </div>
+          </section>
+
+          <!-- ACTIVITY TAB -->
+          <section class="panel tab-page" data-tab="activity">
+            <div class="panel-head">
+              <div class="panel-title">Recent Pulls</div>
+              <button class="btn ghost" id="btn-refresh-activity">Refresh</button>
+            </div>
+            <div id="activity-list" class="cards" style="grid-template-columns: 1fr;">
+              <!-- Fylls i av app.js -->
+            </div>
+          </section>
+
+          <!-- PROFILE TAB -->
+          <section class="panel tab-page" data-tab="profile">
+            <div class="panel-head">
+              <div class="panel-title">Profile</div>
+              <div class="muted">Future: PnL &amp; holdings</div>
+            </div>
+            <div class="cards" style="grid-template-columns: 1fr;">
+              <div class="card">
+                <div class="title">Wallet</div>
+                <div class="muted" id="profile-wallet">Not connected</div>
+              </div>
+              <div class="card">
+                <div class="title">Stats</div>
+                <div class="muted">XP, streaks &amp; more coming later.</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SETTINGS TAB -->
+          <section class="panel tab-page" data-tab="settings">
+            <div class="panel-head">
+              <div class="panel-title">Settings</div>
+            </div>
+            <div class="cards" style="grid-template-columns: 1fr;">
+              <div class="card row">
+                <div class="grow">
+                  <div class="title">Theme</div>
+                  <div class="muted">Toggle dark/light</div>
+                </div>
+                <button class="btn" id="btn-theme-in-settings">Toggle</button>
+              </div>
+              <div class="card">
                 <div class="title">Chain</div>
-                <div class="muted">Base (mocked, ready for mainnet)</div>
+                <div class="muted">Base (configured client-side)</div>
               </div>
             </div>
-            <div class="card">
-              <div class="title">Data sources</div>
-              <div class="muted">
-                Packs & pulls: mock data for now.  
-                Plug into Wield `/api/wield/...` + SpawnEngine contracts senare.
-              </div>
+          </section>
+        </div>
+
+        <!-- RIGHT COLUMN / SIDEBAR -->
+        <aside class="sidebar">
+          <section class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Verified by VibeMarket</div>
+              <a
+                href="https://vibechain.com/market"
+                target="_blank"
+                rel="noreferrer"
+                class="btn ghost"
+                style="font-size: 12px; padding: 6px 10px;"
+              >View all</a>
             </div>
-          </div>
-        </section>
+            <div id="verified-list" class="cards">
+              <!-- Fylls i av app.js -->
+            </div>
+          </section>
+        </aside>
       </div>
 
-      <!-- RIGHT SIDEBAR -->
-      <aside class="sidebar">
-        <!-- VERIFIED PACKS -->
-        <section class="panel">
-          <div class="panel-head">
-            <div class="panel-title">Verified by VibeMarket</div>
-            <a
-              href="https://vibechain.com/market"
-              target="_blank"
-              rel="noreferrer"
-              class="btn ghost small-btn"
-            >View all</a>
-          </div>
-          <div id="verified-grid" class="cards sidebar-cards">
-            <!-- Fylls via JS -->
-          </div>
-        </section>
-
-        <!-- ENGINE INFO -->
-        <section class="panel">
-          <div class="panel-head">
-            <div class="panel-title">SpawnEngine Pack Engine</div>
-          </div>
-          <div class="card engine-info-card">
-            <div class="title">Contracts (MVP)</div>
-            <ul class="muted info-list">
-              <li><strong>PackFactory</strong> — deploys series, enforces split (50/35/15).</li>
-              <li><strong>TokenPackSeries</strong> — ERC20 packs: buy / open / payouts.</li>
-              <li><strong>ReserveGuard</strong> — 2x mythic safety + buffer.</li>
-              <li><strong>UtilityPackRouter</strong> — social / XP stubs (Farcaster).</li>
-            </ul>
-          </div>
-          <div class="card engine-info-card">
-            <div class="title">Burn / Gamble Ladder</div>
-            <ul class="muted info-list">
-              <li>5x Commons → <strong>20%</strong> → 2 packs</li>
-              <li>1x Rare → <strong>30%</strong> → 2 packs</li>
-              <li>1x Legendary → <strong>40%</strong> → 5 packs</li>
-              <li>1x Mythic → <strong>45%</strong> → 10 packs</li>
-            </ul>
-            <div class="muted small-note">
-              All burns are final (`_burn`) and only mint new unopened packs.  
-              Treasury stays clean.
-            </div>
-          </div>
-        </section>
-      </aside>
-    </div>
-
-    <!-- FOOTER -->
-    <footer class="footer">
-      Built for Base & VibeMarket • SpawnEngine2 prototype •
-      <a href="https://github.com/gascheckking" target="_blank" rel="noreferrer" class="linklike">
-        gascheckking
-      </a>
-    </footer>
-  </main>
+      <footer class="footer">
+        Built with SpawnEngine • Prototype UI •
+        <a
+          class="linklike"
+          href="https://vibechain.com/market"
+          target="_blank"
+          rel="noreferrer"
+        >VibeMarket</a>
+      </footer>
+    </main>
+  </div>
 
   <script src="app.js"></script>
 </body>
