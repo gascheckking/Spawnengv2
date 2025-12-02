@@ -1,297 +1,270 @@
-<!doctype html>
-<html lang="en" data-theme="deep">
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="utf-8" />
-  <title>SpawnEngine — Mesh HUD v0.2</title>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./style.css" />
+  <title>SpawnEngine2 — Pack Factory & Vibe Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
 </head>
 <body>
-  <div class="app-shell">
-    <!-- TOP HEADER -->
-    <header class="app-header">
-      <div class="brand-block">
-        <div class="brand-logo">SE</div>
-        <div class="brand-meta">
-          <div class="brand-eyebrow">SPAWNENGINE · MESH HUD V0.2</div>
-          <h1 class="brand-title">SpawnEngine — Mesh HUD</h1>
-          <p class="brand-sub">
-            Modular mesh for packs, XP, bounties & creator modules.
-          </p>
-          <div class="brand-tags">
-            <span class="pill pill-soft">Base · Pack ecosystems</span>
-            <span class="pill pill-soft">Farcaster ready</span>
-          </div>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="row header-row">
+      <div class="logo">
+        <div class="logo-badge">SE</div>
+        <div class="logo-copy">
+          <div class="logo-title">SpawnEngine</div>
+          <div class="logo-sub muted">Pack Factory • Vibe Tracker • Base</div>
+        </div>
+        <div class="pill" id="network-pill">Base · Dev</div>
+      </div>
+      <div class="row header-controls">
+        <div class="pill" id="wallet-pill">Not connected</div>
+        <button class="btn" id="connect-btn">Connect</button>
+        <button class="btn ghost" id="theme-toggle-btn">Dark</button>
+      </div>
+    </div>
+
+    <!-- Ticker -->
+    <div class="wrapper">
+      <div class="ticker-wrap">
+        <div id="ticker" class="ticker">
+          <!-- Fylls via JS -->
         </div>
       </div>
 
-      <div class="header-right">
-        <div class="mesh-pill">
-          <span class="mesh-dot"></span>
-          <span class="mesh-label">Mesh layer · v0.2</span>
-        </div>
-        <button id="btn-connect" class="btn-primary">
-          <span id="connect-label">Connect wallet</span>
-        </button>
-      </div>
-    </header>
+      <!-- Tabs -->
+      <nav class="tabbar">
+        <button class="tab active" data-tab="trading">Trading</button>
+        <button class="tab" data-tab="for-trade">For Trade</button>
+        <button class="tab" data-tab="activity">Activity</button>
+        <button class="tab" data-tab="profile">Profile</button>
+        <button class="tab" data-tab="settings">Settings</button>
+      </nav>
+    </div>
+  </header>
 
-    <!-- HUD CHIPS -->
-    <section class="chip-row">
-      <div class="chip-field">
-        <span class="chip-label">Gas</span>
-        <span id="chip-gas" class="chip-value">~0.24 gwei est.</span>
-      </div>
-      <div class="chip-field">
-        <span class="chip-label">Mode</span>
-        <span id="chip-mode" class="chip-value">Single mesh</span>
-      </div>
-      <div class="chip-field">
-        <span class="chip-label">Sync</span>
-        <span id="chip-sync" class="chip-value">Local mock</span>
-      </div>
-      <div class="chip-field">
-        <span class="chip-label">Active wallets</span>
-        <span id="chip-active" class="chip-value">1</span>
-      </div>
-    </section>
-
-    <!-- TABS (två rader, ingen scroll) -->
-    <nav class="tab-bar">
-      <button class="tab active" data-tab="overview">Overview</button>
-      <button class="tab" data-tab="mesh">Mesh</button>
-      <button class="tab" data-tab="packs">Packs</button>
-      <button class="tab" data-tab="lab">Pull Lab</button>
-      <button class="tab" data-tab="wallets">Wallets</button>
-      <button class="tab" data-tab="quests">Quests</button>
-    </nav>
-
-    <!-- MAIN VIEWS -->
-    <main class="view-stack">
-      <!-- OVERVIEW -->
-      <section class="view active" data-view="overview">
-        <article class="card hero">
-          <header class="card-header">
-            <h2>Mesh snapshot</h2>
-            <span class="badge-soft">Single player mesh</span>
-          </header>
-          <div class="hero-metrics">
-            <div class="metric">
-              <span class="metric-label">XP balance</span>
-              <span id="metric-xp" class="metric-value">1575 XP</span>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Spawn token</span>
-              <span id="metric-spawn" class="metric-value">497 SPN</span>
+  <!-- MAIN -->
+  <main class="wrapper">
+    <div class="grid">
+      <!-- LEFT COLUMN -->
+      <div class="main-column">
+        <!-- TRADING TAB -->
+        <section class="panel tab-panel" data-tab="trading">
+          <div class="panel-head">
+            <div class="panel-title">Marketplace</div>
+            <div class="row filters-row">
+              <input
+                id="search-input"
+                class="input"
+                placeholder="Search packs, collections, creators…"
+              />
+              <select id="rarity-select" class="select">
+                <option value="ALL">All</option>
+                <option value="COMMON">Common</option>
+                <option value="RARE">Rare</option>
+                <option value="EPIC">Epic</option>
+                <option value="LEGENDARY">Legendary</option>
+              </select>
+              <label class="row checkbox-label">
+                <input type="checkbox" id="verified-only" />
+                <span class="muted">Verified only</span>
+              </label>
             </div>
           </div>
-          <div class="hero-bottom">
-            <div class="streak-summary">
-              <div class="streak-label-row">
-                <span class="streak-title">Daily streak</span>
-                <span id="streak-counter" class="streak-count">1 day</span>
+          <div id="packs-grid" class="cards">
+            <!-- Packs renderas här via JS -->
+          </div>
+        </section>
+
+        <!-- FOR TRADE TAB -->
+        <section class="panel tab-panel" data-tab="for-trade" style="display: none;">
+          <div class="panel-head">
+            <div class="panel-title">For Trade (local)</div>
+            <div class="muted" id="for-trade-wallet-label">Connect wallet</div>
+          </div>
+
+          <div class="for-trade-form">
+            <input
+              id="ft-name"
+              class="input"
+              placeholder="Name / Card"
+            />
+            <select id="ft-rarity" class="select">
+              <option value="COMMON">COMMON</option>
+              <option value="RARE">RARE</option>
+              <option value="EPIC">EPIC</option>
+              <option value="LEGENDARY">LEGENDARY</option>
+            </select>
+            <input
+              id="ft-contract"
+              class="input"
+              placeholder="Contract (0x…)"
+            />
+            <input
+              id="ft-tokenid"
+              class="input"
+              placeholder="Token ID"
+            />
+            <button id="ft-add-btn" class="btn">Add</button>
+          </div>
+
+          <div id="for-trade-list" class="cards for-trade-cards">
+            <!-- Items renderas via JS -->
+          </div>
+        </section>
+
+        <!-- ACTIVITY TAB -->
+        <section class="panel tab-panel" data-tab="activity" style="display: none;">
+          <div class="panel-head">
+            <div class="panel-title">Recent Pulls</div>
+            <button class="btn ghost" id="refresh-activity-btn">Refresh</button>
+          </div>
+          <div id="activity-cards" class="cards activity-cards">
+            <!-- Pulls via JS -->
+          </div>
+
+          <!-- Gas mini-widget -->
+          <div class="panel gas-panel">
+            <div class="panel-head">
+              <div class="panel-title">GasCheck Mini</div>
+            </div>
+            <div class="gas-grid">
+              <div class="gas-row">
+                <span class="muted">Ethereum</span>
+                <span id="gas-ethereum" class="gas-value ethereum">-- gwei</span>
               </div>
-              <div class="streak-bar">
-                <div id="streak-fill" class="streak-fill"></div>
+              <div class="gas-row">
+                <span class="muted">Base</span>
+                <span id="gas-base" class="gas-value base">-- gwei</span>
               </div>
-              <p id="streak-copy" class="streak-copy">
-                Keep the streak for 6 more days for a full weekly run.
-              </p>
+              <div class="gas-row">
+                <span class="muted">Optimism</span>
+                <span id="gas-optimism" class="gas-value optimism">-- gwei</span>
+              </div>
+              <div class="gas-updated muted" id="gas-updated">Updated: --</div>
             </div>
-            <button id="btn-open-streak" class="btn-glow">
-              Check-in
-            </button>
           </div>
-        </article>
+        </section>
 
-        <article class="card">
-          <header class="card-header">
-            <h2>Mesh load</h2>
-            <span class="badge-soft">Refresh pulse</span>
-          </header>
-          <p class="card-copy">
-            How busy SpawnEngine feels right now.
-          </p>
-          <div class="activity-meter">
-            <div class="activity-scale">
-              <div id="activity-fill" class="activity-fill"></div>
-            </div>
-            <div class="activity-legend">
-              <span>Quiet</span>
-              <span>Active</span>
-              <span>Wild</span>
-            </div>
-            <p id="activity-text" class="activity-text">Calibrating mesh load…</p>
-            <button id="btn-refresh-activity" class="btn-link">
-              Refresh pulse
-            </button>
+        <!-- PROFILE TAB -->
+        <section class="panel tab-panel" data-tab="profile" style="display: none;">
+          <div class="panel-head">
+            <div class="panel-title">Profile</div>
           </div>
-        </article>
-
-        <article class="card">
-          <header class="card-header">
-            <h2>Online collectors</h2>
-            <span class="badge-soft">Wallet bubbles</span>
-          </header>
-          <p class="card-copy">
-            Local-only preview of bubble maps – wallets “near” your current mesh.
-          </p>
-          <div id="bubble-row" class="bubble-row"></div>
-        </article>
-
-        <article class="card">
-          <header class="card-header">
-            <h2>Today’s mesh events</h2>
-            <span class="badge-soft">Mock feed</span>
-          </header>
-          <ul id="overview-events" class="event-list"></ul>
-        </article>
-      </section>
-
-      <!-- MESH -->
-      <section class="view" data-view="mesh">
-        <article class="card">
-          <header class="card-header">
-            <h2>Mesh overview</h2>
-            <span class="badge-soft">Creator + collectors</span>
-          </header>
-          <p class="card-copy">
-            Rough sketch of how the onchain mesh will look. Bubble maps, creator clusters
-            and where packs & XP are moving in real time.
-          </p>
-          <ul class="bullet-list">
-            <li>Factory · Series · Guard · Router contracts stitched together.</li>
-            <li>Feeds from Zora pulls, burns, swaps & Farcaster casts.</li>
-            <li>XP orbs floating between wallets based on actions.</li>
-            <li>Mini-apps on Base & Farcaster frames plugged into the same mesh.</li>
-          </ul>
-        </article>
-      </section>
-
-      <!-- PACKS -->
-      <section class="view" data-view="packs">
-        <article class="card">
-          <header class="card-header">
-            <h2>Packs / inventory</h2>
-            <span class="badge-soft">Sealed + opened</span>
-          </header>
-          <p class="card-copy">
-            Opened hits, sealed packs & grails in one list. This section will plug
-            into SpawnEngine pack contracts and show real pulls per wallet.
-          </p>
-          <ul id="pack-list" class="event-list"></ul>
-        </article>
-      </section>
-
-      <!-- PULL LAB -->
-      <section class="view" data-view="lab">
-        <article class="card">
-          <header class="card-header">
-            <h2>Pull Lab · Luck engine</h2>
-            <span class="badge-soft">Streaks · entropy · bounties</span>
-          </header>
-          <p class="card-copy">
-            Simulation layer for streaks, entropy & bounties. Pull Lab will host
-            experiments: luck meters, entropy tests, “open N packs” quests and
-            creator bounties wired to real contracts.
-          </p>
-          <div class="lab-meter">
-            <div class="lab-scale">
-              <div id="lab-fill" class="lab-fill"></div>
+          <div class="profile-panel">
+            <div class="profile-row">
+              <span class="muted">Wallet</span>
+              <span id="profile-wallet" class="profile-value">Not connected</span>
             </div>
-            <p id="lab-text" class="lab-text">Tap “Roll luck” to start.</p>
-            <button id="btn-roll-luck" class="btn-secondary">
-              Roll luck
-            </button>
+            <div class="profile-row">
+              <span class="muted">XP</span>
+              <span id="profile-xp" class="profile-value">0 XP</span>
+            </div>
+            <div class="profile-row">
+              <span class="muted">Streak</span>
+              <span id="profile-streak" class="profile-value">0 days</span>
+            </div>
+            <div class="profile-row">
+              <span class="muted">Opened packs</span>
+              <span id="profile-opened" class="profile-value">0</span>
+            </div>
+            <div class="profile-row">
+              <span class="muted">For Trade items</span>
+              <span id="profile-fortrade-count" class="profile-value">0</span>
+            </div>
           </div>
-          <ul class="bullet-list">
-            <li>Auto-quest: burn 3 commons → trigger streak XP.</li>
-            <li>Combo: open 5 packs in 24h → bonus orb drop.</li>
-            <li>Creator mode: route a % of pulls to a treasury.</li>
-            <li>Base app: mirror pulls into onchain activity feed.</li>
-          </ul>
-        </article>
-      </section>
+        </section>
 
-      <!-- WALLETS -->
-      <section class="view" data-view="wallets">
-        <article class="card">
-          <header class="card-header">
-            <h2>Wallet mesh</h2>
-            <span class="badge-soft">Multi-wallet preview</span>
-          </header>
-          <p class="card-copy">
-            Drive the HUD from different addresses: sniping wallet, main vault,
-            creator treasury, etc. UX shell is ready – next step is wiring real
-            connections.
-          </p>
-          <div id="wallet-list" class="wallet-list"></div>
-          <button id="btn-add-mock-wallet" class="btn-secondary">
-            Add mock wallet
-          </button>
-        </article>
-      </section>
+        <!-- SETTINGS TAB -->
+        <section class="panel tab-panel" data-tab="settings" style="display: none;">
+          <div class="panel-head">
+            <div class="panel-title">Settings</div>
+          </div>
+          <div class="cards settings-cards">
+            <div class="card row">
+              <div class="grow">
+                <div class="title">Theme</div>
+                <div class="muted" id="settings-theme-label">Current: dark</div>
+              </div>
+              <button class="btn" id="settings-theme-toggle">Toggle</button>
+            </div>
+            <div class="card row">
+              <div class="grow">
+                <div class="title">Chain</div>
+                <div class="muted">Base (mocked, ready for mainnet)</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="title">Data sources</div>
+              <div class="muted">
+                Packs & pulls: mock data for now.  
+                Plug into Wield `/api/wield/...` + SpawnEngine contracts senare.
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
 
-      <!-- QUESTS -->
-      <section class="view" data-view="quests">
-        <article class="card">
-          <header class="card-header">
-            <h2>Creator quests / bounties</h2>
-            <span class="badge-soft">High-signal tasks</span>
-          </header>
-          <p class="card-copy">
-            High-signal tasks from verified creators. Quest layer will surface
-            pack-based bounties and streak actions – this is where the “Spawn bot”
-            automations will live.
-          </p>
-          <ul class="bullet-list">
-            <li>Open 3 packs on Vibe → earn streak XP.</li>
-            <li>Burn 1 Rare for access to a new pack series.</li>
-            <li>Follow a creator mesh on Farcaster to unlock quests.</li>
-            <li>Pool pulls from a group mesh into a shared treasury.</li>
-          </ul>
-        </article>
-      </section>
-    </main>
+      <!-- RIGHT SIDEBAR -->
+      <aside class="sidebar">
+        <!-- VERIFIED PACKS -->
+        <section class="panel">
+          <div class="panel-head">
+            <div class="panel-title">Verified by VibeMarket</div>
+            <a
+              href="https://vibechain.com/market"
+              target="_blank"
+              rel="noreferrer"
+              class="btn ghost small-btn"
+            >View all</a>
+          </div>
+          <div id="verified-grid" class="cards sidebar-cards">
+            <!-- Fylls via JS -->
+          </div>
+        </section>
+
+        <!-- ENGINE INFO -->
+        <section class="panel">
+          <div class="panel-head">
+            <div class="panel-title">SpawnEngine Pack Engine</div>
+          </div>
+          <div class="card engine-info-card">
+            <div class="title">Contracts (MVP)</div>
+            <ul class="muted info-list">
+              <li><strong>PackFactory</strong> — deploys series, enforces split (50/35/15).</li>
+              <li><strong>TokenPackSeries</strong> — ERC20 packs: buy / open / payouts.</li>
+              <li><strong>ReserveGuard</strong> — 2x mythic safety + buffer.</li>
+              <li><strong>UtilityPackRouter</strong> — social / XP stubs (Farcaster).</li>
+            </ul>
+          </div>
+          <div class="card engine-info-card">
+            <div class="title">Burn / Gamble Ladder</div>
+            <ul class="muted info-list">
+              <li>5x Commons → <strong>20%</strong> → 2 packs</li>
+              <li>1x Rare → <strong>30%</strong> → 2 packs</li>
+              <li>1x Legendary → <strong>40%</strong> → 5 packs</li>
+              <li>1x Mythic → <strong>45%</strong> → 10 packs</li>
+            </ul>
+            <div class="muted small-note">
+              All burns are final (`_burn`) and only mint new unopened packs.  
+              Treasury stays clean.
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
 
     <!-- FOOTER -->
-    <footer class="app-footer">
-      <p>
-        Built with <span class="accent">SpawnEngine</span> · Mesh HUD v0.2 ·
-        <a href="https://spawn-engine.vercel.app" target="_blank">Legacy preview v1</a> ·
-        <a href="https://warpcast.com" target="_blank">Farcaster</a>
-      </p>
+    <footer class="footer">
+      Built for Base & VibeMarket • SpawnEngine2 prototype •
+      <a href="https://github.com/gascheckking" target="_blank" rel="noreferrer" class="linklike">
+        gascheckking
+      </a>
     </footer>
-  </div>
+  </main>
 
-  <!-- DAILY STREAK MODAL -->
-  <div id="streak-modal" class="modal-backdrop hidden">
-    <div class="modal">
-      <header class="modal-header">
-        <h2>Daily streak</h2>
-        <button id="btn-close-streak" class="icon-btn small" aria-label="Close">✕</button>
-      </header>
-      <div class="modal-body">
-        <div class="streak-orbit">
-          <div class="streak-core">SE</div>
-          <div class="streak-spark s1">◎</div>
-          <div class="streak-spark s2">✦</div>
-          <div class="streak-spark s3">⊚</div>
-        </div>
-        <p id="streak-modal-text" class="modal-copy">
-          Ping the mesh once per day to build your streak.
-        </p>
-        <div class="streak-bar big">
-          <div id="streak-modal-fill" class="streak-fill"></div>
-        </div>
-      </div>
-      <footer class="modal-footer">
-        <button id="btn-claim-streak" class="btn-primary wide">Keep streak</button>
-        <button id="btn-skip-streak" class="btn-ghost wide">Later</button>
-      </footer>
-    </div>
-  </div>
-
-  <script src="./app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
