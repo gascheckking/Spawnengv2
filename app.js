@@ -1,282 +1,580 @@
-// Simple helper
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+// SpawnEngine2 – vanilla JS app logic
 
+// Small helpers
+const qs = (sel, ctx = document) => ctx.querySelector(sel);
+const qsa = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+
+function shortAddr(x = "") {
+  if (!x) return "";
+  return x.length > 10 ? `${x.slice(0, 6)}…${x.slice(-4)}` : x;
+}
+
+function normRarity(r) {
+  const n = String(r || "").toUpperCase();
+  if (["4", "LEGENDARY"].includes(n)) return "LEGENDARY";
+  if (["3", "EPIC"].includes(n)) return "EPIC";
+  if (["2", "RARE"].includes(n)) return "RARE";
+  if (["1", "COMMON"].includes(n)) return "COMMON";
+  return ["COMMON", "RARE", "EPIC", "LEGENDARY"].includes(n) ? n : "COMMON";
+}
+
+function starsFor(r) {
+  const n = normRarity(r);
+  if (n === "LEGENDARY") return "★★★★";
+  if (n === "EPIC") return "★★★";
+  if (n === "RARE") return "★★";
+  return "★";
+}
+
+/* ---------- MOCK DATA (packs & pulls) ---------- */
+
+const MOCK_PACKS = [
+  {
+    id: "pack-1",
+    name: "Tiny Legends: Neon Foils",
+    collectionName: "Tiny Legends",
+    rarity: "RARE",
+    creator: "0xSpawniz",
+    verified: true,
+    image:
+      "https://images.pexels.com/photos/799443/pexels-photo-799443.jpeg?auto=compress&cs=tinysrgb&w=800",
+    url: "https://vibechain.com/market",
+  },
+  {
+    id: "pack-2",
+    name: "Glitch Totems – Series 1",
+    collectionName: "GlitchTotems",
+    rarity: "EPIC",
+    creator: "0xVibeArtist",
+    verified: true,
+    image:
+      "https://images.pexels.com/photos/3404200/pexels-photo-3404200.jpeg?auto=compress&cs=tinysrgb&w=800",
+    url: "https://vibechain.com/market",
+  },
+  {
+    id: "pack-3",
+    name: "Base Bots Booster",
+    collectionName: "Base Bots",
+    rarity: "COMMON",
+    creator: "0xBaseBuilder",
+    verified: false,
+    image:
+      "https://images.pexels.com/photos/325153/pexels-photo-325153.jpeg?auto=compress&cs=tinysrgb&w=800",
+    url: "https://vibechain.com/market",
+  },
+  {
+    id: "pack-4",
+    name: "Foil Realms: Prism Veil",
+    collectionName: "Foil Realms",
+    rarity: "LEGENDARY",
+    creator: "0xSpawniz",
+    verified: true,
+    image:
+      "https://images.pexels.com/photos/799443/pexels-photo-799443.jpeg?auto=compress&cs=tinysrgb&w=800",
+    url: "https://vibechain.com/market",
+  },
+  {
+    id: "pack-5",
+    name: "Cabal Deluxe – Balatro Edition",
+    collectionName: "Cabal Deluxe",
+    rarity: "EPIC",
+    creator: "0xCabalDev",
+    verified: false,
+    image:
+      "https://images.pexels.com/photos/799420/pexels-photo-799420.jpeg?auto=compress&cs=tinysrgb&w=800",
+    url: "https://vibechain.com/market",
+  },
+];
+
+const MOCK_PULLS = [
+  {
+    id: "pull-1",
+    owner: "0xSpawniz",
+    collection: "Foil Realms",
+    tokenId: "143",
+    rarity: "LEGENDARY",
+    ts: Date.now() - 2 * 60 * 1000,
+  },
+  {
+    id: "pull-2",
+    owner: "0xVibeLord",
+    collection: "GlitchTotems",
+    tokenId: "88",
+    rarity: "EPIC",
+    ts: Date.now() - 8 * 60 * 1000,
+  },
+  {
+    id: "pull-3",
+    owner: "0xFarmer",
+    collection: "Tiny Legends",
+    tokenId: "312",
+    rarity: "COMMON",
+    ts: Date.now() - 20 * 60 * 1000,
+  },
+  {
+    id: "pull-4",
+    owner: "0xBaseWhale",
+    collection: "Base Bots",
+    tokenId: "7",
+    rarity: "RARE",
+    ts: Date.now() - 45 * 60 * 1000,
+  },
+];
+
+let packs = [...MOCK_PACKS];
+let pulls = [...MOCK_PULLS];
+
+let currentWallet = "";
+let currentTheme = "dark";
+let forTrade = [];
+
+/* ---------- INIT ---------- */
 document.addEventListener("DOMContentLoaded", () => {
-  setupTabs();
-  setupWalletConnectMock();
-  setupMeshLoad();
-  setupBubbles();
-  setupEvents();
-  setupPacks();
-  setupWallets();
-  setupStreak();
-  setupPullLab();
+  initTheme();
+  initTabs();
+  initWallet();
+  initFilters();
+  initForTrade();
+  initActivity();
+  initGas();
+
+  renderPacks();
+  renderVerified();
+  renderTicker();
+  renderActivity();
+  renderProfile();
 });
 
-/* TABS */
+/* ---------- THEME ---------- */
+function initTheme() {
+  const saved = localStorage.getItem("spawnengine_theme");
+  currentTheme = saved === "light" ? "light" : "dark";
+  applyTheme();
 
-function setupTabs() {
-  const tabs = $$(".tab");
-  const views = $$(".view");
+  const btnHeader = qs("#theme-toggle-btn");
+  const btnSettings = qs("#settings-theme-toggle");
+  const settingsLabel = qs("#settings-theme-label");
 
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const target = tab.getAttribute("data-tab");
+  const updateLabels = () => {
+    if (btnHeader) {
+      btnHeader.textContent = currentTheme === "dark" ? "Dark" : "Light";
+    }
+    if (settingsLabel) {
+      settingsLabel.textContent = `Current: ${currentTheme}`;
+    }
+  };
 
+  updateLabels();
+
+  const toggle = () => {
+    currentTheme = currentTheme === "dark" ? "light" : "dark";
+    localStorage.setItem("spawnengine_theme", currentTheme);
+    applyTheme();
+    updateLabels();
+  };
+
+  btnHeader && btnHeader.addEventListener("click", toggle);
+  btnSettings && btnSettings.addEventListener("click", toggle);
+}
+
+function applyTheme() {
+  document.documentElement.setAttribute("data-theme", currentTheme);
+}
+
+/* ---------- TABS ---------- */
+function initTabs() {
+  const tabs = qsa(".tab");
+  const panels = qsa(".tab-panel");
+
+  tabs.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const tab = btn.dataset.tab;
       tabs.forEach((t) => t.classList.remove("active"));
-      tab.classList.add("active");
+      btn.classList.add("active");
 
-      views.forEach((view) => {
-        const viewKey = view.getAttribute("data-view");
-        view.classList.toggle("active", viewKey === target);
+      panels.forEach((p) => {
+        if (p.dataset.tab === tab) {
+          p.style.display = "";
+        } else {
+          p.style.display = "none";
+        }
       });
     });
   });
 }
 
-/* WALLET CONNECT (mock) */
+/* ---------- WALLET ---------- */
+function initWallet() {
+  const connectBtn = qs("#connect-btn");
+  const walletPill = qs("#wallet-pill");
+  const forTradeLabel = qs("#for-trade-wallet-label");
+  const profileWallet = qs("#profile-wallet");
 
-function setupWalletConnectMock() {
-  const btn = $("#btn-connect");
-  const label = $("#connect-label");
-  const walletChip = $("#chip-active");
-
-  let connected = false;
-
-  btn.addEventListener("click", () => {
-    connected = !connected;
-    if (connected) {
-      label.textContent = "Disconnect";
-      walletChip.textContent = "1";
-    } else {
-      label.textContent = "Connect wallet";
-      walletChip.textContent = "0";
-    }
-  });
+  connectBtn &&
+    connectBtn.addEventListener("click", async () => {
+      if (!window.ethereum) {
+        alert("No injected wallet found (MetaMask/Rabby).");
+        return;
+      }
+      try {
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        const addr = accounts?.[0];
+        if (!addr) return;
+        currentWallet = addr;
+        const short = shortAddr(addr);
+        if (walletPill) walletPill.textContent = short;
+        if (forTradeLabel) forTradeLabel.textContent = short;
+        if (profileWallet) profileWallet.textContent = short;
+        connectBtn.textContent = "Connected";
+        connectBtn.classList.add("ghost");
+        renderProfile();
+      } catch (e) {
+        console.error(e);
+        alert("Connection failed");
+      }
+    });
 }
 
-/* MESH LOAD */
+/* ---------- FILTERS / MARKETPLACE ---------- */
+function initFilters() {
+  const search = qs("#search-input");
+  const raritySel = qs("#rarity-select");
+  const verifiedOnly = qs("#verified-only");
 
-function setupMeshLoad() {
-  const fill = $("#activity-fill");
-  const text = $("#activity-text");
-  const gasChip = $("#chip-gas");
-  const btn = $("#btn-refresh-activity");
+  const apply = () => {
+    renderPacks();
+    renderVerified();
+  };
 
-  function pulse() {
-    const load = Math.floor(Math.random() * 101); // 0–100
-    fill.style.width = `${load}%`;
+  search && search.addEventListener("input", apply);
+  raritySel && raritySel.addEventListener("change", apply);
+  verifiedOnly && verifiedOnly.addEventListener("change", apply);
+}
 
-    if (load < 30) {
-      text.textContent = "Quiet – packs are idling.";
-    } else if (load < 70) {
-      text.textContent = "Active – packs & XP are flowing.";
-    } else {
-      text.textContent = "Wild – packs are flying and XP orbs everywhere.";
-    }
+function renderPacks() {
+  const grid = qs("#packs-grid");
+  if (!grid) return;
 
-    // Fake gas est
-    const gas = (0.12 + Math.random() * 0.18).toFixed(2);
-    gasChip.textContent = `~${gas} gwei est.`;
+  const search = qs("#search-input")?.value.trim().toLowerCase() || "";
+  const raritySel = qs("#rarity-select")?.value || "ALL";
+  const verifiedOnly = !!qs("#verified-only")?.checked;
+
+  const filtered = packs.filter((p) => {
+    const rn = normRarity(p.rarity);
+    const passQ =
+      !search ||
+      p.name.toLowerCase().includes(search) ||
+      p.collectionName.toLowerCase().includes(search) ||
+      String(p.creator || "").toLowerCase().includes(search);
+    const passR = raritySel === "ALL" || rn === raritySel;
+    const passV = !verifiedOnly || p.verified === true;
+    return passQ && passR && passV;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="card">No packs found.</div>`;
+    return;
   }
 
-  pulse();
-  btn.addEventListener("click", pulse);
+  grid.innerHTML = filtered
+    .map((p) => {
+      const rarity = normRarity(p.rarity);
+      const vIcon = p.verified
+        ? `<span class="badge">Verified</span>`
+        : "";
+      const img = p.image
+        ? `<img src="${p.image}" alt="" class="pack-thumb" />`
+        : `<div class="pack-thumb"></div>`;
+      return `
+        <a href="${p.url}" target="_blank" rel="noreferrer" class="card pack-card">
+          ${img}
+          <div class="pack-meta">
+            <div class="row-between">
+              <div class="title truncate">${p.name}</div>
+              <span class="badge">${rarity}</span>
+            </div>
+            <div class="muted truncate">${
+              p.collectionName
+            } • ${shortAddr(p.creator || "")}</div>
+            <div class="muted" style="margin-top:4px; font-size:11px;">
+              ${vIcon}
+            </div>
+          </div>
+        </a>
+      `;
+    })
+    .join("");
 }
 
-/* BUBBLE MAP MOCK */
+function renderVerified() {
+  const grid = qs("#verified-grid");
+  if (!grid) return;
+  const verified = packs.filter((p) => p.verified).slice(0, 8);
 
-function setupBubbles() {
-  const row = $("#bubble-row");
-  const sample = [
-    { addr: "0xA9c...91f3", status: "Hot pulls" },
-    { addr: "rainbow.vibe", status: "Swap spree" },
-    { addr: "0x7Be...c101", status: "Burning commons" },
-    { addr: "spawniz.eth", status: "Watching grails" },
-    { addr: "0xF3d...88aa", status: "Idle" },
-  ];
+  if (!verified.length) {
+    grid.innerHTML = `<div class="card">No verified packs yet.</div>`;
+    return;
+  }
 
-  row.innerHTML = "";
-  sample.forEach((w) => {
-    const pill = document.createElement("div");
-    pill.className = "bubble-pill";
-    pill.innerHTML = `
-      <span class="bubble-dot"></span>
-      <span class="bubble-label">${w.addr} · ${w.status}</span>
+  grid.innerHTML = verified
+    .map((p) => {
+      const img = p.image
+        ? `<img src="${p.image}" alt="" class="pack-thumb small" />`
+        : `<div class="pack-thumb small"></div>`;
+      return `
+        <a href="${p.url}" target="_blank" rel="noreferrer" class="card row pack-card-small">
+          ${img}
+          <div class="grow">
+            <div class="title truncate">${p.name}</div>
+            <div class="muted truncate">${p.collectionName}</div>
+          </div>
+          <span class="badge">${normRarity(p.rarity)}</span>
+        </a>
+      `;
+    })
+    .join("");
+}
+
+/* ---------- TICKER ---------- */
+function renderTicker() {
+  const t = qs("#ticker");
+  if (!t) return;
+
+  const items = pulls.length ? pulls : MOCK_PULLS;
+  const chips = items
+    .map((i) => {
+      return `<div class="ticker-chip">${shortAddr(
+        i.owner
+      )} pulled ${normRarity(i.rarity)} in ${i.collection} #${i.tokenId}</div>`;
+    })
+    .join("");
+
+  // duplicate for smooth loop
+  t.innerHTML = chips + chips;
+}
+
+/* ---------- ACTIVITY ---------- */
+function initActivity() {
+  const btn = qs("#refresh-activity-btn");
+  btn &&
+    btn.addEventListener("click", () => {
+      // just reshuffle mock pulls for now
+      pulls = [...pulls].sort(() => Math.random() - 0.5);
+      renderActivity();
+      renderTicker();
+    });
+}
+
+function renderActivity() {
+  const container = qs("#activity-cards");
+  if (!container) return;
+
+  if (!pulls.length) {
+    container.innerHTML = `<div class="card">No recent pulls.</div>`;
+    return;
+  }
+
+  const now = Date.now();
+  const fmtAgo = (ts) => {
+    const diff = Math.max(0, now - ts);
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins} min ago`;
+    const h = Math.floor(mins / 60);
+    return `${h} h ago`;
+  };
+
+  container.innerHTML = pulls
+    .slice(0, 40)
+    .map((p) => {
+      return `
+      <div class="card activity-item">
+        <div class="activity-icon">📦</div>
+        <div class="activity-body">
+          <div class="activity-title">
+            ${shortAddr(p.owner)} opened ${p.collection} #${p.tokenId}
+          </div>
+          <div class="activity-sub">
+            Rarity: ${normRarity(p.rarity)} • ${starsFor(p.rarity)}
+          </div>
+        </div>
+        <div class="activity-time">${fmtAgo(p.ts)}</div>
+      </div>
     `;
-    row.appendChild(pill);
-  });
+    })
+    .join("");
 }
 
-/* OVERVIEW EVENTS MOCK */
+/* ---------- FOR TRADE (local) ---------- */
+function initForTrade() {
+  try {
+    const raw = localStorage.getItem("spawnengine_forTrade");
+    forTrade = raw ? JSON.parse(raw) : [];
+  } catch {
+    forTrade = [];
+  }
 
-function setupEvents() {
-  const list = $("#overview-events");
-  const events = [
-    {
-      type: "pack_open",
-      label: "0xA93…e1c2 → Neon Fragments (Rare)",
-      ago: "10s ago",
-    },
-    {
-      type: "burn",
-      label: "0x4B1…aa32 → Void Keys (Common)",
-      ago: "25s ago",
-    },
-    {
-      type: "swap",
-      label: "0xD29…b81d → Shard Forge (Legendary)",
-      ago: "1m ago",
-    },
-    {
-      type: "zora_buy",
-      label: "0x91F…ccd0 → Base Relics (Epic)",
-      ago: "2m ago",
-    },
-  ];
+  const nameInput = qs("#ft-name");
+  const rarityInput = qs("#ft-rarity");
+  const contractInput = qs("#ft-contract");
+  const tokenInput = qs("#ft-tokenid");
+  const addBtn = qs("#ft-add-btn");
 
-  list.innerHTML = "";
-  events.forEach((ev) => {
-    const li = document.createElement("li");
-    li.className = "event-item";
-    li.innerHTML = `
-      <div class="event-title">${ev.type}</div>
-      <div class="event-meta">${ev.label} · ${ev.ago}</div>
-    `;
-    list.appendChild(li);
-  });
+  const save = () => {
+    try {
+      localStorage.setItem("spawnengine_forTrade", JSON.stringify(forTrade));
+    } catch (e) {
+      console.error(e);
+    }
+    renderForTrade();
+    renderProfile();
+  };
+
+  addBtn &&
+    addBtn.addEventListener("click", () => {
+      const name = nameInput?.value.trim() || "";
+      const rarity = rarityInput?.value || "COMMON";
+      const contract = contractInput?.value.trim() || "";
+      const tokenId = tokenInput?.value.trim() || "";
+
+      if (!name && !contract) return;
+
+      const entry = {
+        id: `${contract || "local"}-${tokenId || Date.now()}-${Math.random()}`,
+        name,
+        rarity: normRarity(rarity),
+        contract,
+        tokenId,
+      };
+      forTrade.push(entry);
+
+      if (nameInput) nameInput.value = "";
+      if (contractInput) contractInput.value = "";
+      if (tokenInput) tokenInput.value = "";
+      rarityInput && (rarityInput.value = "COMMON");
+
+      save();
+    });
+
+  renderForTrade();
 }
 
-/* PACK LIST MOCK */
-
-function setupPacks() {
-  const list = $("#pack-list");
+function renderForTrade() {
+  const list = qs("#for-trade-list");
   if (!list) return;
 
-  const packs = [
-    "Neon Fragment · Rare · opened",
-    "Void Shard · Common · opened",
-    "Shard Forge · Legendary · unopened",
-    "Prime Relic · Epic · opened",
-    "Spawn Core · Mythic · unopened",
-  ];
+  if (!forTrade.length) {
+    list.innerHTML = `<div class="card">No items yet. Add something to your trade list.</div>`;
+    return;
+  }
 
-  list.innerHTML = "";
-  packs.forEach((p) => {
-    const li = document.createElement("li");
-    li.className = "event-item";
-    li.innerHTML = `
-      <div class="event-title">${p}</div>
+  list.innerHTML = forTrade
+    .map((i) => {
+      return `
+      <div class="card">
+        <div class="row-between">
+          <div class="title truncate">${i.name || "Unnamed"}</div>
+          <span class="badge">${normRarity(i.rarity)}</span>
+        </div>
+        <div class="muted" style="font-size:12px; margin:4px 0;">
+          ${i.contract ? shortAddr(i.contract) : "Local"} • #${
+        i.tokenId || "—"
+      }
+        </div>
+        <div class="row" style="margin-top:6px; justify-content:flex-end;">
+          <button class="btn ghost btn-remove" data-id="${i.id}">Remove</button>
+        </div>
+      </div>
     `;
-    list.appendChild(li);
-  });
-}
+    })
+    .join("");
 
-/* WALLET LIST MOCK */
-
-function setupWallets() {
-  const list = $("#wallet-list");
-  const btn = $("#btn-add-mock-wallet");
-  if (!list || !btn) return;
-
-  const baseWallets = [
-    { label: "Main vault", addr: "0xF3a…92b0" },
-    { label: "Sniping wallet", addr: "0x91c…7e10" },
-  ];
-
-  function render() {
-    list.innerHTML = "";
-    baseWallets.forEach((w) => {
-      const row = document.createElement("div");
-      row.className = "wallet-row";
-      row.innerHTML = `
-        <span>${w.addr}</span>
-        <span class="wallet-tag">${w.label}</span>
-      `;
-      list.appendChild(row);
+  qsa(".btn-remove", list).forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      forTrade = forTrade.filter((x) => x.id !== id);
+      try {
+        localStorage.setItem("spawnengine_forTrade", JSON.stringify(forTrade));
+      } catch (e) {
+        console.error(e);
+      }
+      renderForTrade();
+      renderProfile();
     });
-  }
-
-  render();
-
-  btn.addEventListener("click", () => {
-    const id = baseWallets.length + 1;
-    baseWallets.push({
-      label: "Mesh node " + id,
-      addr: "0x" + Math.random().toString(16).slice(2, 6) + "…" + Math.random().toString(16).slice(2, 6),
-    });
-    render();
   });
 }
 
-/* DAILY STREAK */
+/* ---------- PROFILE ---------- */
+function renderProfile() {
+  const xpEl = qs("#profile-xp");
+  const streakEl = qs("#profile-streak");
+  const openedEl = qs("#profile-opened");
+  const ftCountEl = qs("#profile-fortrade-count");
 
-function setupStreak() {
-  let streakDays = 1;
+  // Just placeholders / mock logic
+  const mockXP = 120 + forTrade.length * 5;
+  const mockStreak = 3 + (currentWallet ? 2 : 0);
+  const mockOpened = pulls.length;
 
-  const counter = $("#streak-counter");
-  const fill = $("#streak-fill");
-  const copy = $("#streak-copy");
-  const modal = $("#streak-modal");
-  const modalFill = $("#streak-modal-fill");
-  const modalText = $("#streak-modal-text");
-
-  const btnOpen = $("#btn-open-streak");
-  const btnClose = $("#btn-close-streak");
-  const btnClaim = $("#btn-claim-streak");
-  const btnSkip = $("#btn-skip-streak");
-
-  function updateUI() {
-    counter.textContent = `${streakDays} day${streakDays === 1 ? "" : "s"}`;
-    const pct = Math.min((streakDays / 7) * 100, 100);
-    fill.style.width = pct + "%";
-    modalFill.style.width = pct + "%";
-
-    const remaining = Math.max(0, 7 - streakDays);
-    copy.textContent =
-      remaining > 0
-        ? `Keep the streak for ${remaining} more days for a full weekly run.`
-        : "Full weekly run completed – mesh is glowing.";
-    modalText.textContent = "Ping the mesh once per day to build your streak.";
-  }
-
-  updateUI();
-
-  btnOpen.addEventListener("click", () => {
-    modal.classList.remove("hidden");
-  });
-
-  const closeModal = () => modal.classList.add("hidden");
-
-  btnClose.addEventListener("click", closeModal);
-  btnSkip.addEventListener("click", closeModal);
-
-  btnClaim.addEventListener("click", () => {
-    streakDays = Math.min(streakDays + 1, 7);
-    updateUI();
-    closeModal();
-  });
+  if (xpEl) xpEl.textContent = `${mockXP} XP`;
+  if (streakEl) streakEl.textContent = `${mockStreak} days`;
+  if (openedEl) openedEl.textContent = String(mockOpened);
+  if (ftCountEl) ftCountEl.textContent = String(forTrade.length);
 }
 
-/* PULL LAB LUCK ENGINE */
+/* ---------- GAS MINI-WIDGET ---------- */
+const gasState = {
+  ethereum: 9.2,
+  base: 0.15,
+  optimism: 1.2,
+};
 
-function setupPullLab() {
-  const fill = $("#lab-fill");
-  const text = $("#lab-text");
-  const btn = $("#btn-roll-luck");
-  if (!fill || !btn) return;
+function initGas() {
+  updateGas();
+  setInterval(updateGas, 4000);
+}
 
-  btn.addEventListener("click", () => {
-    const val = 20 + Math.random() * 60;
-    fill.style.width = `${val}%`;
+function simulateGasChange(value) {
+  const change = (Math.random() - 0.5) * 0.3; // lite fladdrigt
+  const next = Math.max(0, value + change);
+  return Number(next.toFixed(2));
+}
 
-    if (val < 35) {
-      text.textContent = "Low entropy – better save packs for later.";
-    } else if (val < 70) {
-      text.textContent = "Decent luck – streak XP feels solid.";
+function updateGas() {
+  const ids = ["ethereum", "base", "optimism"];
+  ids.forEach((net) => {
+    const oldVal = gasState[net];
+    const newVal = simulateGasChange(oldVal);
+    gasState[net] = newVal;
+
+    const el = qs(`#gas-${net}`);
+    if (!el) return;
+
+    el.textContent = `${newVal} gwei`;
+
+    // trend färg
+    if (newVal > oldVal) {
+      el.classList.add("gas-up");
+      el.classList.remove("gas-down", "gas-stable");
+    } else if (newVal < oldVal) {
+      el.classList.add("gas-down");
+      el.classList.remove("gas-up", "gas-stable");
     } else {
-      text.textContent = "Cracked odds – today is a good day to rip packs.";
+      el.classList.add("gas-stable");
+      el.classList.remove("gas-up", "gas-down");
     }
   });
+
+  const upd = qs("#gas-updated");
+  if (upd) {
+    const now = new Date();
+    upd.textContent =
+      "Updated: " +
+      now.toLocaleString("sv-SE", {
+        hour12: false,
+        timeZone: "Europe/Stockholm",
+      });
+  }
 }
