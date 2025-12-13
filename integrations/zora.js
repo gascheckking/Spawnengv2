@@ -1,7 +1,5 @@
 // integrations/zora.js
-
-// Här kan du sen kalla riktiga Zora API:er / GraphQL.
-// Nu: enkel mock för "Zora Bridge" / "Zora Packs"-view.
+// Mock Zora-activity (byt senare mot riktig Zora API/GraphQL)
 
 const MOCK_ZORA_ITEMS = [
   {
@@ -22,10 +20,11 @@ const MOCK_ZORA_ITEMS = [
   },
 ];
 
-export async function getZoraActivityMock(wallet) {
+export async function getZoraActivityMock(wallet = "0x0000...0000") {
   await new Promise((r) => setTimeout(r, 50));
   return {
     wallet,
-    items: MOCK_ZORA_ITEMS,
+    items: MOCK_ZORA_ITEMS.slice(),
+    timestamp: Date.now(),
   };
 }
