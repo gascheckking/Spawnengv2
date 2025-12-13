@@ -1,26 +1,29 @@
+<!-- index.html -->
 <!doctype html>
 <html lang="en" data-theme="deep">
 <head>
   <meta charset="utf-8" />
-  <title>SpawnEngine — Mesh HUD v0.2</title>
+  <title>SpawnEngine — Mesh HUD v0.3</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <div class="app-shell">
+    <!-- TOAST -->
+    <div id="toast" class="toast hidden"></div>
+
     <!-- TOP HEADER -->
     <header class="app-header">
       <div class="brand-block">
         <div class="brand-logo">SE</div>
         <div class="brand-meta">
-          <div class="brand-eyebrow">SPAWNENGINE · MESH HUD V0.2</div>
+          <div class="brand-eyebrow">SPAWNENGINE · ONE MESH PROTOCOL · v0.3</div>
           <h1 class="brand-title">SpawnEngine — Mesh HUD</h1>
-          <p class="brand-sub">
-            Modular mesh for packs, XP, bounties & creator modules.
-          </p>
+          <p class="brand-sub">One unified event mesh powering trading, wallets, packs, XP & tools.</p>
           <div class="brand-tags">
             <span class="pill pill-soft">Base · Pack ecosystems</span>
             <span class="pill pill-soft">Farcaster ready</span>
+            <span class="pill pill-soft">Unified Activity Mesh</span>
           </div>
         </div>
       </div>
@@ -28,7 +31,7 @@
       <div class="header-right">
         <div class="mesh-pill">
           <span class="mesh-dot"></span>
-          <span class="mesh-label">Mesh layer · v0.2</span>
+          <span class="mesh-label">Mesh layer · v0.3</span>
         </div>
         <button id="btn-connect" class="btn-primary">
           <span id="connect-label">Connect wallet</span>
@@ -52,18 +55,31 @@
       </div>
       <div class="chip-field">
         <span class="chip-label">Active wallets</span>
-        <span id="chip-active" class="chip-value">1</span>
+        <span id="chip-active" class="chip-value">0</span>
       </div>
     </section>
 
-    <!-- TABS (två rader, ingen scroll) -->
+    <!-- LIVE TICKER -->
+    <section class="ticker">
+      <div class="ticker-label">LIVE</div>
+      <div class="ticker-track">
+        <div id="ticker-marquee" class="ticker-marquee"></div>
+      </div>
+    </section>
+
+    <!-- TABS -->
     <nav class="tab-bar">
       <button class="tab active" data-tab="overview">Overview</button>
       <button class="tab" data-tab="mesh">Mesh</button>
+      <button class="tab" data-tab="trading">Trading</button>
       <button class="tab" data-tab="packs">Packs</button>
-      <button class="tab" data-tab="lab">Pull Lab</button>
+      <button class="tab" data-tab="gambit">Gambit</button>
       <button class="tab" data-tab="wallets">Wallets</button>
-      <button class="tab" data-tab="quests">Quests</button>
+      <button class="tab" data-tab="chat">Chat</button>
+      <button class="tab" data-tab="forge">Forge</button>
+      <button class="tab" data-tab="supcast">SupCast</button>
+      <button class="tab" data-tab="bot">SpawnBot</button>
+      <button class="tab" data-tab="settings">Settings</button>
     </nav>
 
     <!-- MAIN VIEWS -->
@@ -73,34 +89,32 @@
         <article class="card hero">
           <header class="card-header">
             <h2>Mesh snapshot</h2>
-            <span class="badge-soft">Single player mesh</span>
+            <span class="badge-soft">Unified feed</span>
           </header>
+
           <div class="hero-metrics">
             <div class="metric">
               <span class="metric-label">XP balance</span>
-              <span id="metric-xp" class="metric-value">1575 XP</span>
+              <span id="metric-xp" class="metric-value">0 XP</span>
             </div>
             <div class="metric">
               <span class="metric-label">Spawn token</span>
-              <span id="metric-spawn" class="metric-value">497 SPN</span>
+              <span id="metric-spawn" class="metric-value">0 SPN</span>
             </div>
           </div>
+
           <div class="hero-bottom">
             <div class="streak-summary">
               <div class="streak-label-row">
                 <span class="streak-title">Daily streak</span>
-                <span id="streak-counter" class="streak-count">1 day</span>
+                <span id="streak-counter" class="streak-count">0 days</span>
               </div>
               <div class="streak-bar">
                 <div id="streak-fill" class="streak-fill"></div>
               </div>
-              <p id="streak-copy" class="streak-copy">
-                Keep the streak for 6 more days for a full weekly run.
-              </p>
+              <p id="streak-copy" class="streak-copy">Check-in to start your run.</p>
             </div>
-            <button id="btn-open-streak" class="btn-glow">
-              Check-in
-            </button>
+            <button id="btn-open-streak" class="btn-glow">Check-in</button>
           </div>
         </article>
 
@@ -109,22 +123,17 @@
             <h2>Mesh load</h2>
             <span class="badge-soft">Refresh pulse</span>
           </header>
-          <p class="card-copy">
-            How busy SpawnEngine feels right now.
-          </p>
+          <p class="card-copy">How busy SpawnEngine feels right now.</p>
+
           <div class="activity-meter">
             <div class="activity-scale">
               <div id="activity-fill" class="activity-fill"></div>
             </div>
             <div class="activity-legend">
-              <span>Quiet</span>
-              <span>Active</span>
-              <span>Wild</span>
+              <span>Quiet</span><span>Active</span><span>Wild</span>
             </div>
             <p id="activity-text" class="activity-text">Calibrating mesh load…</p>
-            <button id="btn-refresh-activity" class="btn-link">
-              Refresh pulse
-            </button>
+            <button id="btn-refresh-activity" class="btn-link">Refresh pulse</button>
           </div>
         </article>
 
@@ -133,17 +142,31 @@
             <h2>Online collectors</h2>
             <span class="badge-soft">Wallet bubbles</span>
           </header>
-          <p class="card-copy">
-            Local-only preview of bubble maps – wallets “near” your current mesh.
-          </p>
+          <p class="card-copy">Local preview of bubble maps – wallets “near” your current mesh.</p>
           <div id="bubble-row" class="bubble-row"></div>
         </article>
 
         <article class="card">
           <header class="card-header">
             <h2>Today’s mesh events</h2>
-            <span class="badge-soft">Mock feed</span>
+            <span class="badge-soft">Live mock</span>
           </header>
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <select id="overview-filter" class="select">
+                <option value="all">All events</option>
+                <option value="pack_open">Pack opens</option>
+                <option value="swap">Swaps</option>
+                <option value="burn">Burns</option>
+                <option value="gamble">Gamble</option>
+                <option value="zora_buy">Zora</option>
+                <option value="farcaster_cast">Farcaster</option>
+              </select>
+            </div>
+            <div class="toolbar-right">
+              <button id="btn-pulse-now" class="btn-secondary">Pulse now</button>
+            </div>
+          </div>
           <ul id="overview-events" class="event-list"></ul>
         </article>
       </section>
@@ -153,18 +176,115 @@
         <article class="card">
           <header class="card-header">
             <h2>Mesh overview</h2>
-            <span class="badge-soft">Creator + collectors</span>
+            <span class="badge-soft">Schema · sources</span>
           </header>
-          <p class="card-copy">
-            Rough sketch of how the onchain mesh will look. Bubble maps, creator clusters
-            and where packs & XP are moving in real time.
-          </p>
-          <ul class="bullet-list">
-            <li>Factory · Series · Guard · Router contracts stitched together.</li>
-            <li>Feeds from Zora pulls, burns, swaps & Farcaster casts.</li>
-            <li>XP orbs floating between wallets based on actions.</li>
-            <li>Mini-apps on Base & Farcaster frames plugged into the same mesh.</li>
-          </ul>
+          <p class="card-copy">Everything becomes the same thing: an Event. UI = one feed driving all surfaces.</p>
+
+          <div class="kv-grid">
+            <div class="kv">
+              <div class="kv-k">Event kinds</div>
+              <div class="kv-v">pack_open · burn · swap · craft · zora_buy · farcaster_cast · gamble · reward</div>
+            </div>
+            <div class="kv">
+              <div class="kv-k">Rarity tiers</div>
+              <div class="kv-v">Fragment · Shard · Core · Artifact · Relic</div>
+            </div>
+            <div class="kv">
+              <div class="kv-k">Sources</div>
+              <div class="kv-v">Base · Zora · Farcaster · Protocol</div>
+            </div>
+          </div>
+
+          <div class="mini-note">
+            In v0.3: local mock mesh + live pulse generator. Next: read-only onchain logs → same renderers.
+          </div>
+        </article>
+
+        <article class="card">
+          <header class="card-header">
+            <h2>Stats engine</h2>
+            <span class="badge-soft">From mesh</span>
+          </header>
+          <div class="stat-grid">
+            <div class="stat">
+              <div class="stat-k">Total pack opens</div>
+              <div id="stat-totalPacks" class="stat-v">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-k">Unique holders</div>
+              <div id="stat-holders" class="stat-v">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-k">My luck score</div>
+              <div id="stat-luck" class="stat-v">0</div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- TRADING -->
+      <section class="view" data-view="trading">
+        <article class="card">
+          <header class="card-header">
+            <h2>Trading wall</h2>
+            <span class="badge-soft">Live-style feed</span>
+          </header>
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <select id="trade-series" class="select">
+                <option value="Genesis">Genesis</option>
+                <option value="ZoraPacks">ZoraPacks</option>
+                <option value="Social">Social</option>
+              </select>
+              <select id="trade-view" class="select">
+                <option value="tape">Tape</option>
+                <option value="orderbook">Orderbook</option>
+              </select>
+            </div>
+            <div class="toolbar-right">
+              <button id="btn-quick-buy" class="btn-primary">Quick buy</button>
+              <button id="btn-quick-sell" class="btn-ghost">Quick sell</button>
+            </div>
+          </div>
+
+          <div id="trade-pane-tape" class="pane">
+            <ul id="trade-tape" class="event-list"></ul>
+          </div>
+
+          <div id="trade-pane-ob" class="pane hidden">
+            <div class="ob-grid">
+              <div class="ob-col">
+                <div class="ob-title">Bids</div>
+                <ul id="ob-bids" class="ob-list"></ul>
+              </div>
+              <div class="ob-col">
+                <div class="ob-title">Asks</div>
+                <ul id="ob-asks" class="ob-list"></ul>
+              </div>
+            </div>
+            <div class="mini-note">Mock orderbook. Actions write into the mesh as swap events.</div>
+          </div>
+        </article>
+
+        <article class="card">
+          <header class="card-header">
+            <h2>Wallet trading snapshot</h2>
+            <span class="badge-soft">Local balances</span>
+          </header>
+          <div class="stat-grid">
+            <div class="stat">
+              <div class="stat-k">SPN</div>
+              <div id="trade-spn" class="stat-v">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-k">Fragments</div>
+              <div id="trade-frag" class="stat-v">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-k">Shards</div>
+              <div id="trade-shard" class="stat-v">0</div>
+            </div>
+          </div>
         </article>
       </section>
 
@@ -175,41 +295,71 @@
             <h2>Packs / inventory</h2>
             <span class="badge-soft">Sealed + opened</span>
           </header>
-          <p class="card-copy">
-            Opened hits, sealed packs & grails in one list. This section will plug
-            into SpawnEngine pack contracts and show real pulls per wallet.
-          </p>
+
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <button id="btn-open-pack" class="btn-primary">Open pack</button>
+              <button id="btn-seal-pack" class="btn-ghost">Add sealed</button>
+            </div>
+            <div class="toolbar-right">
+              <select id="pack-filter" class="select">
+                <option value="all">All</option>
+                <option value="opened">Opened</option>
+                <option value="sealed">Sealed</option>
+              </select>
+            </div>
+          </div>
+
           <ul id="pack-list" class="event-list"></ul>
+          <div class="mini-note">Actions write pack_open events into the unified mesh.</div>
         </article>
       </section>
 
-      <!-- PULL LAB -->
-      <section class="view" data-view="lab">
+      <!-- GAMBIT -->
+      <section class="view" data-view="gambit">
         <article class="card">
           <header class="card-header">
-            <h2>Pull Lab · Luck engine</h2>
-            <span class="badge-soft">Streaks · entropy · bounties</span>
+            <h2>Gambit</h2>
+            <span class="badge-soft">Fragment + Shard only</span>
           </header>
-          <p class="card-copy">
-            Simulation layer for streaks, entropy & bounties. Pull Lab will host
-            experiments: luck meters, entropy tests, “open N packs” quests and
-            creator bounties wired to real contracts.
-          </p>
-          <div class="lab-meter">
-            <div class="lab-scale">
-              <div id="lab-fill" class="lab-fill"></div>
+
+          <p class="card-copy">Only low tiers can be gambled. Core / Artifact / Relic are protected by design.</p>
+
+          <div class="g-grid">
+            <div class="g-card">
+              <div class="g-top">
+                <div class="g-title">Fragment engine</div>
+                <div id="g-frag-bal" class="g-bal">0</div>
+              </div>
+              <div class="g-actions">
+                <button id="btn-frag-burn" class="btn-secondary">Burn 10 → 1 Shard</button>
+                <button id="btn-frag-double" class="btn-ghost">Risk roll</button>
+              </div>
+              <div class="g-note">Burn is deterministic. Risk roll is volatile.</div>
             </div>
-            <p id="lab-text" class="lab-text">Tap “Roll luck” to start.</p>
-            <button id="btn-roll-luck" class="btn-secondary">
-              Roll luck
-            </button>
+
+            <div class="g-card">
+              <div class="g-top">
+                <div class="g-title">Shard engine</div>
+                <div id="g-shard-bal" class="g-bal">0</div>
+              </div>
+              <div class="g-actions">
+                <button id="btn-shard-up" class="btn-secondary">2 Shards → chance Core</button>
+                <button id="btn-shard-safe" class="btn-ghost">Shard swap</button>
+              </div>
+              <div class="g-note">Upside writes treasure_hit / gamble into mesh.</div>
+            </div>
           </div>
-          <ul class="bullet-list">
-            <li>Auto-quest: burn 3 commons → trigger streak XP.</li>
-            <li>Combo: open 5 packs in 24h → bonus orb drop.</li>
-            <li>Creator mode: route a % of pulls to a treasury.</li>
-            <li>Base app: mirror pulls into onchain activity feed.</li>
-          </ul>
+
+          <div class="mini-note">This is a local simulation layer for the UI/mesh. Onchain rules come later via Router/Series.</div>
+        </article>
+
+        <article class="card">
+          <header class="card-header">
+            <h2>Gambit log</h2>
+            <span class="badge-soft">From mesh</span>
+          </header>
+          <ul id="gambit-log" class="event-list"></ul>
         </article>
       </section>
 
@@ -218,38 +368,217 @@
         <article class="card">
           <header class="card-header">
             <h2>Wallet mesh</h2>
-            <span class="badge-soft">Multi-wallet preview</span>
+            <span class="badge-soft">Vault · sniper · treasury</span>
           </header>
-          <p class="card-copy">
-            Drive the HUD from different addresses: sniping wallet, main vault,
-            creator treasury, etc. UX shell is ready – next step is wiring real
-            connections.
-          </p>
+
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <button id="btn-add-mock-wallet" class="btn-secondary">Add wallet</button>
+              <button id="btn-set-active" class="btn-ghost">Set active</button>
+            </div>
+            <div class="toolbar-right">
+              <select id="wallet-role" class="select">
+                <option value="Main vault">Main vault</option>
+                <option value="Sniping wallet">Sniping wallet</option>
+                <option value="Creator treasury">Creator treasury</option>
+                <option value="Watcher">Watcher</option>
+              </select>
+            </div>
+          </div>
+
           <div id="wallet-list" class="wallet-list"></div>
-          <button id="btn-add-mock-wallet" class="btn-secondary">
-            Add mock wallet
-          </button>
+
+          <div class="divider"></div>
+
+          <div class="alert-box">
+            <div class="alert-title">Alerts (local)</div>
+            <div class="alert-row">
+              <label class="chk">
+                <input id="alert-whale" type="checkbox" />
+                <span>Whale pulse (score ≥ 2000)</span>
+              </label>
+            </div>
+            <div class="alert-row">
+              <label class="chk">
+                <input id="alert-relic" type="checkbox" />
+                <span>Relic / treasure hit</span>
+              </label>
+            </div>
+            <div class="mini-note">Alerts fire from the same unified mesh events.</div>
+          </div>
         </article>
       </section>
 
-      <!-- QUESTS -->
-      <section class="view" data-view="quests">
+      <!-- CHAT -->
+      <section class="view" data-view="chat">
         <article class="card">
           <header class="card-header">
-            <h2>Creator quests / bounties</h2>
-            <span class="badge-soft">High-signal tasks</span>
+            <h2>Bubble chat</h2>
+            <span class="badge-soft">Collectors + devs</span>
           </header>
-          <p class="card-copy">
-            High-signal tasks from verified creators. Quest layer will surface
-            pack-based bounties and streak actions – this is where the “Spawn bot”
-            automations will live.
-          </p>
-          <ul class="bullet-list">
-            <li>Open 3 packs on Vibe → earn streak XP.</li>
-            <li>Burn 1 Rare for access to a new pack series.</li>
-            <li>Follow a creator mesh on Farcaster to unlock quests.</li>
-            <li>Pool pulls from a group mesh into a shared treasury.</li>
-          </ul>
+
+          <div id="chat-stream" class="chat-stream"></div>
+
+          <div class="chat-bar">
+            <input id="chat-input" class="input" placeholder="Type… (mock)" />
+            <button id="btn-send-chat" class="btn-primary">Send</button>
+          </div>
+
+          <div class="mini-note">Messages can be mirrored into the mesh later (farcaster_cast / supcast_ticket).</div>
+        </article>
+      </section>
+
+      <!-- FORGE -->
+      <section class="view" data-view="forge">
+        <article class="card">
+          <header class="card-header">
+            <h2>Creator Forge</h2>
+            <span class="badge-soft">Zero-code vibe</span>
+          </header>
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Series name</label>
+              <input id="forge-series" class="input" value="Genesis" />
+            </div>
+            <div class="field">
+              <label class="field-label">Preset</label>
+              <select id="forge-preset" class="select">
+                <option value="TokenPackSeries">Token Pack Series</option>
+                <option value="NFTPackSeries">NFT Pack Series (soon)</option>
+                <option value="HybridSeries">Hybrid / Zora Coin (soon)</option>
+                <option value="AccessXP">Access / XP / Reward (soon)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Odds mood</label>
+              <select id="forge-odds" class="select">
+                <option value="safe">Safe</option>
+                <option value="spicy">Spicy</option>
+                <option value="insane">Insane</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Creator cut</label>
+              <select id="forge-cut" class="select">
+                <option value="10">10%</option>
+                <option value="25" selected>25%</option>
+                <option value="50">50%</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <button id="btn-forge-preview" class="btn-secondary">Preview config</button>
+            </div>
+            <div class="toolbar-right">
+              <button id="btn-forge-deploy" class="btn-primary">Deploy (mock)</button>
+            </div>
+          </div>
+
+          <pre id="forge-output" class="codebox"></pre>
+        </article>
+      </section>
+
+      <!-- SUPCAST -->
+      <section class="view" data-view="supcast">
+        <article class="card">
+          <header class="card-header">
+            <h2>SupCast</h2>
+            <span class="badge-soft">Support mesh</span>
+          </header>
+
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <select id="supcast-filter" class="select">
+                <option value="all">All</option>
+                <option value="idea">Ideas</option>
+                <option value="bug">Bugs</option>
+                <option value="bounty">Bounties</option>
+              </select>
+            </div>
+            <div class="toolbar-right">
+              <button id="btn-new-ticket" class="btn-primary">New ticket</button>
+            </div>
+          </div>
+
+          <ul id="supcast-list" class="event-list"></ul>
+          <div class="mini-note">Later: “claim ticket” → XP / reputation → mesh events.</div>
+        </article>
+      </section>
+
+      <!-- SPAWNBOT -->
+      <section class="view" data-view="bot">
+        <article class="card">
+          <header class="card-header">
+            <h2>SpawnBot</h2>
+            <span class="badge-soft">Automations (mock)</span>
+          </header>
+
+          <div class="bot-grid">
+            <label class="chk big">
+              <input id="bot-autoOpen" type="checkbox" />
+              <span>Auto-open packs (when “Cracked odds”)</span>
+            </label>
+            <label class="chk big">
+              <input id="bot-autoClaim" type="checkbox" />
+              <span>Auto-claim streak XP (daily)</span>
+            </label>
+            <label class="chk big">
+              <input id="bot-autoGambit" type="checkbox" />
+              <span>Auto-gambit (Fragments only)</span>
+            </label>
+            <label class="chk big">
+              <input id="bot-alerts" type="checkbox" checked />
+              <span>Smart alerts (whale / relic)</span>
+            </label>
+          </div>
+
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <button id="btn-bot-run" class="btn-secondary">Run once</button>
+            </div>
+            <div class="toolbar-right">
+              <button id="btn-bot-save" class="btn-primary">Save preset</button>
+            </div>
+          </div>
+
+          <pre id="bot-log" class="codebox"></pre>
+        </article>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="view" data-view="settings">
+        <article class="card">
+          <header class="card-header">
+            <h2>Settings</h2>
+            <span class="badge-soft">Local</span>
+          </header>
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Sync mode</label>
+              <select id="set-sync" class="select">
+                <option value="Local mock" selected>Local mock</option>
+                <option value="Read-only onchain">Read-only onchain (soon)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Theme</label>
+              <select id="set-theme" class="select">
+                <option value="deep" selected>Deep</option>
+                <option value="ember">Ember</option>
+                <option value="void">Void</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <button id="btn-reset" class="btn-ghost wide">Reset local state</button>
         </article>
       </section>
     </main>
@@ -257,8 +586,7 @@
     <!-- FOOTER -->
     <footer class="app-footer">
       <p>
-        Built with <span class="accent">SpawnEngine</span> · Mesh HUD v0.2 ·
-        <a href="https://spawn-engine.vercel.app" target="_blank">Legacy preview v1</a> ·
+        Built with <span class="accent">SpawnEngine</span> · Mesh HUD v0.3 ·
         <a href="https://warpcast.com" target="_blank">Farcaster</a>
       </p>
     </footer>
@@ -278,9 +606,7 @@
           <div class="streak-spark s2">✦</div>
           <div class="streak-spark s3">⊚</div>
         </div>
-        <p id="streak-modal-text" class="modal-copy">
-          Ping the mesh once per day to build your streak.
-        </p>
+        <p id="streak-modal-text" class="modal-copy">Ping the mesh once per day to build your streak.</p>
         <div class="streak-bar big">
           <div id="streak-modal-fill" class="streak-fill"></div>
         </div>
@@ -292,6 +618,6 @@
     </div>
   </div>
 
-  <script src="./app.js"></script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
