@@ -1,5 +1,4 @@
 // services/activity.js
-
 // Event shape:
 // { id, kind, label, short, series, rarity, owner, tags, score, timestamp }
 
@@ -73,7 +72,6 @@ const MOCK_EVENTS = [
  *  - Farcaster/Neynar API
  */
 export async function getUnifiedActivity() {
-  // Simulera async (API / onchain)
   await new Promise((r) => setTimeout(r, 50));
   return MOCK_EVENTS.slice().sort((a, b) => b.timestamp - a.timestamp);
 }
@@ -95,21 +93,11 @@ export function computeStatsFromEvents(events) {
     if (e.kind === "pack_open") stats.totalPacks++;
 
     switch (e.rarity) {
-      case "Fragment":
-        stats.fragments++;
-        break;
-      case "Shard":
-        stats.shards++;
-        break;
-      case "Core":
-        stats.cores++;
-        break;
-      case "Artifact":
-        stats.artifacts++;
-        break;
-      case "Relic":
-        stats.relics++;
-        break;
+      case "Fragment": stats.fragments++; break;
+      case "Shard": stats.shards++; break;
+      case "Core": stats.cores++; break;
+      case "Artifact": stats.artifacts++; break;
+      case "Relic": stats.relics++; break;
     }
 
     holders.add(e.owner);
