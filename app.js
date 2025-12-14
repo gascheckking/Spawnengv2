@@ -5,6 +5,47 @@ import { getUnifiedActivity, computeStatsFromEvents } from "./services/activity.
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
+/* =========================
+   PERF / RUNTIME
+========================= */
+const MAX_EVENTS = 120;          // keep in memory
+const RENDER_EVENTS = 40;        // render caps to avoid DOM bloat
+const PULSE_MS = 4500;           // same feel as before
+const LIVE_IDLE_OFF_MS = 20000;  // optional “LIVE” window
+
+let __pulseTimer = null;
+let __liveUntil = 0;
+
+function clampEvents(list) {
+  if (!Array.isArray(list)) return [];
+  if (list.length <= MAX_EVENTS) return list;
+  return list.slice(0, MAX_EVENTS);
+}
+
+function startPulse() {
+  if (__pulseTimer) return;
+  __pulseTimer = setInterval(() => {
+    // Don't spam when tab hidden
+    if (document.hidden) return;
+    addRandomMeshEvent();
+    maybeRunBot();
+    renderAll();
+  }, PULSE_MS);
+}
+
+function stopPulse() {
+  if (!__pulseTimer) return;
+  clearInterval(__pulseTimer);
+  __pulseTimer = null;
+}
+
+function setLiveMode(ms = LIVE_IDLE_OFF_MS) {
+  __liveUntil = Date.now() + ms;
+}
+
+/* =========================
+   STATE
+========================= */
 const state = {
   connected: false,
   activeWallet: null,
@@ -51,7 +92,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupSettings();
 
   await bootMesh();
-  startMeshPulse();
+
+  // Pulse button
+  $("#btn-pulse-now")?.addEventListener("click", () => {
+    addRandomMeshEvent({ loud: true });
+    setLiveMode();
+    renderAll();
+  });
+
+  // Pause/Resume pulses when tab visibility changes
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopPulse();
+    else startPulse();
+  });
+
+  startPulse();
 });
 
 /* =========================
@@ -61,28 +116,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function bootMesh() {
   $("#chip-sync").textContent = "Local mock";
   const events = await getUnifiedActivity();
-  state.events = events;
+  state.events = clampEvents(events || []);
 
   // Seed balances a bit from events
   state.spn = 497;
   state.xp = 1575;
 
   renderAll();
-}
-
-function startMeshPulse() {
-  // Pulse button
-  $("#btn-pulse-now")?.addEventListener("click", () => {
-    addRandomMeshEvent({ loud: true });
-    renderAll();
-  });
-
-  // Background pulse
-  setInterval(() => {
-    addRandomMeshEvent();
-    maybeRunBot();
-    renderAll();
-  }, 4500);
 }
 
 function addRandomMeshEvent(opts = {}) {
@@ -95,7 +135,9 @@ function addRandomMeshEvent(opts = {}) {
   const rarity = rarityPool[Math.floor(Math.random() * rarityPool.length)];
 
   const score = Math.floor(40 + Math.random() * 5000);
-  const owner = state.activeWallet?.addr || "0x" + Math.random().toString(16).slice(2, 6) + "…"+ Math.random().toString(16).slice(2, 6);
+  const owner =
+    state.activeWallet?.addr ||
+    "0x" + Math.random().toString(16).slice(2, 6) + "…" + Math.random().toString(16).slice(2, 6);
 
   const e = {
     id: crypto?.randomUUID?.() || String(Date.now() + Math.random()),
@@ -110,8 +152,8 @@ function addRandomMeshEvent(opts = {}) {
     timestamp: Date.now(),
   };
 
-  state.events.unshift(e);
-  state.events = state.events.slice(0, 80);
+  // push + clamp (prevents infinite growth)
+  state.events = clampEvents([e, ...(state.events || [])]);
 
   // Light economy drip (local sim)
   if (kind === "pack_open") {
@@ -150,15 +192,17 @@ function labelFor(kind, series, rarity) {
 }
 
 function shortFor(kind) {
-  return ({
-    pack_open: "OPEN",
-    swap: "SWAP",
-    burn: "BURN",
-    zora_buy: "ZORA",
-    farcaster_cast: "CAST",
-    gamble: "GMBL",
-    reward: "CLM",
-  })[kind] || "EVT";
+  return (
+    {
+      pack_open: "OPEN",
+      swap: "SWAP",
+      burn: "BURN",
+      zora_buy: "ZORA",
+      farcaster_cast: "CAST",
+      gamble: "GMBL",
+      reward: "CLM",
+    }[kind] || "EVT"
+  );
 }
 
 function tagsFor(kind) {
@@ -174,7 +218,7 @@ function tagsFor(kind) {
 
 function maybeAlertFromEvent(e, loud) {
   const isWhale = e.score >= 2000;
-  const isRelicHit = e.rarity === "Relic" || e.kind === "zora_buy" && e.score >= 5000;
+  const isRelicHit = e.rarity === "Relic" || (e.kind === "zora_buy" && e.score >= 5000);
 
   if (state.alerts.whale && isWhale) toast(`🐋 Whale pulse: ${e.label}`, loud ? 2600 : 1800);
   if (state.alerts.relic && isRelicHit) toast(`💎 Treasure hit: ${e.label}`, loud ? 2600 : 1800);
@@ -317,7 +361,9 @@ function renderHeaderMetrics() {
 
 function renderTicker() {
   const el = $("#ticker-marquee");
-  const slice = state.events.slice(0, 12);
+  if (!el) return;
+
+  const slice = (state.events || []).slice(0, 12);
   const parts = slice.map((e) => `• ${e.short} · ${e.series} · ${e.rarity} · score ${e.score}`);
   const line = parts.join("   ");
   // Duplicate for smooth marquee
@@ -339,7 +385,7 @@ function renderOverview() {
   if (!list) return;
 
   const filter = $("#overview-filter")?.value || "all";
-  const events = state.events
+  const events = (state.events || [])
     .filter((e) => {
       if (filter === "all") return true;
       if (filter === "gamble") return e.kind === "gamble" || (e.tags || []).includes("gamble");
@@ -355,7 +401,10 @@ function renderOverview() {
       <div class="event-title">${ev.kind} · <span style="opacity:.9">${ev.label}</span></div>
       <div class="event-meta">${ev.owner} · ${timeAgo(ev.timestamp)} · score ${ev.score}</div>
       <div class="event-chiprow">
-        ${[ev.series, ev.rarity, ...(ev.tags || [])].slice(0, 5).map((t) => `<span class="chip">${t}</span>`).join("")}
+        ${[ev.series, ev.rarity, ...(ev.tags || [])]
+          .slice(0, 5)
+          .map((t) => `<span class="chip">${t}</span>`)
+          .join("")}
       </div>
     `;
     list.appendChild(li);
@@ -367,12 +416,12 @@ function renderOverview() {
 ========================= */
 
 function renderMeshStats() {
-  const stats = computeStatsFromEvents(state.events);
+  const stats = computeStatsFromEvents(state.events || []);
   $("#stat-totalPacks").textContent = String(stats.totalPacks);
   $("#stat-holders").textContent = String(stats.holderCount);
 
   // Local "luck"
-  const my = state.events.slice(0, 20).reduce((a, e) => a + (e.score || 0), 0);
+  const my = (state.events || []).slice(0, 20).reduce((a, e) => a + (e.score || 0), 0);
   $("#stat-luck").textContent = String(Math.floor(my / 20));
 }
 
@@ -423,8 +472,7 @@ function addSwapEvent(side, amount) {
     score: Math.floor(100 + Math.random() * 900),
     timestamp: Date.now(),
   };
-  state.events.unshift(e);
-  state.events = state.events.slice(0, 80);
+  state.events = clampEvents([e, ...(state.events || [])]);
 }
 
 function renderTrading() {
@@ -432,7 +480,7 @@ function renderTrading() {
   const tape = $("#trade-tape");
   if (tape) {
     const series = $("#trade-series")?.value || "Genesis";
-    const rows = state.events
+    const rows = (state.events || [])
       .filter((e) => e.kind === "swap" || (e.tags || []).includes("trading"))
       .filter((e) => e.series === series)
       .slice(0, 14);
@@ -463,8 +511,8 @@ function renderTrading() {
       return li;
     };
 
-    for (let i = 0; i < 6; i++) bids.appendChild(mk(mid - (i + 1) * 0.6, (20 + Math.floor(Math.random()*90))));
-    for (let i = 0; i < 6; i++) asks.appendChild(mk(mid + (i + 1) * 0.6, (20 + Math.floor(Math.random()*90))));
+    for (let i = 0; i < 6; i++) bids.appendChild(mk(mid - (i + 1) * 0.6, 20 + Math.floor(Math.random() * 90)));
+    for (let i = 0; i < 6; i++) asks.appendChild(mk(mid + (i + 1) * 0.6, 20 + Math.floor(Math.random() * 90)));
   }
 
   // Snapshot
@@ -513,8 +561,7 @@ function addPackOpenEvent() {
     score: rarityScore(rarity),
     timestamp: Date.now(),
   };
-  state.events.unshift(e);
-  state.events = state.events.slice(0, 80);
+  state.events = clampEvents([e, ...(state.events || [])]);
 
   state.inv.opened += 1;
   state.xp += 12;
@@ -532,7 +579,7 @@ function addPackOpenEvent() {
 function rollRarity() {
   const r = Math.random();
   if (r < 0.62) return "Fragment";
-  if (r < 0.90) return "Shard";
+  if (r < 0.9) return "Shard";
   if (r < 0.975) return "Core";
   if (r < 0.995) return "Artifact";
   return "Relic";
@@ -557,9 +604,7 @@ function renderPacks() {
   for (let i = 0; i < Math.min(state.inv.opened, 20); i++) rows.push({ type: "opened", txt: "Opened pack · logged in mesh" });
 
   const shown =
-    filter === "all" ? rows :
-    filter === "sealed" ? rows.filter(r => r.type === "sealed") :
-    rows.filter(r => r.type === "opened");
+    filter === "all" ? rows : filter === "sealed" ? rows.filter((r) => r.type === "sealed") : rows.filter((r) => r.type === "opened");
 
   list.innerHTML = "";
   shown.slice(0, 18).forEach((p) => {
@@ -650,8 +695,7 @@ function writeGambleEvent(kind, from, to, baseScore) {
     score: baseScore + Math.floor(Math.random() * 260),
     timestamp: Date.now(),
   };
-  state.events.unshift(e);
-  state.events = state.events.slice(0, 80);
+  state.events = clampEvents([e, ...(state.events || [])]);
 }
 
 function writeTreasureEvent(rarity) {
@@ -664,11 +708,10 @@ function writeTreasureEvent(rarity) {
     rarity,
     owner: state.activeWallet?.addr || "0x0000…0000",
     tags: ["treasure_hit", "reward"],
-    score: rarity === "Core" ? 1800 + Math.floor(Math.random()*900) : 5200,
+    score: rarity === "Core" ? 1800 + Math.floor(Math.random() * 900) : 5200,
     timestamp: Date.now(),
   };
-  state.events.unshift(e);
-  state.events = state.events.slice(0, 80);
+  state.events = clampEvents([e, ...(state.events || [])]);
 
   if (state.bot.alerts) maybeAlertFromEvent(e, true);
 }
@@ -680,8 +723,8 @@ function renderGambit() {
   const log = $("#gambit-log");
   if (!log) return;
 
-  const rows = state.events
-    .filter(e => e.kind === "gamble" || (e.tags || []).includes("treasure_hit"))
+  const rows = (state.events || [])
+    .filter((e) => e.kind === "gamble" || (e.tags || []).includes("treasure_hit"))
     .slice(0, 14);
 
   log.innerHTML = "";
@@ -723,7 +766,7 @@ function setupWallets() {
 
     const id = state.wallets.length + 1;
     state.wallets.push({
-      label: roleSel?.value || ("Mesh node " + id),
+      label: roleSel?.value || "Mesh node " + id,
       addr: "0x" + Math.random().toString(16).slice(2, 6) + "…" + Math.random().toString(16).slice(2, 6),
       active: false,
     });
@@ -737,9 +780,9 @@ function setupWallets() {
     if (!state.wallets.length) return;
 
     // Rotate active
-    const idx = state.wallets.findIndex(w => w.active);
+    const idx = state.wallets.findIndex((w) => w.active);
     const next = (idx + 1) % state.wallets.length;
-    state.wallets.forEach((w,i) => (w.active = i === next));
+    state.wallets.forEach((w, i) => (w.active = i === next));
     state.activeWallet = state.wallets[next];
 
     toast(`Active wallet: ${state.activeWallet.addr}`, 1500);
@@ -793,9 +836,7 @@ function setupStreak() {
 
     const remaining = Math.max(0, 7 - state.streakDays);
     copy.textContent =
-      remaining > 0
-        ? `Keep the streak for ${remaining} more days for a full weekly run.`
-        : "Full weekly run completed – mesh is glowing.";
+      remaining > 0 ? `Keep the streak for ${remaining} more days for a full weekly run.` : "Full weekly run completed – mesh is glowing.";
     modalText.textContent = "Ping the mesh once per day to build your streak.";
   }
 
@@ -808,6 +849,13 @@ function setupStreak() {
 
   btnClaim?.addEventListener("click", () => {
     if (!state.connected) return toast("Connect wallet first.", 1600);
+
+    // REAL DAILY LOCK (1 claim per ISO date)
+    const today = new Date().toISOString().slice(0, 10);
+    if (state.dailyClaimedISO === today) return toast("Already claimed today.", 1600);
+
+    state.dailyClaimedISO = today;
+
     state.streakDays = Math.min(state.streakDays + 1, 7);
     state.xp += 35;
     state.spn += 20;
@@ -825,8 +873,7 @@ function setupStreak() {
       score: 180 + state.streakDays * 40,
       timestamp: Date.now(),
     };
-    state.events.unshift(e);
-    state.events = state.events.slice(0, 80);
+    state.events = clampEvents([e, ...(state.events || [])]);
 
     updateUI();
     closeModal();
@@ -852,7 +899,7 @@ function setupChat() {
     { who: "them", txt: "Dev: next patch will hook read-only onchain logs → same mesh." },
     { who: "me", txt: "SpawnEngine feels like one brain. Trading + packs in one feed." },
   ];
-  seed.forEach(m => pushMsg(m.who, m.txt, false));
+  seed.forEach((m) => pushMsg(m.who, m.txt, false));
 
   send.addEventListener("click", () => {
     const v = input.value.trim();
@@ -875,7 +922,10 @@ function setupChat() {
     div.className = `msg ${who}`;
     div.innerHTML = `
       <div>${escapeHtml(txt)}</div>
-      <div class="msg-meta">${who === "me" ? "You" : "Mesh"} · ${new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}</div>
+      <div class="msg-meta">${who === "me" ? "You" : "Mesh"} · ${new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })}</div>
     `;
     stream.appendChild(div);
     if (autoscroll) stream.scrollTop = stream.scrollHeight;
@@ -937,8 +987,7 @@ function setupForge() {
       score: 888,
       timestamp: Date.now(),
     };
-    state.events.unshift(e);
-    state.events = state.events.slice(0, 80);
+    state.events = clampEvents([e, ...(state.events || [])]);
 
     toast("Deployed (mock). Event written to mesh.", 1700);
     renderAll();
@@ -964,7 +1013,7 @@ function setupSupCast() {
 
   const render = () => {
     const f = filter.value;
-    const rows = f === "all" ? tickets : tickets.filter(t => t.kind === f);
+    const rows = f === "all" ? tickets : tickets.filter((t) => t.kind === f);
     list.innerHTML = "";
     rows.forEach((t) => {
       const li = document.createElement("li");
@@ -996,8 +1045,7 @@ function setupSupCast() {
       score: 210,
       timestamp: Date.now(),
     };
-    state.events.unshift(e);
-    state.events = state.events.slice(0, 80);
+    state.events = clampEvents([e, ...(state.events || [])]);
     renderAll();
   });
 
@@ -1027,10 +1075,12 @@ function setupBot() {
     state.bot.alerts = !!alerts?.checked;
   };
 
-  [autoOpen, autoClaim, autoGambit, alerts].forEach((el) => el?.addEventListener("change", () => {
-    sync();
-    toast("SpawnBot updated.", 1200);
-  }));
+  [autoOpen, autoClaim, autoGambit, alerts].forEach((el) =>
+    el?.addEventListener("change", () => {
+      sync();
+      toast("SpawnBot updated.", 1200);
+    })
+  );
 
   run.addEventListener("click", () => {
     if (!state.connected) return toast("Connect wallet first.", 1600);
@@ -1055,21 +1105,38 @@ function maybeRunBot() {
   if (!state.connected) return;
   if (!state.bot.autoOpen && !state.bot.autoClaim && !state.bot.autoGambit) return;
 
-  // Auto-claim: if streak not max and random chance
+  // Auto-claim: real daily lock too
   if (state.bot.autoClaim && state.streakDays < 7 && Math.random() < 0.08) {
-    state.streakDays += 1;
-    state.xp += 20;
-    state.spn += 14;
-    writeGambleEvent("reward", "streak", "xp", 180);
+    const today = new Date().toISOString().slice(0, 10);
+    if (state.dailyClaimedISO !== today) {
+      state.dailyClaimedISO = today;
+      state.streakDays += 1;
+      state.xp += 20;
+      state.spn += 14;
+
+      const e = {
+        id: crypto?.randomUUID?.() || String(Date.now() + Math.random()),
+        kind: "reward",
+        label: `Auto-claim · streak day ${state.streakDays}`,
+        short: "CLM",
+        series: "Streak",
+        rarity: "Shard",
+        owner: state.activeWallet?.addr || "0x0000…0000",
+        tags: ["reward", "xp", "streak"],
+        score: 160 + state.streakDays * 35,
+        timestamp: Date.now(),
+      };
+      state.events = clampEvents([e, ...(state.events || [])]);
+    }
   }
 
-  // Auto-open: if "Cracked odds" vibe from mesh load simulated
-  if (state.bot.autoOpen && state.inv.sealed > 0 && Math.random() < 0.10) {
+  // Auto-open
+  if (state.bot.autoOpen && state.inv.sealed > 0 && Math.random() < 0.1) {
     state.inv.sealed -= 1;
     addPackOpenEvent();
   }
 
-  // Auto-gambit: fragments only
+  // Auto-gambit
   if (state.bot.autoGambit && state.inv.Fragment >= 10 && Math.random() < 0.09) {
     state.inv.Fragment -= 10;
     state.inv.Shard += 1;
@@ -1086,9 +1153,15 @@ function runBotOnce() {
   lines.push(`- alerts: ${state.bot.alerts}`);
 
   if (state.bot.autoClaim && state.streakDays < 7) {
-    state.streakDays += 1;
-    state.xp += 15;
-    lines.push(`→ Claimed streak (mock). streakDays=${state.streakDays}`);
+    const today = new Date().toISOString().slice(0, 10);
+    if (state.dailyClaimedISO !== today) {
+      state.dailyClaimedISO = today;
+      state.streakDays += 1;
+      state.xp += 15;
+      lines.push(`→ Claimed streak (mock). streakDays=${state.streakDays}`);
+    } else {
+      lines.push(`→ Daily already claimed today.`);
+    }
   }
 
   if (state.bot.autoOpen && state.inv.sealed > 0) {
@@ -1137,8 +1210,9 @@ function localReset() {
   state.xp = 0;
   state.spn = 0;
   state.streakDays = 0;
+  state.dailyClaimedISO = null;
   state.inv = { sealed: 2, opened: 0, Fragment: 20, Shard: 2, Core: 0, Artifact: 0, Relic: 0 };
-  state.events = state.events.slice(0, 5);
+  state.events = (state.events || []).slice(0, 5);
 }
 
 /* =========================
