@@ -571,3 +571,51 @@ body{
   .chip-row{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .brand-tags{ display:none; }
 }
+/* ===== DESKTOP MODE (wide screens) ===== */
+@media (min-width: 900px){
+  body{
+    overflow: auto; /* desktop kan scrolla normalt */
+  }
+
+  .app-shell{
+    max-width: 1100px;     /* blir “desktop” */
+    height: auto;          /* inte låst till 100vh */
+    min-height: calc(100vh - 48px);
+    margin: 24px auto;
+    padding: 20px;
+  }
+
+  .view-stack{
+    max-height: none;
+    overflow: visible;     /* scroll i body på desktop */
+    padding: 10px 6px 18px;
+  }
+
+  /* bredare header */
+  .app-header{
+    position: relative;
+    top: 0;
+  }
+
+  /* tabs får plats bättre */
+  .tab-bar{
+    flex-wrap: wrap;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+  .tab{ flex: 0 0 auto; }
+
+  /* cards grid-känsla på desktop */
+  .view.active{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .view.active .card{
+    margin-bottom: 0;
+  }
+  /* hero går över hela bredden */
+  .view.active .card.hero{
+    grid-column: 1 / -1;
+  }
+}
